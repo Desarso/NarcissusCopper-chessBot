@@ -1,0 +1,7 @@
+pieces now know how to move an eat other pieces
+
+as soon as a rock is moved we remove the right for castling.
+as soon as a king is moved we moved the right for both castles.
+also we need to limit the kings movement when in check, the only allowed movements must be the ones that get the king out of check, and
+the king can never eat unprotected pieces.
+all of this needs to be tracked recursively because minimax is basically playing the game itself recursively millions of times.
