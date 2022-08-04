@@ -46,7 +46,7 @@
  
  
 .chessBoard{
-    width: fit-content;
+    width: min-content;
     display: grid;
     grid-template-columns: repeat(8, calc(12.5%));
     gap: 0px;
