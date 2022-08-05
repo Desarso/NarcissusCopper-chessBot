@@ -1,5 +1,6 @@
-import React from 'react'
-import ChessSquare from './ChessSquare'
+import React from 'react';
+import ChessSquare from './ChessSquare';
+import NewChessSquare from './NewChessSquare';
 import { DndProvider, useDrag} from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -28,11 +29,11 @@ function getClassNameFromIndex(index){
      
 }
   return (
-    <DndProvider
-    backend={HTML5Backend}>
+    // <DndProvider
+    // backend={HTML5Backend}>
       <div className='chessBoard'>
       {chessBoard.map((square) => (
-        <ChessSquare
+        <NewChessSquare
           index = {thing++}
           key = {thing}
           text = {square}
@@ -43,7 +44,7 @@ function getClassNameFromIndex(index){
         />
       ))}
     </div>
-    </DndProvider>
+    // </DndProvider>
     
   )
 }

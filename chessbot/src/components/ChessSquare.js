@@ -1,10 +1,119 @@
-import React from 'react'
+import React from 'react';
+import ReactDOM from "react-dom";
 import { useEffect, useRef, useState} from 'react';
 import { DndProvider, useDrag, useDrop, DragPreviewImage, dragPreview} from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 
 
+const $ = window.$;
+
+class Droppable extends React.Component {
+  constructor() {
+    super();
+    this.dropRef = React.createRef();
+  }
+
+  componentDidMount() {
+    this.$drop = $(this.dropRef.current);
+    this.$drop.droppable({
+      accept: ".draggable",
+      classes: {
+        "ui-droppable-active": "onDraging",
+        "ui-droppable-hover": "onDragOver"
+      },
+      drop: (evt, ui) => {
+        console.log({
+          position: ui.position,
+          ui,
+          evt
+        });
+        const { left: dragLeft, top: dragTop } = ui.position;
+        const { left: dropLeft, top: dropTop } = this.$drop.offset();
+        const top = dragTop - dropTop;
+        const left = dragLeft - dropLeft;
+        const height = ui.helper.height();
+        const width = ui.helper.width();
+        this.$drop.append(
+          `<div style="left: ${left}px; top: ${top}px; border: 1px dashed rgba(0,0,0,.2); position: absolute; border-radius: 4px; width: ${width}px; height: ${height}px; color: rgba(0,0,0,.2)">Dropped</div>`
+        );
+      }
+    });
+  }
+
+  componentDidUpdate(prevProps) {}
+
+  componentWillUnmount() {}
+
+  handleChange(e) {}
+
+  render() {
+    return <section className="droppable" ref={this.dropRef} />;
+  }
+}
+
+class DragMe extends React.Component {
+  constructor() {
+    super();
+    this.dragRef = React.createRef();
+  }
+
+  componentDidMount() {
+    this.$dragMe = $(this.dragRef.current);
+    this.$dragMe.draggable({
+      helper: "clone"
+    });
+  }
+
+  componentDidUpdate(prevProps) {}
+
+  componentWillUnmount() {}
+
+  handleChange(e) {}
+
+  render() {
+    return (
+      <section className="draggable" ref={this.dragRef}>
+        Drag Me
+      </section>
+    );
+  }
+}
+
+class Chosen extends React.Component {
+  componentDidMount() {
+    this.$el = $(this.el);
+    this.$el.chosen();
+
+    this.handleChange = this.handleChange.bind(this);
+    this.$el.on("change", this.handleChange);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.children !== this.props.children) {
+      this.$el.trigger("chosen:updated");
+    }
+  }
+
+  componentWillUnmount() {
+    this.$el.off("change", this.handleChange);
+    this.$el.chosen("destroy");
+  }
+
+  handleChange(e) {
+    this.props.onChange(e.target.value);
+  }
+
+  render() {
+    return (
+      <div>
+        <select className="Chosen-select" ref={(el) => (this.el = el)}>
+          {this.props.children}
+        </select>
+      </div>
+    );
+  }
+}
 
 
 
@@ -37,34 +146,39 @@ function ChessSquare({text, className, chessBoard, index}) {
   // console.log(chessBoard);
 
   if(className != undefined)  pieceClass += className;
-  const [dropBox, setDropBox] = useState('none');
-  const dragItem = useRef();
-  const dragOverItem = useRef();
 
-  const[{isDragging}, drag, preview] = useDrag(() => ({
-    type: PieceTypes.KNIGHT,
-    collect: monitor => ({
-      isDragging : !!monitor.isDragging()
-    })
-  }))
+//react DnD
 
-  const [,drop] = useDrop(
-    () => ({
-      accept: PieceTypes.KNIGHT,
-      drop: () => console.log("dropped")
-    }),[]
-  )
+//   const [dropBox, setDropBox] = useState('none');
+//   const dragItem = useRef();
+//   const dragOverItem = useRef();
 
-const [{isOver}, dropped] = useDrop(
-  () => ({
-    accept: PieceTypes.KNIGHT,
-    drop: () => console.log("is over dropped knight"),
-    collect: monitor => ({
-      isOver: !!monitor.isOver(),
-    })
-  })
-)
+//   const[{isDragging}, drag, dragPreview] = useDrag(() => ({
+//     type: PieceTypes.KNIGHT,
+//     collect: monitor => ({
+//       isDragging : !!monitor.isDragging()
+//     })
+//   }))
 
+//   const [,drop] = useDrop(
+//     () => ({
+//       accept: PieceTypes.KNIGHT,
+//       drop: () => console.log("dropped")
+//     }),[]
+//   )
+
+// const [{isOver}, dropped] = useDrop(
+//   () => ({
+//     accept: PieceTypes.KNIGHT,
+//     drop: () => console.log("is over dropped knight"),
+//     collect: monitor => ({
+//       isOver: !!monitor.isOver(),
+//     })
+//   })
+// )
+
+
+//vanilla javascript 
 
   // const dragStart = (e, position) => {
   //   e.target.className = addClass(e.target.className, "invisible");
@@ -94,23 +208,23 @@ const [{isOver}, dropped] = useDrop(
 
   return (
     <>
-    <DragPreviewImage 
-      connect={preview} 
+    {/* <DragPreviewImage 
+      connect={dragPreview} 
       className = {pieceClass}
       src="./images/whiteBishop.png"
-      />
+      /> */}
     <div
       // {...isEmptySquare 
       //   && ondragover={(e) =>this.ondragOver(e)}} 
-      ref ={isEmptySquare ? dropped : drag}
+      // ref ={isEmptySquare ? dropped : drag}
       
-      className={ `${pieceClass} ${isOver && 'yellowBackground isOver'}`}
-      style={{
-        opacity: isDragging ? 1 : 1,
-        backgroundImage: isDragging && 'none',
-        backgroundColor: isOver && 'yellow !important',
-        cursor: isDragging && 'pointer'
-      }}
+      className={ `${pieceClass}`}
+      // style={{
+      //   opacity: isDragging ? 1 : 1,
+      //   backgroundImage: isDragging && 'none',
+      //   backgroundColor: isOver && 'yellow !important',
+      //   cursor: isDragging && 'pointer'
+      // }}
       // onDragStart={(e) => dragStart(e, index)}
       // onDragEnter={(e) => dragEnter(e, index)}
       // onDragEnd = {(e) => drop(e, index)}
