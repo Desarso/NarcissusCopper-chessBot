@@ -67,7 +67,8 @@ function ChessBoard() {
 
 let className;
   return (
-      <div className='chessBoard'>
+    <div className="chessBoardContainer">
+         <div className='chessBoard'>
          <DragDropProvider>
         <DragDropSensors>
         <For each={chessBoard()}>
@@ -89,10 +90,12 @@ let className;
                 setActiveItem = {setActiveItem}
                 />
             )}
-        </For>
-        </DragDropSensors>
-    </DragDropProvider>
+            </For>
+            </DragDropSensors>
+        </DragDropProvider>
+        </div>
     </div>
+     
   )
 }
 

@@ -227,9 +227,11 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
                 >
                     <section 
                     use:draggable
-                    class = {`${pieceClass()} ${litUpBoxes()[index]}`}
+                    class = {`${pieceClass()}`}
                     index = {index}
-                    ></section>
+                    >
+                        <div class = {`${litUpBoxes()[index]}`}></div>
+                    </section>
             </div>
         );
        
@@ -510,8 +512,10 @@ function addClass(previousClass, newClass) {
             }
         }
         // move up and to the right;
+        //example has index 8;
         for(let i=7;i<=63;i=i+7){
-            if(index%8 === 7 || index <= 7){ break;}
+           
+            if(index%8 === 7 || index <= 7 || index-i < 0){ break;}
             if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() < 91 || chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
@@ -577,8 +581,9 @@ function addClass(previousClass, newClass) {
         }
         // move up and to the right;
         for(let i=7;i<=63;i=i+7){
-            if(index%8 === 7 || index <= 7){ break;}
-            if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() > 91 || chessBoard[index-i] === emptySpace)){
+           
+            if(index%8 === 7 || index <= 7 || index-i < 0){ break;}
+            if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() < 91 || chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
                 if((index-i)%8 === 7 || index+i <= 7 ||  chessBoard[index-i] !== emptySpace){
@@ -797,7 +802,8 @@ function addClass(previousClass, newClass) {
         }
         // move up and to the right;
         for(let i=7;i<=63;i=i+7){
-            if(index%8 === 7 || index <= 7){ break;}
+           
+            if(index%8 === 7 || index <= 7 || index-i < 0){ break;}
             if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() < 91 || chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
@@ -910,7 +916,8 @@ function addClass(previousClass, newClass) {
         }
         // move up and to the right;
         for(let i=7;i<=63;i=i+7){
-            if(index%8 === 7 || index <= 7){ break;}
+           
+            if(index%8 === 7 || index <= 7 || index-i < 0){ break;}
             if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() > 91 || chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
@@ -922,6 +929,7 @@ function addClass(previousClass, newClass) {
                 break;
             }
         } 
+      
         
     }
     return moves;
