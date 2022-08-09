@@ -1,11 +1,11 @@
 import logo from './logo.svg';
-import './App.css';
+import styles from './App.module.css';
 import ChessBoard from './components/ChessBoard';
 
 function App() {
   return (
-    <div className="App">
-      <ChessBoard/>
+    <div class={styles.App}>
+     <ChessBoard/>
     </div>
   );
 }
