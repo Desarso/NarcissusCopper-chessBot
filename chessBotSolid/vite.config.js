@@ -5,7 +5,6 @@ import path from "path";
 export default defineConfig({
 
   plugins: [solidPlugin()],
-  base: './docs',
   server: {
     port: 3000,
   },
