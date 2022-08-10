@@ -4,9 +4,7 @@ import ChessBoard from './components/ChessBoard';
 
 function App() {
   return (
-    <div class={"app"}>
      <ChessBoard/>
-    </div>
   );
 }
 
