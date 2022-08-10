@@ -9,6 +9,9 @@
 //     justify-content: center;
 //     overflow: hidden;
 // }
+
+
+
 *{margin: 0px; padding:0px}
 
 html{
@@ -68,7 +71,7 @@ section{
     display: flex;
     align-items: center;
     justify-content: center;
-    background-image: url(./images/allPieces.svg);
+    background-image: url(./allPieces.svg);
     /* background-size: 60vw; */
     background-size: 600% ;
     background-position-y: 100% ;
