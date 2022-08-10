@@ -6,6 +6,7 @@ import {
     createDroppable,
     DragOverlay
   } from "@thisbeyond/solid-dnd";
+import { get } from "jquery";
   import { createSignal } from "solid-js";
 
 const  emptySpace = '-';
@@ -68,6 +69,28 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
    
 
     const [previousMove, setPreviousMove] = createSignal([69,69]);
+
+
+    //white first indices are 
+    //0-7,16-23
+    function getClassNameFromIndex(index){
+        // console.log(index);
+       if((index >= 56)||
+          (index >=40 && index < 48)||
+          (index >=24 && index < 32)||
+          (index >=8  && index < 16)){
+            if(index%2 ==1){
+                return 'lighterBackground';
+            }
+       }else{
+        if(index%2 ==0){
+            return 'lighterBackground';
+        }
+       }
+    }
+
+    //get classes
+
     if(chessBoard()[index] === '-') setPieceClass('-'); 
     if(chessBoard()[index] === 't' || text === 'r'){setPieceClass('piece rook');}
     if(chessBoard()[index] === 'b')  setPieceClass('piece bishop');
@@ -237,7 +260,6 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
        
       };
 
-    
  
     // if(className !== undefined)  pieceClass += className;
   return (
@@ -245,7 +267,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
         <Draggable
                 index = {index}
                 id = {key}
-                className = {`${className} ${litUpBoxes()[index]}`}
+                className = {`${className} ${getClassNameFromIndex(index)} ${litUpBoxes()[index]}`}
                 pieceClass = {pieceClass}
                 />
 

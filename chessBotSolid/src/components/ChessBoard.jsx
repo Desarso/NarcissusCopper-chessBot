@@ -50,17 +50,17 @@ function ChessBoard() {
 
     let thing = 0;
     let whiteFirst = true;
-    function getClassNameFromIndex(index){
-        // console.log(index);
-        if (index%8==0 && index!= 0) whiteFirst = !whiteFirst;
+    // function getClassNameFromIndex(index){
+    //     // console.log(index);
+    //     if (index%8==0 && index!= 0) whiteFirst = !whiteFirst;
     
-        if (whiteFirst && index%2==0)
-            return ' lighterBackground ';
-        else if (!whiteFirst && index%2==1)
-            return' lighterBackground ';
-        else 
-            return '';
-    }
+    //     if (whiteFirst && index%2==0)
+    //         return ' lighterBackground ';
+    //     else if (!whiteFirst && index%2==1)
+    //         return' lighterBackground ';
+    //     else 
+    //         return '';
+    // }
     function handleBoardChange(newBoard){
          setChessBoard(newBoard)
     }
@@ -73,13 +73,13 @@ let className;
         <DragDropSensors>
         <For each={chessBoard()}>
             {(square, i) => (
-                className = `${getClassNameFromIndex(thing)} chessSquare`,
+                className = `chessSquare`,
                 <ChessSquare
                 index = {thing++}
                 key = {thing+1}
                 text = {square}
                 chessBoard = {chessBoard}
-                className = {`${getClassNameFromIndex(thing-1)!= undefined ? getClassNameFromIndex(thing-1) : ''} chessSquare ${boardClass()[thing-1]}`}
+                className = {`chessSquare ${boardClass()[thing-1]}`}
                 setBoardClass = {setBoardClass}
                 hoveredElement = {hoveredElement}
                 setHovered = {setHovered}
