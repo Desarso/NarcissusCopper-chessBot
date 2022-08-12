@@ -1,0 +1,18 @@
+.box{
+    width: 10vw;
+    height: 10vw;
+    background-color: brown;
+    border: 1vh solid black;
+}
+
+.piece{
+    position: relative;
+    width: calc(100%);
+    height: calc(100%);
+    top: -1vh;
+    left: -1vh;
+    border:  1vh solid red;
+
+    border-radius: 100%;
+    background-color: yellow;
+}

@@ -14,16 +14,6 @@ using std::string;
 //need a minimax function that returns the next move
 //this minimax function will be different from previous
 //I also need to include a lot of trimming and beam search, etc
-void findPossibleMoves(vector<int> &moves, vector<char> chessBoard, int &index, int* previousMove);
-int firstOfRowFunc(int &index);
-void findRockMoves(vector<char> chessBoard, int &index, vector<int> &moves);
-void findBishopMoves(vector<char> chessBoard, int &index, vector<int> &moves);
-void findHorseMoves(vector<char> chessBoard, int &index, vector<int> &moves);
-void findQueenMoves(vector<char> chessBoard, int &index, vector<int> &moves);
-void findKingMoves(vector<char> chessBoard, int &index, vector<int> &moves);
-void movements(vector<int> &moves, vector<char> chessBoard);
-void findPawnMoves(vector<char> chessBoard, int &index, vector<int> &moves, int* previousMove);
-int fact(float& num);
 
 const char emptySpace = '-';
 const char whiteRook = 'R';
@@ -74,6 +64,19 @@ bool whiteKingHasMoved = false;
 bool blackKingHasMoved = false;
 
 
+void findPossibleMoves(vector<int> &moves, vector<char> chessBoard, int &index, int* previousMove);
+int firstOfRowFunc(int &index);
+void findRockMoves(vector<char> chessBoard, int &index, vector<int> &moves);
+void findBishopMoves(vector<char> chessBoard, int &index, vector<int> &moves);
+void findHorseMoves(vector<char> chessBoard, int &index, vector<int> &moves);
+void findQueenMoves(vector<char> chessBoard, int &index, vector<int> &moves);
+void findKingMoves(vector<char> chessBoard, int &index, vector<int> &moves);
+void movements(vector<int> &moves, vector<char> chessBoard);
+void findPawnMoves(vector<char> chessBoard, int &index, vector<int> &moves, int* previousMove);
+int fact(float& num);
+void singleMove(vector<int> &moves, vector<char> chessBoard);
+
+
 int main(){
      auto start = std::chrono::high_resolution_clock::now();
     
@@ -100,34 +103,38 @@ int main(){
                                 'b'
                             };
                             
-    int result = 20;
-    // result = fact(5);
-    float stuff = 2000;
-    cout << "factorial: " << fact(stuff);
     //how to find all possible moves;
     //for a rock, we must check the spacest adjecent to it, and add it to possible moves
     //a rock can move its it's row in the array, and also in steps of 8
     //so it rock is at position two, we check 0,1,2,3,4,5,6,7, and 2+8=10; 10+8=18; 18+8=26; 26+8=34; 34+8=42; 42+8=50; 50+8=58; 
     //so the pattern is, we stat at it's position, then we left, right, up, down, and figure out where the nearest pieces are in each direction;
 
-//     int previousMove [2] = {8,16};
-//     vector<int> moves ={};
-//     for(int i=0;i<64;i++){
-//         if(chessBoard[i] != emptySpace){
-//               findPossibleMoves(moves, chessBoard, i, previousMove);
-//         }
-//     }
+    int previousMove [2] = {8,16};
+    vector<int> moves ={};
+    for(int i=0;i<64;i++){
+        if(chessBoard[i] != emptySpace){
+              findPossibleMoves(moves, chessBoard, i, previousMove);
+        }
+    }
+
+
 
 //     movements(moves, chessBoard);
 
 
-//     cout << "\n";
-//     if(moves.size()>0){
-//         for(int i=0; i<moves.size()-1; i=i+2){
-//             cout << "("<<moves[i]<<"," << moves[i+1]<<")";
-//         }
-//         cout<<".";
-//     }
+    cout << "\n";
+    if(moves.size()>0){
+        for(int i=0; i<moves.size()-1; i=i+2){
+            cout << "("<<moves[i]<<"," << moves[i+1]<<")";
+        }
+        cout<<".";
+    }
+
+    vector<int> oneMove = {96,96};
+
+    singleMove(oneMove, chessBoard);
+
+
 
 //     // cout << "\n\nNumber of moves: " << moves.size()/2;
 
@@ -140,7 +147,7 @@ int main(){
 
 //currently pieces don't know they can eat enemy pieces, need to add this behavior.
 
-void findPossibleMoves(vector<int> &moves, vector<char> chessBoard, int &index, int* castlingRigths, int* previousMove){
+void findPossibleMoves(vector<int> &moves, vector<char> chessBoard, int &index, int* previousMove){
     //calculate possible moves for black
     if(chessBoard[64] == 'b'){
         //rook moves
@@ -759,29 +766,42 @@ void findKingMoves(vector<char> chessBoard, int &index, vector<int> &moves){
     
     int firstOfRow = firstOfRowFunc(index);
 
-
-    if(chessBoard[index] == blackKing && blackKingHasMoved == false){
-        if(chessBoard[0] == 't'){
-            // moves.push_back()
+//first we check if castling is possible.
+    if(chessBoard[index] == blackKing){
+        //the blackKing begins at index position 4;
+        //it must check that position 1,2,3 are clear.
+        //for queen side castling.
+        //and for 5,6 to be clear for king side, as well
+        //ass check that the rook is a t
+        if(chessBoard[0] == 't' && chessBoard[1] == emptySpace && chessBoard[2] == emptySpace && chessBoard[3] ==  emptySpace){
+           moves.push_back(99);
+           moves.push_back(99);
         }
-        if(chessBoard[7] == 't'){
-
+        
+        if(chessBoard[7] == 't' && chessBoard[5] == emptySpace && chessBoard[6] == emptySpace){
+            moves.push_back(98);
+            moves.push_back(98);
         }
         blackKingHasMoved = true;
-        for(int i=0;i<chessBoard.size(); i++){
-            if(chessBoard[i] == 't'){
-                chessBoard[i] ='r';
-            }
-        }
+      
+      //the index for the other rooks are 56 and 63;
+        
     }
 
-    if(chessBoard[index] == whiteKing && whiteKingHasMoved == false){
-        whiteKingHasMoved = true;
-        for(int i=0;i<chessBoard.size(); i++){
-            if(chessBoard[i] == 'T'){
-                chessBoard[i] ='R';
-            }
+    if(chessBoard[index] == whiteKing){
+        //for white king the index position is 60
+        //for queen side it must check 59,58,57
+        //for king side it must check 61,62
+
+        if(chessBoard[56] == 'T' && chessBoard[59] == emptySpace && chessBoard[58] == emptySpace && chessBoard[57] == emptySpace){
+              moves.push_back(97);
+              moves.push_back(97);
         }
+        if(chessBoard[63] == 'T' && chessBoard[61] == emptySpace && chessBoard[62] == emptySpace){
+            moves.push_back(96);
+            moves.push_back(96);
+        }
+
     }
  
 if(chessBoard[index] == blackKing){
@@ -864,7 +884,7 @@ if(chessBoard[index] == whiteKing){
       
 }
 
-//pawns know to eat- need to leart em-peassant or whatever
+//pawns are officially done
 void findPawnMoves(vector<char> chessBoard, int &index, vector<int> &moves, int* previousMove ){
     //pawsns know everything except how to do en-paissant.
     //pawns can only do on-passent when directly adjacent
@@ -881,11 +901,14 @@ void findPawnMoves(vector<char> chessBoard, int &index, vector<int> &moves, int*
     //and the also check if the pawn moved either -16, or 16 in the previous move.
     //if all of these are true then we use on-passant, which is a diagonal movement, but we eat the pawn,
     //that is next to us.  
+
     if(chessBoard[index] == blackPawn && index < ONEROWFROMBOTTOM){
+        //can move forward
         if(chessBoard[index+spaceDown] == emptySpace){
             moves.push_back(index);
             moves.push_back(spaceDown);
         }
+        //this part of the code deals with en-peassant
         if(index >=32 && index <= 39){
             if(chessBoard[index+right] == whitePawn){
                 if(previousMove[0]+previousMove[1] == index+1 && previousMove[1] == -16){
@@ -901,6 +924,7 @@ void findPawnMoves(vector<char> chessBoard, int &index, vector<int> &moves, int*
             }
         }
     
+        //the reast deals with eating and double forward
         if(chessBoard[index+rightDown] != emptySpace && chessBoard[index+rightDown]-0 < COLORDELIMITER){
             moves.push_back(index);
             moves.push_back(rightDown);
@@ -914,6 +938,7 @@ void findPawnMoves(vector<char> chessBoard, int &index, vector<int> &moves, int*
             moves.push_back(spaceDown*2);
         }
     }
+
     if(chessBoard[index] == whitePawn && index >= ONEROWFROMTOP){
         if(chessBoard[index+spaceUp] == emptySpace){
             moves.push_back(index);
@@ -959,12 +984,29 @@ void movements(vector<int> &moves, vector<char> chessBoard){
 
     for(int i=0;i<moves.size(); i=i+2){
         pieceToMove = chessBoard[moves[i]];
+
+        if(moves[i] == 99 && moves[i+1] == 99){
+            
+        }
+         if(moves[i] == 98 && moves[i+1] == 98){
+            
+        }
+         if(moves[i] == 97 && moves[i+1] == 97){
+            
+        }
+         if(moves[i] == 96 && moves[i+1] == 96){
+            
+        }
+
+        //if any rook os moves we turn it to a non-castalable rook
         if(pieceToMove == 'T'){
             pieceToMove = 'R';
         }
         if(pieceToMove == 't'){
             pieceToMove = 'r';
         }
+
+       //checks if move is un-peasant to remove piece from board.
         if(pieceToMove == blackPawn){
             if(moves[i+1] == leftDown && (chessBoard[moves[i]+moves[i+1]]) == emptySpace){
                 chessBoard[moves[i]+left] = emptySpace;
@@ -985,6 +1027,8 @@ void movements(vector<int> &moves, vector<char> chessBoard){
         }
         chessBoard[moves[i]+moves[i+1]] = pieceToMove;
     }
+
+    //log out chessboard with overlapping moves
     for(int i=0;i<chessBoard.size()-1; i=i+8){
         cout << chessBoard[i]  << "," << chessBoard[i+1] << "," << chessBoard[i+2] << "," << chessBoard[i+3] << ","
         <<chessBoard[i+4] << "," << chessBoard[i+5] << "," << chessBoard[i+6] << "," << chessBoard[i+7] << ",\n";
@@ -994,7 +1038,33 @@ void movements(vector<int> &moves, vector<char> chessBoard){
 void singleMove(vector<int> &moves, vector<char> chessBoard){
 
      char pieceToMove;
+     int i =0;
      pieceToMove = chessBoard[moves[0]];
+        if(moves[i] == 99 && moves[i+1] == 99){
+            chessBoard[4] = '-'; 
+            chessBoard[0] = '-';
+            chessBoard[1] = 'k';
+            chessBoard[2] = 'r';
+        }
+         if(moves[i] == 98 && moves[i+1] == 98){
+            chessBoard[4] = '-'; 
+            chessBoard[7] = '-';
+            chessBoard[5] = 'k';
+            chessBoard[4] = 'r';
+        }
+         if(moves[i] == 97 && moves[i+1] == 97){
+            chessBoard[60] = '-';
+            chessBoard[56] = '-';
+            chessBoard[58] = 'K';
+            chessBoard[59] = 'R';
+        }
+         if(moves[i] == 96 && moves[i+1] == 96){
+            chessBoard[60] = '-';
+            chessBoard[63] = '-';
+            chessBoard[62] = 'K';
+            chessBoard[61] = 'R';
+        }
+     //this thing is doing en-passeant somehow`
         if(pieceToMove == blackPawn){
             if(moves[1] == leftDown && (chessBoard[moves[0]+moves[1]]) == emptySpace){
                 chessBoard[moves[0]+left] = emptySpace;
@@ -1015,14 +1085,13 @@ void singleMove(vector<int> &moves, vector<char> chessBoard){
         }
         chessBoard[moves[0]] = emptySpace;
         chessBoard[moves[0]+moves[1]] = pieceToMove;
+
+        cout << "\n";
+         for(int i=0;i<chessBoard.size()-1; i=i+8){
+        cout << chessBoard[i]  << "," << chessBoard[i+1] << "," << chessBoard[i+2] << "," << chessBoard[i+3] << ","
+        <<chessBoard[i+4] << "," << chessBoard[i+5] << "," << chessBoard[i+6] << "," << chessBoard[i+7] << ",\n";
+    }
 }
 
 
 
-
-// int fact(float &num) {
-//     if (num == 1.0) return 1;
-//     // cout<< num << " ";
-//     float newNum = num-1;
-//     return num*fact(newNum);
-// }

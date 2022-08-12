@@ -1,7 +1,19 @@
-pieces now know how to move an eat other pieces
+To_Do's
 
-as soon as a rock is moved we remove the right for castling.
-as soon as a king is moved we moved the right for both castles.
-also we need to limit the kings movement when in check, the only allowed movements must be the ones that get the king out of check, and
-the king can never eat unprotected pieces.
-all of this needs to be tracked recursively because minimax is basically playing the game itself recursively millions of times.
+Castling is now being tracked with letter T vs R and,
+need to ass castling to the rookmoves function, and then write a condition in the 
+moves function to deal with castling
+So the move function only stores two values, which is not enough to represent castling.
+Castling should be represented with special repeated numbers.
+99,98,97,96.
+
+turning the rooks to a different letter needs to be handled in the move function since that is the function
+that generates the new chessboard, and the other function only generate moves.
+might separate the individual move functions into another file to simplify the file.
+
+
+Top-Left corner: (99,99);
+Top-Right corner: (98,98);
+Bottom-Left corner: (97,97);
+Bottom-Right corner: (96,96);
+

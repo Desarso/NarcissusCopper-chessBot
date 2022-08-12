@@ -66,9 +66,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
 
 
     const [pieceClass, setPieceClass] = createSignal('-');
-   
-
-    const [previousMove, setPreviousMove] = createSignal([69,69]);
+    const [previousMove, setPreviousMove] = createSignal();
 
 
     //white first indices are 
@@ -133,7 +131,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
               moves.push(...findKingMoves(chessBoard(), index, moves ));
           }
           if(chessBoard()[index] === blackPawn || chessBoard()[index] === whitePawn){
-              moves.push(...findPawnMoves(chessBoard(), index, moves, previousMove));
+              moves.push(...findPawnMoves(chessBoard(), index, moves, previousMove()));
           }
         moves = moves.filter((move) => {
            if(move != undefined){
@@ -169,12 +167,20 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
             // console.log("hovered", hoveredElement());
             if(index === hoveredElement() && activeItem() != null){
              
-                // console.log("hovered", hoveredElement())
-                // console.log("index", activeItem().getAttribute('index')-0);
+                //when a piece is droppedn onto another, then we must update not,
+                //only the board, and the visual part, but also, the previous moves, there might be a way to use
+                //the board positions, and not have to do double code.
+                //active item is being hovered.
                 let newClass = activeItem().getAttribute('class');
                 let newchessBoard = chessBoard();
-                // console.log("hovered",newChessBoad[hoveredElement()]);
-                // console.log("drop", newChessBoad[activeItem().getAttribute('index')-0] )
+                let lastMove = [activeItem().getAttribute('index')-0, hoveredElement()-activeItem().getAttribute('index')];
+                console.log("The previous move is being set to: (",activeItem().getAttribute('index')-0,", ",hoveredElement()-activeItem().getAttribute('index'),")");
+                setPreviousMove(lastMove);
+                console.log("just set prev:",lastMove)
+           
+                //here I update board state, but I also need to update the previous move to this one.
+                //the previous move is 2 digits. The intial index, and what was added, to get the final index.
+                //that would be, move = {activeItem().getAttribute('index)-0, hoveredElement()}
                 newchessBoard[hoveredElement()] = newchessBoard[activeItem().getAttribute('index')-0];
                 if(activeItem().getAttribute('index')-0 != hoveredElement()){
                     newchessBoard[activeItem().getAttribute('index')-0] = '-';
@@ -206,12 +212,13 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
         });
     
         onDragStart(({draggable}) => {
-        //    console.log(litUpBoxes());
+         
      
 
            
            if(index === draggable.node.getAttribute('index')-0){
                 setActiveItem(draggable.node);
+                console.log("Previous:",previousMove());
                 findPieceMoves(index);
                
            }
