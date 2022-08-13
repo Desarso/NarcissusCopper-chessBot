@@ -62,11 +62,15 @@ let blackKingHasMoved = false;
 
 
 
-function ChessSquare({text, className, chessBoard, index, hoveredElement, setHovered, key, handleBoardChange, litUpBoxes, setLitUpBoxes, activeItem, setActiveItem}) {
+function ChessSquare({text, className, chessBoard, index, hoveredElement, 
+                        setHovered, key, handleBoardChange, litUpBoxes, 
+                        setLitUpBoxes, activeItem, setActiveItem, previousMove, setPreviousMove,
+                        pieceClass, setPieceClass
+                    }) {
 
 
-    const [pieceClass, setPieceClass] = createSignal('-');
-    const [previousMove, setPreviousMove] = createSignal();
+    let lastMove;
+
 
 
     //white first indices are 
@@ -89,19 +93,6 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
 
     //get classes
 
-    if(chessBoard()[index] === '-') setPieceClass('-'); 
-    if(chessBoard()[index] === 't' || text === 'r'){setPieceClass('piece rook');}
-    if(chessBoard()[index] === 'b')  setPieceClass('piece bishop');
-    if(chessBoard()[index] === 'n')  setPieceClass('piece knight');
-    if(chessBoard()[index] === 'k')  setPieceClass('piece king');
-    if(chessBoard()[index] === 'q')  setPieceClass('piece queen');
-    if(chessBoard()[index] === 'p')  setPieceClass('piece pawn');
-    if(chessBoard()[index] === 'T' || text === 'R')  setPieceClass('piece white rook');
-    if(chessBoard()[index] === 'B') setPieceClass('piece white bishop');
-    if(chessBoard()[index] === 'N') setPieceClass('piece white knight');
-    if(chessBoard()[index] === 'K') setPieceClass('piece white king');
-    if(chessBoard()[index] === 'Q') setPieceClass('piece white queen');
-    if(chessBoard()[index] === 'P') setPieceClass('piece white pawn');
 
     function findPieceMoves(index) {
         let moves = [];
@@ -131,7 +122,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
               moves.push(...findKingMoves(chessBoard(), index, moves ));
           }
           if(chessBoard()[index] === blackPawn || chessBoard()[index] === whitePawn){
-              moves.push(...findPawnMoves(chessBoard(), index, moves, previousMove()));
+              moves.push(...findPawnMoves(chessBoard(), index, moves));
           }
         moves = moves.filter((move) => {
            if(move != undefined){
@@ -139,15 +130,29 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
          };
         });
     
-    console.log(chessBoard()[index]);
+    // console.log(chessBoard()[index]);
     console.log("moves", moves);
+    console.log("~~~~~~~~~~~~~~~~~~~~");
     if(moves.length >0){
         let newBoxes = litUpBoxes();
+
        
     
         for(let i=0;i<moves.length;i=i+2){
             if(moves[i] != undefined && moves[i+1] != undefined){
             newBoxes[moves[i]+moves[i+1]] = 'circle';
+            }
+            if(moves[i] === 99 && moves[i+1] === 99){
+                newBoxes[2] = 'circle';
+            }
+            if(moves[i] === 98 && moves[i+1] === 98){
+                newBoxes[6] = 'circle';
+            }
+            if(moves[i] === 97 && moves[i+1] === 97){
+                newBoxes[58] = 'circle';
+            }
+            if(moves[i] === 96 && moves[i+1] === 96){
+                newBoxes[62] = 'circle';
             }
         }
         setLitUpBoxes(newBoxes);
@@ -157,48 +162,122 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
     
       }
 
-    const Draggable = ({id, index, className, pieceClass}) => {
+    const Draggable = ({id, index, className}) => {
         const droppable = createDroppable(id);
         const draggable = createDraggable(id);
         const [,{onDragEnd, onDragStart, activeDraggable }] = useDragDropContext();
         // console.log(index);
         onDragEnd(({draggable}) => {
-            // console.log("drop",activeItem());
-            // console.log("hovered", hoveredElement());
+
+            //active === draggable;
+            //hovered === box;
+            //
+        
             if(index === hoveredElement() && activeItem() != null){
              
-                //when a piece is droppedn onto another, then we must update not,
-                //only the board, and the visual part, but also, the previous moves, there might be a way to use
-                //the board positions, and not have to do double code.
-                //active item is being hovered.
+                //get the piece class
                 let newClass = activeItem().getAttribute('class');
-                let newchessBoard = chessBoard();
-                let lastMove = [activeItem().getAttribute('index')-0, hoveredElement()-activeItem().getAttribute('index')];
-                console.log("The previous move is being set to: (",activeItem().getAttribute('index')-0,", ",hoveredElement()-activeItem().getAttribute('index'),")");
+                let CurrentIndex = activeItem().getAttribute('index')-0;
+                let NewIndex = hoveredElement();
+                let newChessBoard = chessBoard();
+                let newPieceClass = pieceClass();
+                
+                //set the last move
+                lastMove = [activeItem().getAttribute('index')-0, hoveredElement()-activeItem().getAttribute('index')];
                 setPreviousMove(lastMove);
-                console.log("just set prev:",lastMove)
+            
            
-                //here I update board state, but I also need to update the previous move to this one.
-                //the previous move is 2 digits. The intial index, and what was added, to get the final index.
-                //that would be, move = {activeItem().getAttribute('index)-0, hoveredElement()}
-                newchessBoard[hoveredElement()] = newchessBoard[activeItem().getAttribute('index')-0];
-                if(activeItem().getAttribute('index')-0 != hoveredElement()){
-                    newchessBoard[activeItem().getAttribute('index')-0] = '-';
-                }
-               
+                //set newChessboard state
+                newChessBoard[hoveredElement()] = newChessBoard[activeItem().getAttribute('index')-0];
+             
+             
+                console.log(CurrentIndex);
+                console.log(chessBoard()[CurrentIndex]);
+                let newPieceClasses = pieceClass();
+                //so when going forward current + 8 = new; 8 = new-current;
+                if(chessBoard()[CurrentIndex] === whitePawn || chessBoard()[CurrentIndex] === blackPawn){
+                    console.log("piece is a pawn");
+                    if(NewIndex-CurrentIndex != 8 || NewIndex-CurrentIndex != -8){
+                        if(chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 7){
+                            newchessBoard[CurrentIndex+left] = '-';
+                            newPieceClasses[CurrentIndex+left] = '-';
+                        }
+                        if(chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 9){
+                            newchessBoard[CurrentIndex+right] = '-';
+                            newPieceClasses[CurrentIndex+right] = '-';
+                        }
+                        if(chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -7){
+                            newchessBoard[CurrentIndex+right] = '-';
+                            newPieceClasses[CurrentIndex+right] = '-';
+                        }   
+                        if(chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -9){
+                            newchessBoard[CurrentIndex+left] = '-';
+                            newPieceClasses[CurrentIndex+left] = '-';
 
-                console.log(newchessBoard);
-                handleBoardChange(newchessBoard);
+                        }
+                    }
+                }
+
+                if(activeItem().getAttribute('index')-0 != hoveredElement()){
+                    newChessBoard[activeItem().getAttribute('index')-0] = '-';
+                }
+
+                if(chessBoard()[NewIndex] === whiteKing || chessBoard()[NewIndex] === blackKing){
+                    
+                    if(CurrentIndex-NewIndex === 2 || CurrentIndex-NewIndex === -2){
+                     
+                        if(NewIndex === 58){
+                            newChessBoard[56] = '-';
+                            newPieceClass[56] = '-';
+                            newChessBoard[59] = 'R';
+                            newPieceClass[59] = 'piece white rook'
+                        }
+                        if(NewIndex === 62){
+                            newChessBoard[63] = '-';
+                            newPieceClass[63] = '-';
+                            newChessBoard[61] = 'R';
+                            newPieceClass[61] = 'piece white rook'
+                        }
+                        if(NewIndex === 2){
+                            newChessBoard[0] = '-';
+                            newPieceClass[0] = '-';
+                            newChessBoard[3] = 'r';
+                            newPieceClass[3] = 'piece rook'
+                        }
+                        if(NewIndex === 6){
+                            newChessBoard[7] = '-';
+                            newPieceClass[7] = '-';
+                            newChessBoard[5] = 'r';
+                            newPieceClass[5] = 'piece rook'
+                        }
+                        handleBoardChange(newChessBoard);
+                    }
+                }
+           
+                
+                // console.log(previousMove());
+               
+                
+                // console.log(newchessBoard);
+                handleBoardChange(newChessBoard);
+        
+                displayBoard(newChessBoard);
                 // console.log(chessBoard());
-                // console.log(chessBoard());
-                setPieceClass(newClass);
-                setPreviousMove([activeItem().getAttribute('index')-0,hoveredElement()-activeItem().getAttribute('index')]);
+              
+                newPieceClass[hoveredElement()] = newClass;
+                setPieceClass(newPieceClass);
             
             }
 
+
+
             if(index === activeItem().getAttribute('index')-0 && activeItem().getAttribute('index') != hoveredElement()){
-                setPieceClass('-')
+                let newPieceClass = pieceClass();
+                newPieceClass[activeItem().getAttribute('index')] = '-';
+                setPieceClass(newPieceClass);
             }
+
+
 
          setLitUpBoxes(['-','-','-','-','-','-','-','-',
                         '-','-','-','-','-','-','-','-',
@@ -257,7 +336,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
                 >
                     <section 
                     use:draggable
-                    class = {`${pieceClass()}`}
+                    class = {`${pieceClass()[index]}`}
                     index = {index}
                     >
                         <div class = {`${litUpBoxes()[index]}`}></div>
@@ -267,6 +346,101 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
        
       };
 
+       //pawns know to eat- need to leart em-peassant or whatever
+
+  function findPawnMoves( chessBoard, index ){
+    let moves = [];
+    //pawsns know everything except how to do en-paissant.
+    //pawns can only do on-passent when directly adjacent
+    //pawns can only do en paessant if, they a pawn jumps directly next to them
+    //by doing a double pawn move, this seems difficult to track. 
+    //In order to be able to keep track of em-passent, I need to pay attention to pawsn that are on the 5th
+    //then we keep track of previous move, and check if the there is pawns from the opposite team next to it.
+    //then if the previous move was that exact double pawn move, then we add on-passant is possible.` `
+    
+    //for black pawns we need to check if the pawn is between the numbers 
+    // chessBoard[index] >= 32 && <= 39;
+    //and then check if index plus or minus one has a pawn,
+    //and then check if the previous move is from one of the pawns,
+    //and the also check if the pawn moved either -16, or 16 in the previous move.
+    //if all of these are true then we use on-passant, which is a diagonal movement, but we eat the pawn,
+    //that is next to us.  
+    if( chessBoard[index] === blackPawn && index < ONEROWFROMBOTTOM){
+        console.log("made it here");
+        if( chessBoard[index+spaceDown] === emptySpace){
+            moves.push(index);
+            moves.push(spaceDown);
+        }
+        
+        if(index >=32 && index <= 39){
+            //this deals with black en-peseant
+            if( chessBoard[index+right] === whitePawn){
+                if(previousMove()[0]+previousMove()[1] === index+1 && previousMove()[1] === -16){
+                    moves.push(index);
+                    moves.push(rightDown);
+                }
+            }
+            if( chessBoard[index+left] === whitePawn){
+                if(previousMove()[0]+previousMove()[1] === index+1 && previousMove()[1] === -16){
+                    moves.push(index);
+                    moves.push(leftDown);
+                }
+            }
+        }
+    
+        if( chessBoard[index+rightDown] !== emptySpace &&  chessBoard[index+rightDown].charCodeAt() < COLORDELIMITER){
+            moves.push(index);
+            moves.push(rightDown);
+        }
+        if( chessBoard[index+leftDown] !== emptySpace &&  chessBoard[index+leftDown].charCodeAt() < COLORDELIMITER){
+            moves.push(index);
+            moves.push(leftDown);
+        }
+        if(index <= 15 && index >= 8 &&  chessBoard[index+(spaceDown*2)] === emptySpace){
+            moves.push(index);
+            moves.push(spaceDown*2);
+        }
+    }
+    if( chessBoard[index] === whitePawn && index >= ONEROWFROMTOP){
+        if( chessBoard[index+spaceUp] === emptySpace){
+            moves.push(index);
+            moves.push(spaceUp);
+        }
+        //for the white pawns it is different numbers
+        
+        console.log("white pawn index is:", index);
+        if(index >=24 && index <= 31){
+                 console.log("made it");
+            if( chessBoard[index+right] === blackPawn){
+                if(previousMove()[0]+previousMove()[1] === index+right && previousMove()[1] === 16){
+                    moves.push(index);
+                    moves.push(rightUp);
+                }
+            }
+            if( chessBoard[index+left] === blackPawn){
+                if(previousMove()[0]+previousMove()[1] === index+left && previousMove()[1] === 16){
+                    moves.push(index);
+                    moves.push(leftUp);
+                }
+            }
+        }
+    
+        if( chessBoard[index+rightUp] !== emptySpace &&  chessBoard[index+rightUp].charCodeAt() > COLORDELIMITER){
+            moves.push(index);
+            moves.push(rightUp);
+        }
+        if( chessBoard[index+leftUp] !== emptySpace &&  chessBoard[index+leftUp].charCodeAt() > COLORDELIMITER){
+            moves.push(index);
+            moves.push(leftUp);
+        }
+        if(index <= 55 && index >= 48 &&  chessBoard[index+(spaceUp*2)] === emptySpace){
+            moves.push(index);
+            moves.push(spaceUp*2);
+        }
+    } 
+    
+    return moves;
+  }
  
     // if(className !== undefined)  pieceClass += className;
   return (
@@ -275,7 +449,6 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement, setHov
                 index = {index}
                 id = {key}
                 className = {`${className} ${getClassNameFromIndex(index)} ${litUpBoxes()[index]}`}
-                pieceClass = {pieceClass}
                 />
 
   
@@ -970,29 +1143,44 @@ function addClass(previousClass, newClass) {
   let firstOfRow = firstOfRowFunc(index);
   
   
-  if( chessBoard[index] === blackKing && blackKingHasMoved === false){
-      if( chessBoard[0] === 't'){
-          // moves.push()
-      }
-      if( chessBoard[7] === 't'){
-  
-      }
-      blackKingHasMoved = true;
-      for(let i=0;i< chessBoard.length; i++){
-          if( chessBoard[i] === 't'){
-               chessBoard[i] ='r';
-          }
-      }
+  //first we check if castling is possible.
+  if(chessBoard[index] == blackKing){
+    //the blackKing begins at index position 4;
+    //it must check that position 1,2,3 are clear.
+    //for queen side castling.
+    //and for 5,6 to be clear for king side, as well
+    //ass check that the rook is a t
+    if(chessBoard[0] == 't' && chessBoard[1] == emptySpace && chessBoard[2] == emptySpace && chessBoard[3] ==  emptySpace){
+       moves.push(99);
+       moves.push(99);
     }
-  
-    if( chessBoard[index] === whiteKing && whiteKingHasMoved === false){
-        whiteKingHasMoved = true;
-        for(let i=0;i< chessBoard.length; i++){
-            if( chessBoard[i] === 'T'){
-                 chessBoard[i] ='R';
-            }
-        }
+    
+    if(chessBoard[7] == 't' && chessBoard[5] == emptySpace && chessBoard[6] == emptySpace){
+        moves.push(98);
+        moves.push(98);
     }
+
+  
+  //the index for the other rooks are 56 and 63;
+    
+}
+
+if(chessBoard[index] == whiteKing){
+    //for white king the index position is 60
+    //for queen side it must check 59,58,57
+    //for king side it must check 61,62
+
+    if(chessBoard[56] == 'T' && chessBoard[59] == emptySpace && chessBoard[58] == emptySpace && chessBoard[57] == emptySpace){
+          moves.push(97);
+          moves.push(97);
+    }
+    if(chessBoard[63] == 'T' && chessBoard[61] == emptySpace && chessBoard[62] == emptySpace){
+        moves.push(96);
+        moves.push(96);
+    }
+
+}
+
   
     if( chessBoard[index] === blackKing){
     // cout << "made it";
@@ -1075,98 +1263,7 @@ function addClass(previousClass, newClass) {
     
   }
 
-  //pawns know to eat- need to leart em-peassant or whatever
-
-  function findPawnMoves( chessBoard, index, previousMove ){
-    let moves = [];
-    //pawsns know everything except how to do en-paissant.
-    //pawns can only do on-passent when directly adjacent
-    //pawns can only do en paessant if, they a pawn jumps directly next to them
-    //by doing a double pawn move, this seems difficult to track. 
-    //In order to be able to keep track of em-passent, I need to pay attention to pawsn that are on the 5th
-    //then we keep track of previous move, and check if the there is pawns from the opposite team next to it.
-    //then if the previous move was that exact double pawn move, then we add on-passant is possible.` `
-    
-    //for black pawns we need to check if the pawn is between the numbers 
-    // chessBoard[index] >= 32 && <= 39;
-    //and then check if index plus or minus one has a pawn,
-    //and then check if the previous move is from one of the pawns,
-    //and the also check if the pawn moved either -16, or 16 in the previous move.
-    //if all of these are true then we use on-passant, which is a diagonal movement, but we eat the pawn,
-    //that is next to us.  
-    if( chessBoard[index] === blackPawn && index < ONEROWFROMBOTTOM){
-        if( chessBoard[index+spaceDown] === emptySpace){
-            moves.push(index);
-            moves.push(spaceDown);
-        }
-        if(index >=32 && index <= 39){
-            if( chessBoard[index+right] === whitePawn){
-                if(previousMove[0]+previousMove[1] === index+1 && previousMove[1] === -16){
-                    moves.push(index);
-                    moves.push(rightDown);
-                }
-            }
-            if( chessBoard[index+left] === whitePawn){
-                if(previousMove[0]+previousMove[1] === index+1 && previousMove[1] === -16){
-                    moves.push(index);
-                    moves.push(leftDown);
-                }
-            }
-        }
-    
-        if( chessBoard[index+rightDown] !== emptySpace &&  chessBoard[index+rightDown].charCodeAt() < COLORDELIMITER){
-            moves.push(index);
-            moves.push(rightDown);
-        }
-        if( chessBoard[index+leftDown] !== emptySpace &&  chessBoard[index+leftDown].charCodeAt() < COLORDELIMITER){
-            moves.push(index);
-            moves.push(leftDown);
-        }
-        if(index <= 15 && index >= 8 &&  chessBoard[index+(spaceDown*2)] === emptySpace){
-            moves.push(index);
-            moves.push(spaceDown*2);
-        }
-    }
-    if( chessBoard[index] === whitePawn && index >= ONEROWFROMTOP){
-        if( chessBoard[index+spaceUp] === emptySpace){
-            moves.push(index);
-            moves.push(spaceUp);
-        }
-        //for the white pawns it is different numbers
-        
-    
-        if(index >=24 && index <= 31){
-                //  cout << "made it  "<< index << " " << index+left << "\n\n";
-            if( chessBoard[index+right] === blackPawn){
-                if(previousMove[0]+previousMove[1] === index+right && previousMove[1] === -16){
-                    moves.push(index);
-                    moves.push(rightUp);
-                }
-            }
-            if( chessBoard[index+left] === blackPawn){
-                if(previousMove[0]+previousMove[1] === index+left && previousMove[1] === 16){
-                    moves.push(index);
-                    moves.push(leftUp);
-                }
-            }
-        }
-    
-        if( chessBoard[index+rightUp] !== emptySpace &&  chessBoard[index+rightUp].charCodeAt() > COLORDELIMITER){
-            moves.push(index);
-            moves.push(rightUp);
-        }
-        if( chessBoard[index+leftUp] !== emptySpace &&  chessBoard[index+leftUp].charCodeAt() > COLORDELIMITER){
-            moves.push(index);
-            moves.push(leftUp);
-        }
-        if(index <= 55 && index >= 48 &&  chessBoard[index+(spaceUp*2)] === emptySpace){
-            moves.push(index);
-            moves.push(spaceUp*2);
-        }
-    }
-    
-    return moves;
-  }
+ 
   
   function firstOfRowFunc(index){
   if(index>=56) return 56;
@@ -1177,4 +1274,10 @@ function addClass(previousClass, newClass) {
   if(index>=16) return 16;
   if(index>=8) return 8;
   return 0;
+  }
+
+  function displayBoard(chessBoard){
+    for(let i=0;i<chessBoard.length;i=i+8){
+        console.log(chessBoard[i],chessBoard[i+1],chessBoard[i+2],chessBoard[i+3],chessBoard[i+4],chessBoard[i+5],chessBoard[i+6],chessBoard[i+7],"\n");
+    }
   }

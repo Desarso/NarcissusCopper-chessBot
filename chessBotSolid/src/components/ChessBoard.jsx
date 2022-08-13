@@ -13,14 +13,15 @@ import {
 function ChessBoard() {
     const [activeItem, setActiveItem] = createSignal(null);
     const [hoveredElement, setHovered] = createSignal(null);
-    const [chessBoard, setChessBoard] = createSignal([  'r','n','b','q','k','b','n','r',
+    const [previousMove, setPreviousMove] = createSignal([70,70]);
+    const [chessBoard, setChessBoard] = createSignal([  't','n','b','q','k','b','n','t',
                                                         'p','p','p','p','p','p','p','p',
                                                         '-','-','-','-','-','-','-','-',
                                                         '-','-','-','-','-','-','-','-',
                                                         '-','-','-','-','-','-','-','-',
                                                         '-','-','-','-','-','-','-','-',
                                                         'P','P','P','P','P','P','P','P',
-                                                        'R','N','B','Q','K','B','N','R',]);
+                                                        'T','N','B','Q','K','B','N','T',]);
 
     const [litUpBoxes, setLitUpBoxes] = createSignal(['-','-','-','-','-','-','-','-',
                                                     '-','-','-','-','-','-','-','-',
@@ -39,12 +40,37 @@ function ChessBoard() {
                                                         '-','-','-','-','-','-','-','-',
                                                         '-','-','-','-','-','-','-','-',
                                                         '-','-','-','-','-','-','-','-'
-                                                        ]);
-    // const [allPossibleMoves, setAllPossibleMoves] =createSignal(getMoves());
+                                                        ]);  
+    const [pieceClass, setPieceClass] = createSignal([]);
+
+   
+                                                        
+
+    
+    
 
     createEffect(() => {
 
-        console.log(chessBoard());
+        // console.log(chessBoard());
+        let newPieceClasses = [];
+        for(let i=0;i<chessBoard().length;i++){
+            if(chessBoard()[i] === '-') newPieceClasses.push('-'); 
+            if(chessBoard()[i] === 't' || chessBoard()[i] === 'r'){newPieceClasses.push('piece rook');}
+            if(chessBoard()[i] === 'b')  newPieceClasses.push('piece bishop');
+            if(chessBoard()[i] === 'n')  newPieceClasses.push('piece knight');
+            if(chessBoard()[i] === 'k')  newPieceClasses.push('piece king');
+            if(chessBoard()[i] === 'q')  newPieceClasses.push('piece queen');
+            if(chessBoard()[i] === 'p')  newPieceClasses.push('piece pawn');
+            if(chessBoard()[i] === 'T' || chessBoard()[i] === 'R')  newPieceClasses.push('piece white rook');
+            if(chessBoard()[i] === 'B') newPieceClasses.push('piece white bishop');
+            if(chessBoard()[i] === 'N') newPieceClasses.push('piece white knight');
+            if(chessBoard()[i] === 'K') newPieceClasses.push('piece white king');
+            if(chessBoard()[i] === 'Q') newPieceClasses.push('piece white queen');
+            if(chessBoard()[i] === 'P') newPieceClasses.push('piece white pawn');
+        }
+        console.log("setting things");
+        // console.log(newPieceClasses);
+        setPieceClass(newPieceClasses);
     },chessBoard)
 
 
@@ -62,7 +88,27 @@ function ChessBoard() {
     //         return '';
     // }
     function handleBoardChange(newBoard){
-         setChessBoard(newBoard)
+        setChessBoard(newBoard);
+        let newPieceClasses = [];
+        for(let i=0;i<newBoard.length;i++){
+            if(newBoard[i] === '-') newPieceClasses.push('-'); 
+            if(newBoard[i] === 't' || newBoard[i] === 'r'){newPieceClasses.push('piece rook');}
+            if(newBoard[i] === 'b')  newPieceClasses.push('piece bishop');
+            if(newBoard[i] === 'n')  newPieceClasses.push('piece knight');
+            if(newBoard[i] === 'k')  newPieceClasses.push('piece king');
+            if(newBoard[i] === 'q')  newPieceClasses.push('piece queen');
+            if(newBoard[i] === 'p')  newPieceClasses.push('piece pawn');
+            if(newBoard[i] === 'T' || newBoard[i] === 'R')  newPieceClasses.push('piece white rook');
+            if(newBoard[i] === 'B') newPieceClasses.push('piece white bishop');
+            if(newBoard[i] === 'N') newPieceClasses.push('piece white knight');
+            if(newBoard[i] === 'K') newPieceClasses.push('piece white king');
+            if(newBoard[i] === 'Q') newPieceClasses.push('piece white queen');
+            if(newBoard[i] === 'P') newPieceClasses.push('piece white pawn');
+        }
+        console.log("setting things");
+        // console.log(newPieceClasses);
+        setPieceClass(newPieceClasses);
+        // console.log(pieceClass());
     }
 
 let className;
@@ -88,6 +134,11 @@ let className;
                 setLitUpBoxes = {setLitUpBoxes}
                 activeItem = {activeItem}
                 setActiveItem = {setActiveItem}
+                previousMove = {previousMove}
+                setPreviousMove = {setPreviousMove}
+                pieceClass = {pieceClass}
+                setPieceClass = {setPieceClass}
+
                 />
             )}
             </For>
