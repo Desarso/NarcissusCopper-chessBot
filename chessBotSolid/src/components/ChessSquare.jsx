@@ -199,19 +199,19 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                     console.log("piece is a pawn");
                     if(NewIndex-CurrentIndex != 8 || NewIndex-CurrentIndex != -8){
                         if(chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 7){
-                            newchessBoard[CurrentIndex+left] = '-';
+                            newChessBoard[CurrentIndex+left] = '-';
                             newPieceClasses[CurrentIndex+left] = '-';
                         }
                         if(chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 9){
-                            newchessBoard[CurrentIndex+right] = '-';
+                            newChessBoard[CurrentIndex+right] = '-';
                             newPieceClasses[CurrentIndex+right] = '-';
                         }
                         if(chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -7){
-                            newchessBoard[CurrentIndex+right] = '-';
+                            newChessBoard[CurrentIndex+right] = '-';
                             newPieceClasses[CurrentIndex+right] = '-';
                         }   
                         if(chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -9){
-                            newchessBoard[CurrentIndex+left] = '-';
+                            newChessBoard[CurrentIndex+left] = '-';
                             newPieceClasses[CurrentIndex+left] = '-';
 
                         }
@@ -785,7 +785,7 @@ function addClass(previousClass, newClass) {
         for(let i=7;i<=63;i=i+7){
            
             if(index%8 === 7 || index <= 7 || index-i < 0){ break;}
-            if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() < 91 || chessBoard[index-i] === emptySpace)){
+            if(index-i <= 63 && ( chessBoard[index-i].charCodeAt() > 91 || chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
                 if((index-i)%8 === 7 || index+i <= 7 ||  chessBoard[index-i] !== emptySpace){
