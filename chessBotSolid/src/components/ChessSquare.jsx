@@ -341,6 +341,8 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 return returnClass;
             }
         }
+
+
         
 
         return(
@@ -565,7 +567,7 @@ function addClass(previousClass, newClass) {
   
     if( chessBoard[index] === blackRook){
             for(let i=1;i<8;i++){
-                if(index-i >= firstOfRow && ( chessBoard[index-i]-0 < COLORDELIMITER ||  chessBoard[index-i] === emptySpace)){
+                if(index-i >= firstOfRow && ( chessBoard[index-i].charCodeAt() < COLORDELIMITER ||  chessBoard[index-i] === emptySpace)){
                     moves.push(index);
                     moves.push(-i);
                     if( chessBoard[index-i] !== emptySpace){
@@ -576,7 +578,7 @@ function addClass(previousClass, newClass) {
                 }
             }
             for(let i=1;i<8;i++){
-                if(index+i < firstOfRow+8 && ( chessBoard[index+i]-0 < 91 ||  chessBoard[index+i] === emptySpace)){
+                if(index+i < firstOfRow+8 && ( chessBoard[index+i].charCodeAt() < 91 ||  chessBoard[index+i] === emptySpace)){
                     moves.push(index);
                     moves.push(i);
                     if( chessBoard[index+i] !== emptySpace){
@@ -587,7 +589,7 @@ function addClass(previousClass, newClass) {
                 }
             }
             for(let i=8;i<57;i=i+8){
-                if(index+i <= 63 && ( chessBoard[index+i]-0 < 91 ||  chessBoard[index+i] === emptySpace)){
+                if(index+i <= 63 && ( chessBoard[index+i].charCodeAt() < 91 ||  chessBoard[index+i] === emptySpace)){
                     moves.push(index);
                     moves.push(i);
                     if( chessBoard[index+i] !== emptySpace){
@@ -599,7 +601,7 @@ function addClass(previousClass, newClass) {
             }
             for(let i=8;i<57;i=i+8){
             //add or subtract 8 to go up or down
-                if(index-i >= 0 && ( chessBoard[index-i]-0 < COLORDELIMITER ||  chessBoard[index-i] === emptySpace)){
+                if(index-i >= 0 && ( chessBoard[index-i].charCodeAt() < COLORDELIMITER ||  chessBoard[index-i] === emptySpace)){
                     moves.push(index);
                     moves.push(-i);
                     if( chessBoard[index-i] !== emptySpace){
@@ -613,7 +615,7 @@ function addClass(previousClass, newClass) {
     if( chessBoard[index] === whiteRook){
                 //left and right moves
         for(let i=1;i<8;i++){
-            if(index-i >= firstOfRow && ( chessBoard[index-i]-0 > COLORDELIMITER ||  chessBoard[index-i] === emptySpace)){
+            if(index-i >= firstOfRow && ( chessBoard[index-i].charCodeAt() > COLORDELIMITER ||  chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
                 if( chessBoard[index-i] !== emptySpace){
@@ -624,7 +626,7 @@ function addClass(previousClass, newClass) {
             }
         }
         for(let i=1;i<8;i++){
-            if(index+i < firstOfRow+8 && ( chessBoard[index+i]-0 > 91 ||  chessBoard[index+i] === emptySpace)){
+            if(index+i < firstOfRow+8 && ( chessBoard[index+i].charCodeAt() > 91 ||  chessBoard[index+i] === emptySpace)){
                 moves.push(index);
                 moves.push(i);
                 if( chessBoard[index+i] !== emptySpace){
@@ -635,7 +637,7 @@ function addClass(previousClass, newClass) {
             }
         }
         for(let i=8;i<57;i=i+8){
-            if(index+i <= 63 && ( chessBoard[index+i]-0 > 91 ||  chessBoard[index+i] === emptySpace)){
+            if(index+i <= 63 && ( chessBoard[index+i].charCodeAt() > 91 ||  chessBoard[index+i] === emptySpace)){
                 moves.push(index);
                 moves.push(i);
                 if( chessBoard[index+i] !== emptySpace){
@@ -647,7 +649,7 @@ function addClass(previousClass, newClass) {
         }
         for(let i=8;i<57;i=i+8){
         //add or subtract 8 to go up or down
-            if(index-i >= 0 && ( chessBoard[index-i]-0 > 91 ||  chessBoard[index-i] === emptySpace)){
+            if(index-i >= 0 && ( chessBoard[index-i].charCodeAt() > 91 ||  chessBoard[index-i] === emptySpace)){
                 moves.push(index);
                 moves.push(-i);
                 if( chessBoard[index-i] !== emptySpace){
