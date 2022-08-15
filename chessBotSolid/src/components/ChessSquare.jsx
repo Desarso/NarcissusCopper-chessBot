@@ -161,6 +161,14 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
        
     
       }
+    
+    function shouldBeDraggable(){
+        if(activeItem() === null || activeItem().getAttribute('index')-0 === index){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
     const Draggable = ({id, index, className}) => {
         const droppable = createDroppable(id);
@@ -169,10 +177,11 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
         // console.log(index);
         onDragEnd(({draggable}) => {
 
-            //active === draggable;
-            //hovered === box;
-            //
-        
+           
+        //here I process what happends to the hovered element.
+        if(litUpBoxes()[hoveredElement()] === 'circle'){
+
+
             if(index === hoveredElement() && activeItem() != null){
              
                 //get the piece class
@@ -183,8 +192,8 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 let newPieceClass = pieceClass();
                 
                 //set the last move
-                lastMove = [activeItem().getAttribute('index')-0, hoveredElement()-activeItem().getAttribute('index')];
-                setPreviousMove(lastMove);
+                //check that I did not move to the same spot
+               
             
            
                 //set newChessboard state
@@ -194,7 +203,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 console.log(CurrentIndex);
                 console.log(chessBoard()[CurrentIndex]);
                 let newPieceClasses = pieceClass();
-                //so when going forward current + 8 = new; 8 = new-current;
+
                 if(chessBoard()[CurrentIndex] === whitePawn || chessBoard()[CurrentIndex] === blackPawn){
                     console.log("piece is a pawn");
                     if(NewIndex-CurrentIndex != 8 || NewIndex-CurrentIndex != -8){
@@ -220,6 +229,8 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
 
                 if(activeItem().getAttribute('index')-0 != hoveredElement()){
                     newChessBoard[activeItem().getAttribute('index')-0] = '-';
+                    lastMove = [activeItem().getAttribute('index')-0, hoveredElement()-activeItem().getAttribute('index')];
+                    setPreviousMove(lastMove);
                 }
 
                 if(chessBoard()[NewIndex] === whiteKing || chessBoard()[NewIndex] === blackKing){
@@ -276,6 +287,9 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 newPieceClass[activeItem().getAttribute('index')] = '-';
                 setPieceClass(newPieceClass);
             }
+        }
+
+    
 
 
 
@@ -287,6 +301,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                         '-','-','-','-','-','-','-','-',
                         '-','-','-','-','-','-','-','-',
                         '-','-','-','-','-','-','-','-']);
+        setActiveItem(null);
            
         });
     
@@ -299,7 +314,6 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 setActiveItem(draggable.node);
                 console.log("Previous:",previousMove());
                 findPieceMoves(index);
-               
            }
            
           
@@ -327,6 +341,8 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 return returnClass;
             }
         }
+        
+
         return(
             <div
                 class={`${className} ${activeClass()}` }
@@ -334,7 +350,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
                 text = {text}
                 use:droppable
                 >
-                    <section 
+                    <section
                     use:draggable
                     class = {`${pieceClass()[index]}`}
                     index = {index}
