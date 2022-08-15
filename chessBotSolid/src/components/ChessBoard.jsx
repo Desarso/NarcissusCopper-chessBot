@@ -1,5 +1,6 @@
 import { createSignal, createEffect } from "solid-js";
 import ChessSquare from "./ChessSquare";
+import { NewDragNDrop } from "./NewDragNDrop";
 import {
     DragDropProvider,
     DragDropSensors,
@@ -142,9 +143,11 @@ let className;
                 />
             )}
             </For>
+          
             </DragDropSensors>
         </DragDropProvider>
         </div>
+        {/* <NewDragNDrop/> */}
     </div>
      
   )

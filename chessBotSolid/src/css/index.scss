@@ -60,6 +60,7 @@ body{
 }
 
 section{
+    touch-action: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -199,4 +200,19 @@ section{
 
 .active{
     background-color: red !important;
+}
+
+
+.draggable, .droppable{
+    background-color: blue;
+    color: white;
+    padding: 10px;
+    border-radius: 20%;
+    margin: 10%;
+    float: left;
+}
+
+
+.draggable123{
+    touch-action: none;
 }

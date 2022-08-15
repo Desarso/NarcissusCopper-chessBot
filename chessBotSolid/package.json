@@ -6,8 +6,8 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview", 
-    "cout" : "node sayHello.js"
+    "serve": "vite preview",
+    "cout": "node sayHello.js"
   },
   "license": "MIT",
   "devDependencies": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@thisbeyond/solid-dnd": "^0.6.1",
+    "interactjs": "^1.10.17",
     "jquery": "^3.6.0",
     "jquery-ui": "^1.13.2",
     "solid-js": "^1.4.7"
