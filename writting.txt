@@ -17,3 +17,13 @@ Top-Right corner: (98,98);
 Bottom-Left corner: (97,97);
 Bottom-Right corner: (96,96);
 
+
+
+Design ideas for UI, customizable board colors, 
+the board color should be random everytime the player goes inside
+there should be a button for resetting pieces to normal
+need to have a system for the pawn to turn into a queen once it reaches the 
+end of the board.
+Once most of that is done then the I need to finish up the AI,
+and add multiplayer to the chessBot.
+

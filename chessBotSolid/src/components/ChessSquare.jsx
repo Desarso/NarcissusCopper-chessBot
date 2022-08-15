@@ -98,6 +98,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
         let moves = [];
     
           if(chessBoard()[index] === blackRook || chessBoard()[index] === whiteRook || chessBoard()[index] === 'T' || chessBoard()[index] === 't'){
+            // console.log("finding rook moves",index);
             let rookMoves = findRockMoves(chessBoard(), index);
             if(rookMoves != undefined)
               if(rookMoves.length>0)
@@ -206,20 +207,20 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
 
                 if(chessBoard()[CurrentIndex] === whitePawn || chessBoard()[CurrentIndex] === blackPawn){
                     console.log("piece is a pawn");
-                    if(NewIndex-CurrentIndex != 8 || NewIndex-CurrentIndex != -8){
+                    if((NewIndex-CurrentIndex != 8 || NewIndex-CurrentIndex != -8)&& newChessBoard[NewIndex] === emptySpace){
                         if(chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 7){
                             newChessBoard[CurrentIndex+left] = '-';
                             newPieceClasses[CurrentIndex+left] = '-';
                         }
-                        if(chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 9){
+                        if((chessBoard()[CurrentIndex] === blackPawn && NewIndex-CurrentIndex === 9)&& newChessBoard[NewIndex] === emptySpace ){
                             newChessBoard[CurrentIndex+right] = '-';
                             newPieceClasses[CurrentIndex+right] = '-';
                         }
-                        if(chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -7){
+                        if((chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -7) && newChessBoard[NewIndex] === emptySpace){
                             newChessBoard[CurrentIndex+right] = '-';
                             newPieceClasses[CurrentIndex+right] = '-';
                         }   
-                        if(chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -9){
+                        if((chessBoard()[CurrentIndex] === whitePawn && NewIndex-CurrentIndex === -9) && newChessBoard[NewIndex] === emptySpace){
                             newChessBoard[CurrentIndex+left] = '-';
                             newPieceClasses[CurrentIndex+left] = '-';
 
@@ -313,6 +314,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
            if(index === draggable.node.getAttribute('index')-0){
                 setActiveItem(draggable.node);
                 console.log("Previous:",previousMove());
+                displayBoard(chessBoard());
                 findPieceMoves(index);
            }
            
@@ -638,7 +640,8 @@ function addClass(previousClass, newClass) {
         }
         for(let i=8;i<57;i=i+8){
             if(index+i <= 63 && ( chessBoard[index+i].charCodeAt() > 91 ||  chessBoard[index+i] === emptySpace)){
-                moves.push(index);
+                console.log(index)
+                moves.push(index)+1;
                 moves.push(i);
                 if( chessBoard[index+i] !== emptySpace){
                     break;
@@ -659,7 +662,7 @@ function addClass(previousClass, newClass) {
                 break;
             }
         }
-   
+        console.log("moves in", moves);
     }
     if(moves.length>0){
       return moves;
@@ -674,7 +677,7 @@ function addClass(previousClass, newClass) {
     //when they can castle that seems like the easiest choice, that would not take up any more data, and would allow for the castlingrights to be stored in the
     //board array, so rook right now is represented by R and r, but maybe when they can castle they can be T and t for tower. So, at the begging state,
     //they start out as T, and t but when they move they turn to R and r and also the king will turn it when moving. 
-  
+ 
   };
   
   //bishops can move and eat now
