@@ -1159,6 +1159,7 @@ function addClass(previousClass, newClass) {
   let moves = [];
   
   let firstOfRow = firstOfRowFunc(index);
+  console.log("first of row",firstOfRow);
   
   
   //first we check if castling is possible.
@@ -1203,37 +1204,38 @@ if(chessBoard[index] == whiteKing){
     if( chessBoard[index] === blackKing){
     // cout << "made it";
     // cout <<  chessBoard[index+7].charCodeAt();
-    if((index+left >= firstOfRow )&& (( chessBoard[index+left])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+left] === emptySpace){
+    if((index+left >= firstOfRow )&& (( chessBoard[index+left].charCodeAt() < COLORDELIMITER ||  chessBoard[index+left] === emptySpace))){
+
                 moves.push(index);
                 moves.push(left);
     }
-    if((index+right < firstOfRow+ROWZISE )&& (( chessBoard[index+right])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+right] === emptySpace){
+    if((index+right < firstOfRow+ROWZISE )&& (( chessBoard[index+right].charCodeAt() < COLORDELIMITER ||  chessBoard[index+right] === emptySpace))){
                 moves.push(index);
                 moves.push(right);
     }
-    if((index+spaceDown <= MAXBOARDINDEX )&& (( chessBoard[index+spaceDown])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+spaceDown] === emptySpace){
+    if((index+spaceDown <= MAXBOARDINDEX )&& (( chessBoard[index+spaceDown].charCodeAt() < COLORDELIMITER ||  chessBoard[index+spaceDown] === emptySpace))){
                 moves.push(index);
                 moves.push(spaceDown);
     }
-    if((index+spaceUp >= 0 ) && (( chessBoard[index+spaceUp])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+spaceUp] === emptySpace){
+    if((index+spaceUp >= 0 ) && (( chessBoard[index+spaceUp].charCodeAt() < COLORDELIMITER ||  chessBoard[index+spaceUp] === emptySpace))){
                 moves.push(index);
                 moves.push(spaceUp);
     }
   
   
-    if((index+rightDown <= MAXBOARDINDEX  && (index%ROWZISE !== RIGHTCOLUMN && index < MAXBOARDINDEX ))&&(( chessBoard[index+rightDown])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+rightDown] === emptySpace){
+    if((index+rightDown <= MAXBOARDINDEX  && (index%ROWZISE !== RIGHTCOLUMN && index < MAXBOARDINDEX ))&&(( chessBoard[index+rightDown].charCodeAt() < COLORDELIMITER ||  chessBoard[index+rightDown] === emptySpace))){
         moves.push(index);
         moves.push(rightDown);
     }
-    if((index+leftUp <= MAXBOARDINDEX && (index%ROWZISE !== LEFTCOLUMN && index >= ONEROWFROMTOP  ))&&(( chessBoard[index+leftUp])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+leftUp] === emptySpace){
+    if((index+leftUp <= MAXBOARDINDEX && (index%ROWZISE !== LEFTCOLUMN && index >= ONEROWFROMTOP  ))&&(( chessBoard[index+leftUp].charCodeAt() < COLORDELIMITER ||  chessBoard[index+leftUp] === emptySpace))){
         moves.push(index);
         moves.push(leftUp);
     }
-    if((index+leftDown <= MAXBOARDINDEX  && (index%ROWZISE !== LEFTCOLUMN && index < MAXBOARDINDEX )) && (( chessBoard[index+leftDown])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+leftDown] === emptySpace){
+    if((index+leftDown <= MAXBOARDINDEX  && (index%ROWZISE !== LEFTCOLUMN && index < MAXBOARDINDEX )) && (( chessBoard[index+leftDown].charCodeAt() < COLORDELIMITER ||  chessBoard[index+leftDown] === emptySpace))){
         moves.push(index);
         moves.push(leftDown);
     }
-    if((index+rightUp <= MAXBOARDINDEX &&  (index%ROWZISE !== RIGHTCOLUMN && index >= ONEROWFROMTOP  )) && (( chessBoard[index+rightUp])).charCodeAt() < COLORDELIMITER ||  chessBoard[index+rightUp] === emptySpace){
+    if((index+rightUp <= MAXBOARDINDEX &&  (index%ROWZISE !== RIGHTCOLUMN && index >= ONEROWFROMTOP  )) && (( chessBoard[index+rightUp].charCodeAt() < COLORDELIMITER ||  chessBoard[index+rightUp] === emptySpace))){
         moves.push(index);
         moves.push(rightUp);
     }
@@ -1242,36 +1244,36 @@ if(chessBoard[index] == whiteKing){
     if( chessBoard[index] === whiteKing){
     // cout << "made it";
     // cout <<  chessBoard[index+7].charCodeAt();
-    if((index+left >= firstOfRow )&& (( chessBoard[index+left])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+left] === emptySpace){
+    if((index+left >= firstOfRow )&& (( chessBoard[index+left].charCodeAt() > COLORDELIMITER ||  chessBoard[index+left] === emptySpace))){
                 moves.push(index);
                 moves.push(left);
     }
-    if((index+right < firstOfRow+ROWZISE )&& (( chessBoard[index+right])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+right] === emptySpace){
+    if((index+right < firstOfRow+ROWZISE )&& (( chessBoard[index+right].charCodeAt() > COLORDELIMITER ||  chessBoard[index+right] === emptySpace))){
                 moves.push(index);
                 moves.push(right);
     }
-    if((index+spaceDown <= MAXBOARDINDEX )&& (( chessBoard[index+spaceDown])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+spaceDown] === emptySpace){
+    if((index+spaceDown <= MAXBOARDINDEX )&& (( chessBoard[index+spaceDown].charCodeAt() > COLORDELIMITER ||  chessBoard[index+spaceDown] === emptySpace))){
                 moves.push(index);
                 moves.push(spaceDown);
     }
-    if((index+spaceUp >= 0 ) && (( chessBoard[index+spaceUp])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+spaceUp] === emptySpace){
+    if((index+spaceUp >= 0 ) && (( chessBoard[index+spaceUp].charCodeAt() > COLORDELIMITER ||  chessBoard[index+spaceUp] === emptySpace))){
                 moves.push(index);
                 moves.push(spaceUp);
     }
   
-    if((index+rightDown <= MAXBOARDINDEX  && (index%ROWZISE !== RIGHTCOLUMN && index < MAXBOARDINDEX ))&&(( chessBoard[index+rightDown])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+rightDown] === emptySpace){
+    if((index+rightDown <= MAXBOARDINDEX  && (index%ROWZISE !== RIGHTCOLUMN && index < MAXBOARDINDEX ))&&(( chessBoard[index+rightDown].charCodeAt() > COLORDELIMITER ||  chessBoard[index+rightDown] === emptySpace))){
         moves.push(index);
         moves.push(rightDown);
     }
-    if((index+leftUp <= MAXBOARDINDEX && (index%ROWZISE !== LEFTCOLUMN && index > ONEROWFROMTOP  ))&&(( chessBoard[index+leftUp])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+leftUp] === emptySpace){
+    if((index+leftUp <= MAXBOARDINDEX && (index%ROWZISE !== LEFTCOLUMN && index > ONEROWFROMTOP  ))&&(( chessBoard[index+leftUp].charCodeAt() > COLORDELIMITER ||  chessBoard[index+leftUp] === emptySpace))){
         moves.push(index);
         moves.push(leftUp);
     }
-    if((index+leftDown <= MAXBOARDINDEX  && (index%ROWZISE !== LEFTCOLUMN && index < MAXBOARDINDEX )) && (( chessBoard[index+leftDown])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+leftDown] === emptySpace){
+    if((index+leftDown <= MAXBOARDINDEX  && (index%ROWZISE !== LEFTCOLUMN && index < MAXBOARDINDEX )) && (( chessBoard[index+leftDown].charCodeAt() > COLORDELIMITER ||  chessBoard[index+leftDown] === emptySpace))){
         moves.push(index);
         moves.push(leftDown);
     }
-    if((index+rightUp <= MAXBOARDINDEX &&  (index%ROWZISE !== RIGHTCOLUMN && index > ONEROWFROMTOP  )) && (( chessBoard[index+rightUp])).charCodeAt() > COLORDELIMITER ||  chessBoard[index+rightUp] === emptySpace){
+    if((index+rightUp <= MAXBOARDINDEX &&  (index%ROWZISE !== RIGHTCOLUMN && index > ONEROWFROMTOP  )) && (( chessBoard[index+rightUp].charCodeAt() > COLORDELIMITER ||  chessBoard[index+rightUp] === emptySpace))){
         moves.push(index);
         moves.push(rightUp);
     }
