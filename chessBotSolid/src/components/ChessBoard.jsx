@@ -155,25 +155,6 @@ let className;
 
 export default ChessBoard
 
-function addClass(previousClass, newClass) {
-    // console.log(object.className)
-    if(twoStringMatch(newClass, previousClass).length < newClass.length){
-      let returnString = `${previousClass} ${newClass}`;
-      return returnString;
-    }else{
-      return previousClass;
-    }
-    
-  }
-  
-  function removeClass(previousClass, oldClass) {
-    if(twoStringMatch(oldClass, previousClass).length === oldClass.length){
-      let newClass = previousClass.replace(oldClass, "").trim();
-      return newClass;
-    }else{
-      return previousClass;
-    }
-  }
   
   function twoStringMatch(X, Y){
     //create algorth that find the commons substring between two 
