@@ -6,7 +6,7 @@ import {
     createDroppable,
     DragOverlay
   } from "@thisbeyond/solid-dnd";
-import { get } from "jquery";
+import { get, type } from "jquery";
   import { createSignal } from "solid-js";
 
 const  emptySpace = '-';
@@ -125,11 +125,20 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
           if(chessBoard()[index] === blackPawn || chessBoard()[index] === whitePawn){
               moves.push(...findPawnMoves(chessBoard(), index, moves));
           }
-        moves = moves.filter((move) => {
-           if(move != undefined){
-            return move;
-         };
-        });
+
+          let newMoves =[];
+        for(let i=0;i<moves.length;i++){
+            if(moves[i] != undefined){
+                newMoves.push(moves[i])
+            }
+        }
+        moves = newMoves;
+        // moves = moves.filter((move) => {
+        //     console.log(move);
+        //    if(typeof move === 'number'){
+        //     return move-0;
+        //  };
+        // });
     
     // console.log(chessBoard()[index]);
     console.log("moves", moves);
@@ -163,13 +172,7 @@ function ChessSquare({text, className, chessBoard, index, hoveredElement,
     
       }
     
-    function shouldBeDraggable(){
-        if(activeItem() === null || activeItem().getAttribute('index')-0 === index){
-            return true;
-        }else{
-            return false;
-        }
-    }
+
 
     const Draggable = ({id, index, className}) => {
         const droppable = createDroppable(id);
