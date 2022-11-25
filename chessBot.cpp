@@ -103,11 +103,6 @@ int main(){
                                 'b'
                             };
                             
-    //how to find all possible moves;
-    //for a rock, we must check the spacest adjecent to it, and add it to possible moves
-    //a rock can move its it's row in the array, and also in steps of 8
-    //so it rock is at position two, we check 0,1,2,3,4,5,6,7, and 2+8=10; 10+8=18; 18+8=26; 26+8=34; 34+8=42; 42+8=50; 50+8=58; 
-    //so the pattern is, we stat at it's position, then we left, right, up, down, and figure out where the nearest pieces are in each direction;
 
     int previousMove [2] = {8,16};
     vector<int> moves ={};
