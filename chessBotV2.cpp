@@ -89,11 +89,12 @@ public:
         this->instructions.push_back(vector2D(secondStartIndex, secondMoveIndex));
     }
 
-    void display(){
+    void display()
+    {
         cout << "[";
         for (int i = 0; i < this->instructions.size(); i++)
         {
-            cout << "(" << this->instructions[i].y  % 8  << ", " << this->instructions[i].y /8 << ")";
+            cout << "(" << this->instructions[i].y % 8 << ", " << this->instructions[i].y / 8 << ")";
         }
         cout << "]";
     }
@@ -143,13 +144,14 @@ public:
         position.display();
     };
 
-    void findMoves(vector<Piece> board)
+    void findMoves(vector<Piece> board)     
     {
-
+        vector<Move> rookMoves;
         switch (this->type)
         {
         case whiteRook:
-            findRookMoves(board);
+            rookMoves = findRookMoves(board);
+            this->possibleMoves.insert(this->possibleMoves.end(), rookMoves.begin(), rookMoves.end());
             break;
         case whiteKnight:
             findKnightMoves(board);
@@ -167,7 +169,8 @@ public:
             findPawnMoves(board);
             break;
         case blackRook:
-            findRookMoves(board);
+            rookMoves = findRookMoves(board);
+            this->possibleMoves.insert(this->possibleMoves.end(), rookMoves.begin(), rookMoves.end());
             break;
         case blackKnight:
             findKnightMoves(board);
@@ -203,8 +206,9 @@ public:
         }
     }
 
-    void findRookMoves(vector<Piece> board)
+    vector<Move> findRookMoves(vector<Piece> board)
     {
+        vector<Move> moves;
         int x = this->position.x;
         int y = this->position.y;
 
@@ -214,7 +218,7 @@ public:
                 break;
             if ((i != x) && (board[getIndexFromPosition(i, y)].type == emptySpace || board[getIndexFromPosition(i, y)].color != this->color))
             {
-                this->possibleMoves.push_back(Move(vector2D(i, y), this->position));
+                moves.push_back(Move(vector2D(i, y), this->position));
                 if (board[i].color != this->color && board[i].color != 'e')
                 {
                     break;
@@ -227,7 +231,7 @@ public:
                 break;
             if ((i != x) && (board[getIndexFromPosition(i, y)].type == emptySpace || board[getIndexFromPosition(i, y)].color != this->color))
             {
-                this->possibleMoves.push_back(Move(vector2D(i, y), this->position));
+                moves.push_back(Move(vector2D(i, y), this->position));
                 if (board[i].color != this->color && board[i].color != 'e')
                 {
                     break;
@@ -242,7 +246,7 @@ public:
                 break;
             if ((i != y) && (board[getIndexFromPosition(x, i)].type == emptySpace || board[getIndexFromPosition(x, i)].color != this->color))
             {
-                this->possibleMoves.push_back(Move(vector2D(x, i), this->position));
+                moves.push_back(Move(vector2D(x, i), this->position));
                 if (board[i].color != this->color && board[i].color != 'e')
                 {
                     break;
@@ -257,17 +261,19 @@ public:
                 break;
             if ((i != y) && (board[getIndexFromPosition(x, i)].type == emptySpace || board[getIndexFromPosition(x, i)].color != this->color))
             {
-                this->possibleMoves.push_back(Move(vector2D(x, i), this->position));
+                moves.push_back(Move(vector2D(x, i), this->position));
                 if (board[i].color != this->color && board[i].color != 'e')
                 {
                     break;
                 }
             }
         }
+        return moves;
     }
 
-    void findKnightMoves(vector<Piece> board)
+    vector<Move> findKnightMoves(vector<Piece> board)
     {
+        vector<Move> moves;
         int x = this->position.x;
         int y = this->position.y;
 
@@ -275,62 +281,64 @@ public:
         {
             if (board[getIndexFromPosition(x + 2, y + 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 2, y + 1), this->position));
+                moves.push_back(Move(vector2D(x + 2, y + 1), this->position));
             }
         }
         if (x + 2 < 8 && y - 1 >= 0 && (board[getIndexFromPosition(x + 2, y - 1)].color != this->color || board[getIndexFromPosition(x + 2, y - 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x + 2, y - 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 2, y - 1), this->position));
+                moves.push_back(Move(vector2D(x + 2, y - 1), this->position));
             }
         }
         if (x - 2 >= 0 && y + 1 < 8 && (board[getIndexFromPosition(x - 2, y + 1)].color != this->color || board[getIndexFromPosition(x - 2, y + 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x - 2, y + 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x - 2, y + 1), this->position));
+                moves.push_back(Move(vector2D(x - 2, y + 1), this->position));
             }
         }
         if (x - 2 >= 0 && y - 1 >= 0 && (board[getIndexFromPosition(x - 2, y - 1)].color != this->color || board[getIndexFromPosition(x - 2, y - 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x - 2, y - 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x - 2, y - 1), this->position));
+                moves.push_back(Move(vector2D(x - 2, y - 1), this->position));
             }
         }
         if (x + 1 < 8 && y + 2 < 8 && (board[getIndexFromPosition(x + 1, y + 2)].color != this->color || board[getIndexFromPosition(x + 1, y + 2)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x + 1, y + 2)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y + 2), this->position));
+                moves.push_back(Move(vector2D(x + 1, y + 2), this->position));
             }
         }
         if (x + 1 < 8 && y - 2 >= 0 && (board[getIndexFromPosition(x + 1, y - 2)].color != this->color || board[getIndexFromPosition(x + 1, y - 2)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x + 1, y - 2)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y - 2), this->position));
+                moves.push_back(Move(vector2D(x + 1, y - 2), this->position));
             }
         }
         if (x - 1 >= 0 && y + 2 < 8 && (board[getIndexFromPosition(x - 1, y + 2)].color != this->color || board[getIndexFromPosition(x - 1, y + 2)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x - 1, y + 2)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x - 1, y + 2), this->position));
+                moves.push_back(Move(vector2D(x - 1, y + 2), this->position));
             }
         }
         if (x - 1 >= 0 && y - 2 >= 0 && (board[getIndexFromPosition(x - 1, y - 2)].color != this->color || board[getIndexFromPosition(x - 1, y - 2)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x - 1, y - 2)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x - 1, y - 2), this->position));
+                moves.push_back(Move(vector2D(x - 1, y - 2), this->position));
             }
         }
+        return moves;
     }
 
-    void findBishopMoves(vector<Piece> board)
+    vector<Move> findBishopMoves(vector<Piece> board)
     {
+        vector<Move> moves;
         int x = this->position.x;
         int y = this->position.y;
 
@@ -340,7 +348,7 @@ public:
                 break;
             if (board[getIndexFromPosition(i, y + (i - x))].type == emptySpace || board[getIndexFromPosition(i, y + (i - x))].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(i, y + (i - x)), this->position));
+                moves.push_back(Move(vector2D(i, y + (i - x)), this->position));
             }
         }
         for (int i = x - 1; i >= 0; i--)
@@ -349,7 +357,7 @@ public:
                 break;
             if (board[getIndexFromPosition(i, y + (i - x))].type == emptySpace || board[getIndexFromPosition(i, y + (i - x))].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(i, y + (i - x)), this->position));
+                moves.push_back(Move(vector2D(i, y + (i - x)), this->position));
             }
         }
         for (int i = x + 1; i < 8; i++)
@@ -358,7 +366,7 @@ public:
                 break;
             if (board[getIndexFromPosition(i, y - (i - x))].type == emptySpace || board[getIndexFromPosition(i, y - (i - x))].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(i, y - (i - x)), this->position));
+                moves.push_back(Move(vector2D(i, y - (i - x)), this->position));
             }
         }
         for (int i = x - 1; i >= 0; i--)
@@ -367,13 +375,15 @@ public:
                 break;
             if (board[getIndexFromPosition(i, y - (i - x))].type == emptySpace || board[getIndexFromPosition(i, y - (i - x))].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(i, y - (i - x)), this->position));
+                moves.push_back(Move(vector2D(i, y - (i - x)), this->position));
             }
         }
+        return moves;
     }
 
-    void findKingMoves(vector<Piece> board)
+    vector<Move> findKingMoves(vector<Piece> board)
     {
+        vector<Move> moves;
         int x = this->position.x;
         int y = this->position.y;
 
@@ -381,68 +391,74 @@ public:
         {
             if (board[getIndexFromPosition(x + 1, y)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y),this->position));
+                moves.push_back(Move(vector2D(x + 1, y), this->position));
             }
         }
         if (x - 1 >= 0 && (board[getIndexFromPosition(x - 1, y)].color != this->color || board[getIndexFromPosition(x - 1, y)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x - 1, y)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x - 1, y),this->position ));
-           }
+                moves.push_back(Move(vector2D(x - 1, y), this->position));
+            }
         }
         if (y + 1 < 8 && (board[getIndexFromPosition(x, y + 1)].color != this->color || board[getIndexFromPosition(x, y + 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x, y + 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x, y + 1),this->position));
+                moves.push_back(Move(vector2D(x, y + 1), this->position));
             }
         }
         if (y - 1 >= 0 && (board[getIndexFromPosition(x, y - 1)].color != this->color || board[getIndexFromPosition(x, y - 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x, y - 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x, y - 1),this->position));
-           }
+                moves.push_back(Move(vector2D(x, y - 1), this->position));
+            }
         }
         if (x + 1 < 8 && y + 1 < 8 && (board[getIndexFromPosition(x + 1, y + 1)].color != this->color || board[getIndexFromPosition(x + 1, y + 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x + 1, y + 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y + 1),this->position));
+                moves.push_back(Move(vector2D(x + 1, y + 1), this->position));
             }
         }
         if (x + 1 < 8 && y - 1 >= 0 && (board[getIndexFromPosition(x + 1, y - 1)].color != this->color || board[getIndexFromPosition(x + 1, y - 1)].type == emptySpace))
         {
             if (board[getIndexFromPosition(x + 1, y - 1)].color != this->color)
             {
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y - 1),this->position));
+                moves.push_back(Move(vector2D(x + 1, y - 1), this->position));
             }
             if (x - 1 >= 0 && y + 1 < 8 && (board[getIndexFromPosition(x - 1, y + 1)].color != this->color || board[getIndexFromPosition(x - 1, y + 1)].type == emptySpace))
             {
                 if (board[getIndexFromPosition(x - 1, y + 1)].color != this->color)
                 {
-                    this->possibleMoves.push_back(Move(vector2D(x - 1, y + 1),this->position));
+                    moves.push_back(Move(vector2D(x - 1, y + 1), this->position));
                 }
             }
             if (x - 1 >= 0 && y - 1 >= 0 && (board[getIndexFromPosition(x - 1, y - 1)].color != this->color || board[getIndexFromPosition(x - 1, y - 1)].type == emptySpace))
             {
                 if (board[getIndexFromPosition(x - 1, y - 1)].color != this->color)
                 {
-                    this->possibleMoves.push_back(Move(vector2D(x - 1, y - 1),this->position));
+                    moves.push_back(Move(vector2D(x - 1, y - 1), this->position));
                 }
             }
         }
+        return moves;
     };
 
-    void findQueenMoves(vector<Piece> board)
+    vector<Move> findQueenMoves(vector<Piece> board)
     {
-        findRookMoves(board);
-        findBishopMoves(board);
+        vector<Move> moves;
+        vector<Move> rookMoves = findRookMoves(board);
+        vector<Move> bishopMoves = findBishopMoves(board);
+        moves.insert(moves.end(), rookMoves.begin(), rookMoves.end());
+        moves.insert(moves.end(), bishopMoves.begin(), bishopMoves.end());
+        return moves;
     };
 
-    void findPawnMoves(vector<Piece> board)
+    vector<Move> findPawnMoves(vector<Piece> board)
     {
+        vector<Move> moves;
         int x = this->position.x;
         int y = this->position.y;
         if (this->type == blackPawn && this->position.y > 1)
@@ -458,28 +474,29 @@ public:
         {
             if (y + 1 < 8 && board[getIndexFromPosition(x, y + 1)].type == emptySpace)
             {
-                this->possibleMoves.push_back(Move(vector2D(x, y + 1), this->position));
+                moves.push_back(Move(vector2D(x, y + 1), this->position));
             }
             if (y + 2 < 8 && board[getIndexFromPosition(x, y + 2)].type == emptySpace && board[getIndexFromPosition(x, y + 1)].type == emptySpace && this->hasMoved == false)
-                this->possibleMoves.push_back(Move(vector2D(x, y + 2), this->position));
+                moves.push_back(Move(vector2D(x, y + 2), this->position));
             if (x + 1 < 8 && y + 1 < 8 && board[getIndexFromPosition(x + 1, y + 1)].color == BLACK)
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y + 1), this->position));
+                moves.push_back(Move(vector2D(x + 1, y + 1), this->position));
             if (x - 1 >= 0 && y + 1 < 8 && board[getIndexFromPosition(x - 1, y + 1)].color == BLACK)
-                this->possibleMoves.push_back(Move(vector2D(x - 1, y + 1), this->position));
+                moves.push_back(Move(vector2D(x - 1, y + 1), this->position));
         }
         else
         {
             if (y - 1 >= 0 && board[getIndexFromPosition(x, y - 1)].type == emptySpace)
             {
-                this->possibleMoves.push_back(Move(vector2D(x, y - 1), this->position));
+                moves.push_back(Move(vector2D(x, y - 1), this->position));
             }
             if (y - 2 >= 0 && board[getIndexFromPosition(x, y - 2)].type == emptySpace && board[getIndexFromPosition(x, y - 1)].type == emptySpace && this->hasMoved == false)
-                this->possibleMoves.push_back(Move(vector2D(x, y - 2), this->position));
+                moves.push_back(Move(vector2D(x, y - 2), this->position));
             if (x + 1 < 8 && y - 1 >= 0 && board[getIndexFromPosition(x + 1, y - 1)].color == WHITE)
-                this->possibleMoves.push_back(Move(vector2D(x + 1, y - 1), this->position));
+                moves.push_back(Move(vector2D(x + 1, y - 1), this->position));
             if (x - 1 >= 0 && y - 1 >= 0 && board[getIndexFromPosition(x - 1, y - 1)].color == WHITE)
-                this->possibleMoves.push_back(Move(vector2D(x - 1, y - 1), this->position));
+                moves.push_back(Move(vector2D(x - 1, y - 1), this->position));
         }
+        return moves;
     };
 };
 
@@ -489,6 +506,8 @@ class Board
 public:
     vector<Piece> pieces;
     bool movesSearched = false;
+    bool inCheck = false;
+    char currentTurn = WHITE;
 
     Board()
     {
@@ -604,8 +623,47 @@ public:
 
     bool amIInCheck()
     {
-        return false;
+        if(this->currentTurn == WHITE){
+            //I need a function that gets the diagonal distance to other pieces
+            //first lets check for long range attacks, if I can move the king like a queen can I hit, any oposing
+            //color long range piece?
+            int KingIndex;
+            for(int i = 0; i < this->pieces.size(); i++){
+                if(this->pieces[i].type == whiteKing){
+                    KingIndex = i;
+                }
+            }
+            Piece king = this->pieces[KingIndex];
+            vector<Move> rookMoves = king.findRookMoves(this->pieces);
+            vector<Move> bishopMoves = king.findBishopMoves(this->pieces);
+
+            vector<int> attackIndexes;
+            for(int i =0; i < rookMoves.size(); i++){
+                if(this->pieces[rookMoves[i].instructions[0].y].type == blackRook || this->pieces[rookMoves[i].instructions[0].y].type == blackQueen){
+                    attackIndexes.push_back(rookMoves[i].instructions[0].y);
+                }
+                attackIndexes.push_back(rookMoves[i].instructions[0].y);
+            }
+
+            for(int i =0; i < bishopMoves.size(); i++){
+                if(this->pieces[bishopMoves[i].instructions[0].y].type == blackBishop || this->pieces[bishopMoves[i].instructions[0].y].type == blackQueen){
+                    attackIndexes.push_back(bishopMoves[i].instructions[0].y);
+                }
+                attackIndexes.push_back(bishopMoves[i].instructions[0].y);
+            }
+
+            
+           
+
+            //the moves get turned into instructions. Each move is an array of vectors, each y component of the vector 
+            //is an index of the final position of the piece, if any of those indexes is a long rage piece, then I am likely check, need to check
+            //bishops, rooks and quuens. 
+
+        }
+
+        
     }
+
 };
 
 int main()
@@ -634,7 +692,6 @@ int main()
     // setting a processing time limit, so that it can stop going down after a certain amount of depth.
     // this will result in a guess for the best move, and then the AI can take that move and execute it on the main board,
     // the program, also needs to clear memory for previous boards, so that when it doesn't need them anymore it can reuse that memory.
-
     // so I need to use pointers.
 
     vector<char> custom = {
