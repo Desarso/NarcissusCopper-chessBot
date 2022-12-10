@@ -1,16 +1,44 @@
 import { nextHydrateContext } from "solid-js/types/render/hydration";
+import { unzipSync } from "zlib";
+
+export class V2D{
+  x: number;
+  y: number;
+  constructor(x: number, y: number){
+    this.x = x;
+    this.y = y;
+  }
+}
 
 export class Move {
-  start: string;
+  start: string ;
   end: string;
   boardStartIndex: number;
   boardEndIndex: number;
 
-  constructor(start: string, end: string) {
-    this.start = start;
-    this.end = end;
-    this.boardStartIndex = this.convertToBoardIndex(this.start);
-    this.boardEndIndex = this.convertToBoardIndex(this.end);
+  constructor(start2D?: V2D,end2D?: V2D, start?: string, end?: string) {
+    if(start)this.start = start;
+    if(end) this.end = end;
+    if(start && end){
+      this.boardStartIndex = this.convertToBoardIndex(start);
+      this.boardEndIndex = this.convertToBoardIndex(end);
+      return;
+    }
+    if(start2D && end2D){
+      this.boardStartIndex = start2D.x + start2D.y * 8;
+      this.boardEndIndex = end2D.x + end2D.y * 8;
+      this.start = this.convertToBoardPosition(this.boardStartIndex);
+      this.end = this.convertToBoardPosition(this.boardEndIndex);
+    }else{
+      this.start = "a8";
+      this.end = "a8";
+      this.boardStartIndex = 0;
+      this.boardEndIndex = 0;
+    }
+  }
+
+  public toString(): string {
+    return this.start + "-" + this.end;
   }
 
   private convertToBoardIndex(position: string): number {
@@ -26,6 +54,18 @@ export class Move {
     let numberIndex = 8 - parseInt(number);
 
     return letterIndex + numberIndex * 8;
+  }
+
+  private convertToBoardPosition(index: number): string {
+    //converts a board index to a string
+    if (index < 0 || index > 63) {
+      throw new Error("Invalid index");
+    }
+    let letterIndex = index % 8;
+    let numberIndex = Math.floor(index / 8);
+    let letter = String.fromCharCode(letterIndex + 97);
+    let number = 8 - numberIndex;
+    return letter + number;
   }
 
   private testConverToBoardIndex() {
@@ -64,17 +104,21 @@ export class Move {
 
 export class Position{
   position: string;
+  pos: V2D;
   boardIndex : number;
   constructor(position?: string, boardIndex?: number){
     if(position){
       this.position = position;
       this.boardIndex = this.convertToBoardIndex(position);
+      this.pos = new V2D(boardIndex % 8, Math.floor(boardIndex / 8));
     }else if(boardIndex){
       this.boardIndex = boardIndex;
       this.position = this.convertToBoardPosition(boardIndex);
+      this.pos = new V2D(boardIndex % 8, Math.floor(boardIndex / 8));
     }else{
       this.position = "a8";
       this.boardIndex = 0;
+      this.pos = new V2D(0,0);
     }
   }
   moveTo(position: string){
@@ -254,17 +298,19 @@ export class Board {
   Pieces: Piece[];
   currentTurnColor: string = "white";
   fen: string = "";
+  board : string[] = [];
   halfMoveClock: number = 0;
   fullMoveNumber: number = 1;
   castlingRights: string = "KQkq";
   enPassantTargetSquare: string = "-";
   legalMoves: Move[] = [];
-  inCheck = [false, false];
+  inCheck = false;
+  checkMate = false;
 
   //constructor creates a board with all the pieces in their starting positions
   constructor(board?: string[], fen?: string) {
     if(!board){
-        board = [
+      board = [
             "r",
             "n",
             "b",
@@ -337,9 +383,8 @@ export class Board {
     if (fen != undefined && fen.match(fenregex)) {
       let parts = fen.split(" ");
       board = this.fenToBoard(fen);
-      console.log(board);
       this.castlingRights = parts[2];
-      this.enPassantTargetSquare = fen.split(" ")[3];
+      this.enPassantTargetSquare = parts[3];
       parts[1] === "w" ? this.currentTurnColor = "white" : this.currentTurnColor = "black";
       this.halfMoveClock = parseInt(parts[4]);
       this.fullMoveNumber = parseInt(parts[5]);
@@ -354,10 +399,10 @@ export class Board {
         let color = piece == piece.toUpperCase() ? "white" : "black";
         let type = piece.toLowerCase();
         let position = this.convertToPosition(i);
-        console.log(fen);
         this.Pieces.push(new Piece(position, color, type));
       }
     }
+    this.board = board;
     fen != undefined ? (this.fen = fen) : (this.fen = this.boardToFen());
   }
 
@@ -380,7 +425,6 @@ export class Board {
     for (let i = 0; i < fenBoardArray.length; i++) {
       let row = fenBoardArray[i];
       let rowArray = row.split("");
-      console.log(rowArray, i);
       for (let j = 0; j < rowArray.length; j++) {
         let piece = rowArray[j];
         if (piece.match(/[1-8]/)) {
@@ -449,7 +493,7 @@ export class Board {
 
   private movePiece(start: string, end: string): void {
 
-    let newMove = new Move(start, end);
+    let newMove = new Move(undefined, undefined,start, end);
     newMove.boardEndIndex;
     //so move first gets the current piece index
     let pieceIndex = this.getPieceIndex(start);
@@ -465,12 +509,12 @@ export class Board {
         enPassant = this.convertToPosition(newMove.boardEndIndex - 8);
       }
       this.enPassantTargetSquare = enPassant;
+      
     }
     //then it sets the piece's position to  end position
     piece.move(end);
     this.currentTurnColor = this.currentTurnColor === "white" ? "black" : "white";
   
-
     //then it sets the fen to the new fen
     this.fen = this.boardToFen();
   }
@@ -485,6 +529,17 @@ export class Board {
       }
     }
     return index;
+  }
+
+  private getPieceAtPosition(position: string): any {
+    let piece = "";
+    for (let i = 0; i < this.Pieces.length; i++) {
+      let piece = this.Pieces[i];
+      if (piece.getPosition() == position) {
+        return piece;
+      }
+    }
+    return piece;
   }
 
   private testConvertToPosition() {
@@ -702,6 +757,7 @@ export class Board {
       board.boardToFen() ==
         "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
     );
+
     // console.log(board.boardToFen());
     // console.log("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
     for (let i = 0; i < tests.length; i++) {
@@ -784,7 +840,9 @@ export class Board {
       let currentPiece = board.Pieces[i];
       //for each move I must check first if I am in check from board.
       // I can keep track of this since I start out of check
-      //then whenever I move 
+      //then whenever I move I check if I am putting my opponent in check.
+      // I am then I set the board to in check.
+      //also if I input a fen string or board state from the board, I need to check if I am in check.
       switch(currentPiece.type) {
         case "p":
           moves.push(this.findPawnMoves(currentPiece));
@@ -809,6 +867,29 @@ export class Board {
     return moves;
   }
 
+  private testFindLegalMoves() {
+    let board = new Board();
+    let moves = this.findLegalMoves(board);
+    let tests = [];
+    tests.push(moves.length == 20);
+    for(let i = 0; i < tests.length; i++) {
+      if(!tests[i]) {
+        throw new Error("Find legal moves failed, test " + (i+1) + " failed");
+      }
+    }
+  }
+
+  private Piece(vector : V2D){
+    let index = vector.x + vector.y * 8;
+    for(let i = 0; i < this.Pieces.length; i++) {
+      if(this.Pieces[i].getIndex() == index) {
+        return this.Pieces[i];
+      }
+    }
+    return " "
+  }
+
+
   //come back to this once we can generate all valid moves and put them in an array.2
   // private generateRandomMoves(board : string []): Move {
   //   //it's time for me to create the functions that find board moves.
@@ -818,6 +899,171 @@ export class Board {
   //   return moves[randomIndex];
   // }
 
+  private findPawnMoves(piece : Piece) : Move[] {
+    let moves : Move[]= [];
+    let index = piece.getIndex();
+    let pos = new V2D(index % 8, Math.floor(index / 8));
+    let color = piece.color;
+    //let the write the syntax that I want
+    //the syntax I want is not gonna fly but I can still use a 2d vector.
+    //here's the thing for each move I need to check if the move puts me in check.
+    // so I need to actually create a new board, that is created using the fen string of the current board.
+    //then I execute, the move, and check if I am currently in check, so the am I in check function takes in a color,
+    //and a board and returns a boolean. 
+    // I can check all the moves at the end before returning them, but I can do that, from the main function.
+    // each move will create a new board, but hopefully it's fast enough, for just one board depth. 
+    // thing is I should push the moves, into their respective piece, so that on hoover, they have access to their own moves.
+    //moves are generated on board class but stored on piece class, they are recalculated every time the board is updated.
+
+    if(color == "white") {
+      //check if there is a piece in front remember white is on the bottom.\\
+      let moveForward = new V2D(pos.x, pos.y-1);
+      if(this.Piece(moveForward) == " ") {
+        moves.push(new Move(pos, moveForward));
+      }
+      //check if I can move two spaces forward
+      let moveForward2 = new V2D(pos.x, pos.y-2);
+      if(this.Piece(moveForward2) == " " && this.Piece(moveForward) == " " && pos.y == 6) {
+        moves.push(new Move(pos, moveForward2));
+      }
+
+      //check if there is a piece to the left
+      let moveLeft = new V2D(pos.x-1, pos.y-1);
+      if(this.Piece(moveLeft) != " " && this.Piece(moveLeft)?.color == "black") {
+        moves.push(new Move(pos, moveLeft));
+      }
+      //check if there is a piece to the right
+      let moveRight = new V2D(pos.x+1, pos.y-1);
+      if(this.Piece(moveRight) != " " && this.Piece(moveRight)?.color == "black") {
+        moves.push(new Move(pos, moveRight));
+      }
+    }
+    else {
+      //check if there is a piece in front remember white is on the bottom.\\
+      let moveForward = new V2D(pos.x, pos.y+1);
+      if(this.Piece(moveForward) == " ") {
+        moves.push(new Move(pos, moveForward));
+      }
+      //check if I can move two spaces forward
+      let moveForward2 = new V2D(pos.x, pos.y+2);
+      if(this.Piece(moveForward2) == " " && this.Piece(moveForward) == " " && pos.y == 1) {
+        moves.push(new Move(pos, moveForward2));
+      }
+
+      //check if there is a piece to the left
+      let moveLeft = new V2D(pos.x-1, pos.y+1);
+      if(this.Piece(moveLeft) != " " && this.Piece(moveLeft)?.color == "white") {
+        moves.push(new Move(pos, moveLeft));
+      }
+      //check if there is a piece to the right
+      let moveRight = new V2D(pos.x+1, pos.y+1);
+      if(this.Piece(moveRight) != " " && this.Piece(moveRight)?.color == "white") {
+        moves.push(new Move(pos, moveRight));
+      }
+    }
+
+    return moves;
+
+}
+
+  private testFindPawnMoves() {
+    let board = new Board();
+    let moves = this.findPawnMoves(board.Pieces[8]);
+    let tests = [];
+    tests.push(moves.length == 2);
+    // console.log(moves[0].toString());
+    // console.log(moves[1].toString())
+    tests.push(moves[0].toString() == "a7-a6");
+    tests.push(moves[1].toString() == "a7-a5");
+    for(let i = 0; i < tests.length; i++) {
+      if(tests[i] == false) {
+        console.log("testFindPawnMoves failed");
+        return;
+      }
+    }
+
+    tests = [];
+    moves = this.findPawnMoves(board.Pieces[16]);
+      // console.log(moves[0].toString());
+      // console.log(moves[1].toString())
+    tests.push(moves.length == 2);
+    tests.push(moves[0].toString() == "a2-a3");
+    tests.push(moves[1].toString() == "a2-a4");
+    for(let i = 0; i < tests.length; i++) {
+      if(tests[i] == false) {
+        console.log("testFindPawnMoves failed");
+        return;
+      }
+    }  
+
+  }
+
+  private findRookMoves(piece : Piece) : Move[] {
+    let moves : Move[]= [];
+    let index = piece.getIndex();
+    let pos = new V2D(index % 8, Math.floor(index / 8));
+    let color = piece.color;
+
+    //move forward as long as there is not pieces on the way, or I don't eat.
+    if(color === "white") {
+      for(let i = pos.y-1; i >= 0; i--) {
+        let move = new V2D(pos.x, i);
+        if(this.Piece(move) === " ") {
+          moves.push(new Move(pos, move));
+        }
+        else if(this.Piece(move)?.color === "black") {
+          moves.push(new Move(pos, move));
+          break;
+        }
+        else {
+          break;
+        }
+      }
+      //move backward as long as there is not pieces on the way, or I don't eat.
+      for(let i = pos.y+1; i <= 7; i++) {
+        let move = new V2D(pos.x, i);
+        if(this.Piece(move) === " ") {
+          moves.push(new Move(pos, move));
+        }
+        else if(this.Piece(move)?.color === "black") {
+          moves.push(new Move(pos, move));
+          break;
+        }
+        else {
+          break;
+        }
+      }
+      //move left as long as there is not pieces on the way, or I don't eat.
+      for(let i = pos.x-1; i >= 0; i--) {
+        let move = new V2D(i, pos.y);
+        if(this.Piece(move) === " ") {
+          moves.push(new Move(pos, move));
+        }
+        else if(this.Piece(move)?.color === "black") {
+          moves.push(new Move(pos, move));
+          break;
+        }
+        else {
+          break;
+        }
+      }
+      //move right as long as there is not pieces on the way, or I don't eat.
+      for(let i = pos.x+1; i <= 7; i++) {
+        let move = new V2D(i, pos.y);
+        if(this.Piece(move) === " ") {
+          moves.push(new Move(pos, move));
+        }
+        else if(this.Piece(move)?.color === "black") {
+          moves.push(new Move(pos, move));
+          break;
+        }
+        else {
+          break;
+        }
+      }
+    }
+  }
+
 
 
   runAllTests() {
@@ -825,6 +1071,7 @@ export class Board {
     this.testConstructors();
     this.testBoardToFen();
     this.testFenToBoard();
+    this.testFindPawnMoves();
 
     console.log("All tests ran for board class");
   }
@@ -832,7 +1079,7 @@ export class Board {
 
 export class TEST {
   runAllTests() {
-    let move = new Move("a2", "a4");
+    let move = new Move(undefined, undefined,"a2", "a4");
     move.runAllTests();
     let position = new Position("a2");
     position.runAllTests();
