@@ -1,0 +1,8 @@
+Re-do the black pieces from mom such that they keep a white background 
+--re-write the entire front-ui using classes, 2D moves, and a game function to keep track of game state.
+functions to check for possible moves, and also can turn the board to a fen string on every turn.
+Make the API as nice an usable as possible.  
+Make methods small and simple.
+whenever possible create an abstraction, this benefits from using test. For now I can simply use try catch on every method to pin point where the error is occuring. 
+
+
