@@ -43,6 +43,7 @@ export class Move {
       this.boardStartIndex = 0;
       this.boardEndIndex = 0;
     }
+
   }
 
   public toString(): string {
@@ -67,7 +68,7 @@ export class Move {
   private convertToBoardPosition(index: number): string {
     //converts a board index to a string
     if (index < 0 || index > 63) {
-      throw new Error("Invalid index: ", index);
+      throw new Error("Invalid index: "+ index);
     }
     let letterIndex = index % 8;
     let numberIndex = Math.floor(index / 8);
@@ -252,6 +253,10 @@ export class Piece {
 
   public getIndex(): number {
     return this.position.getIndex();
+  }
+
+  public getPos(): Position {
+    return this.position;
   }
 
   private convertToBoardIndex(position: string): number {
@@ -862,38 +867,88 @@ export class Board {
     // }
   }
 
-  private findLegalMoves(board: Board): Move[] {
+  private findPseudoLegalMoves(board: Board): any[] {
     let moves = [];
+    //right now I am finding moves that are pseudolegal based on turns
+    //I need to add en passant, castling, and promotion
+    //also need to add checks and checkmates
     for (let i = 0; i < board.Pieces.length; i++) {
       let currentPiece = board.Pieces[i];
-      if (this.currentTurnColor != currentPiece.color) return moves;
+      if (board.currentTurnColor === currentPiece.color) {
+        switch (currentPiece.type) {
+          case "p":
+            moves.push(...this.findPawnMoves(currentPiece, board));
+            break;
+          case "r":
+            moves.push(...this.findRookMoves(currentPiece, board));
+            break;
+          case "n":
+            moves.push(...this.findKnightMoves(currentPiece, board));
+            break;
+          case "b":
+            moves.push(...this.findBishopMoves(currentPiece, board));
+            break;
+          case "q":
+            moves.push(...this.findQueenMoves(currentPiece, board));
+            break;
+          case "k":
+            moves.push(...this.findKingMoves(currentPiece, board));
+            break;
+        }
+      } ;
       //for each move I must check first if I am in check from board.
       // I can keep track of this since I start out of check
       //then whenever I move I check if I am putting my opponent in check.
       // I am then I set the board to in check.
       //also if I input a fen string or board state from the board, I need to check if I am in check.
-      switch (currentPiece.type) {
-        case "p":
-          moves.push(this.findPawnMoves(currentPiece));
-          break;
-        case "r":
-          moves.push(this.findRookMoves(currentPiece));
-          break;
-        case "n":
-          moves.push(this.findKnightMoves(currentPiece));
-          break;
-        case "b":
-          moves.push(this.findBishopMoves(currentPiece));
-          break;
-        case "q":
-          moves.push(this.findQueenMoves(currentPiece));
-          break;
-        case "k":
-          moves.push(this.findKingMoves(currentPiece));
-          break;
+      
+    }
+
+    //here I must check if I am in check and if I am I only return moves that get me out of check
+    // let amIInCheck = this.isInCheck(board);
+    return moves;
+  }
+
+
+  private testFindPseudoLegalMoves() {
+    let board = new Board();
+    let moves = this.findPseudoLegalMoves(board);
+    let tests = [];
+    tests.push(moves.length == 20);
+    for (let i = 0; i < tests.length; i++) {
+      if (!tests[i]) {
+        throw new Error("Find legal moves failed, test " + (i + 1) + " failed");
       }
     }
-    return moves;
+
+    //check en-passant
+    board = new Board(
+      [], //pieces
+      "rnbqkbnr/1ppp1ppp/8/p3pP2/4P3/8/PPPP2PP/RNBQKBNR w KQkq e6 0 4"
+    );
+    moves = this.findPseudoLegalMoves(board);
+    tests = [];
+    tests.push(moves.length == 30);
+    for (let i = 0; i < tests.length; i++) {
+      if (!tests[i]) {
+        throw new Error("Find legal moves failed, test " + (i + 1) + " failed");
+      }
+    }
+  }
+
+  private findLegalMoves(board: Board): any[] {
+    let moves = this.findPseudoLegalMoves(board);
+    let legalMoves = [];
+    for (let i = 0; i < moves.length; i++) {
+      let newBoard = new Board([], board.boardToFen());
+      newBoard.movePiece(moves[i].start, moves[i].end);
+      newBoard.currentTurnColor = newBoard.currentTurnColor === "white" ? "black" : "white";
+      if (!this.isInCheck(newBoard)) {
+        legalMoves.push(moves[i]);
+      }
+    }
+    // console.log(legalMoves)
+    return legalMoves;
   }
 
   private testFindLegalMoves() {
@@ -901,9 +956,61 @@ export class Board {
     let moves = this.findLegalMoves(board);
     let tests = [];
     tests.push(moves.length == 20);
+
+    board = new Board([], "rnb1k1nr/pppp1ppp/8/2b1p3/P3q3/8/1PPP1PPP/RNBQKB1R w KQkq - 0 6");
+    moves = this.findLegalMoves(board);
+    tests.push(moves.length == 2);
+
+    board = new Board([], "rnbqkbnr/1ppp1ppp/8/p3Q3/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 3")
+    moves = this.findLegalMoves(board);
+    tests.push(moves.length == 3);
+
+    board = new Board([], "rnbqkbnr/p1p1pppp/1p6/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3")
+    moves = this.findLegalMoves(board);
+    tests.push(moves.length == 31);
+
+
     for (let i = 0; i < tests.length; i++) {
       if (!tests[i]) {
         throw new Error("Find legal moves failed, test " + (i + 1) + " failed");
+      }
+    }
+  }
+
+  private isInCheck(board: Board): boolean {
+    //we first copy the board, and change the turn to the opposite color
+
+    let boardToSeeIfInCheck = new Board([], board.boardToFen());
+    boardToSeeIfInCheck.currentTurnColor = boardToSeeIfInCheck.currentTurnColor == "white" ? "black" : "white";
+
+    let opponentMoves = boardToSeeIfInCheck.findPseudoLegalMoves(boardToSeeIfInCheck);
+
+    //first we get the index of the king from the actual board
+    let currentKingIndex;
+    for(let i =0; i < board.Pieces.length; i++) {
+      if(board.Pieces[i].type == "k" && board.Pieces[i].color == board.currentTurnColor) {
+        currentKingIndex = board.Pieces[i].getIndex();
+      }
+    }
+    //now we check if any of the opponent moves can eat the king
+    for(let i = 0; i < opponentMoves.length; i++) {
+      if(opponentMoves[i].boardEndIndex == currentKingIndex) {
+        return true;
+      }
+    }
+    
+
+
+    return false;
+  }
+
+  private testIsInCheck() {
+    let board = new Board();
+    let tests = [];
+    tests.push(!this.isInCheck(board));
+    for (let i = 0; i < tests.length; i++) {
+      if (!tests[i]) {
+        throw new Error("Is in check failed, test " + (i + 1) + " failed");
       }
     }
   }
@@ -930,16 +1037,7 @@ export class Board {
     this.board[piece.getIndex()] = piece.type;
   }
 
-  //come back to this once we can generate all valid moves and put them in an array.2
-  // private generateRandomMoves(board : string []): Move {
-  //   //it's time for me to create the functions that find board moves.
-  //   let moves = board.generateMoves();
-
-  //   let randomIndex = Math.floor(Math.random() * moves.length);
-  //   return moves[randomIndex];
-  // }
-
-  private findPawnMoves(piece: Piece): Move[] {
+  private findPawnMoves(piece: Piece, board: Board): Move[] {
     let moves: Move[] = [];
     let index = piece.getIndex();
     let pos = new V2D(index % 8, Math.floor(index / 8));
@@ -950,46 +1048,59 @@ export class Board {
     if (color == "white") {
       //check if there is a piece in front remember white is on the bottom.\\
       let moveForward = new V2D(pos.x, pos.y - 1);
-      if (this.Piece(moveForward) == " ") {
+      
+      if (board.Piece(moveForward) == " ") {
         moves.push(new Move(pos, moveForward));
       }
       //check if I can move two spaces forward
       let moveForward2 = new V2D(pos.x, pos.y - 2);
       if (
-        this.Piece(moveForward2) == " " &&
-        this.Piece(moveForward) == " " &&
+        board.Piece(moveForward2) == " " &&
+        board.Piece(moveForward) == " " &&
         pos.y == 6
       ) {
         moves.push(new Move(pos, moveForward2));
       }
 
+
       //check if there is a piece to the left
       let moveLeft = new V2D(pos.x - 1, pos.y - 1);
       if (
-        this.Piece(moveLeft) != " " &&
-        this.Piece(moveLeft)?.color == "black"
+        board.Piece(moveLeft) != " " &&
+        board.Piece(moveLeft)?.color == "black"
       ) {
         moves.push(new Move(pos, moveLeft));
       }
       //check if there is a piece to the right
       let moveRight = new V2D(pos.x + 1, pos.y - 1);
       if (
-        this.Piece(moveRight) != " " &&
-        this.Piece(moveRight)?.color == "black"
+        board.Piece(moveRight) != " " &&
+        board.Piece(moveRight)?.color == "black"
       ) {
         moves.push(new Move(pos, moveRight));
+      }
+      //check for en passant
+      if (board.enPassantTargetSquare != "-" && index <= 31 && index >= 24) {
+        let enPassantTarget = new V2D( board.enPassantTargetSquare.charCodeAt(0) - 97,  8-parseInt(board.enPassantTargetSquare[1]));
+        if( deepEqual(enPassantTarget, moveRight) === true){
+          moves.push(new Move(pos, moveRight));
+        }
+        if( deepEqual(enPassantTarget, moveLeft) === true){
+          moves.push(new Move(pos, moveLeft));
+        }
+
       }
     } else {
       //check if there is a piece in front remember white is on the bottom.\\
       let moveForward = new V2D(pos.x, pos.y + 1);
-      if (this.Piece(moveForward) == " ") {
+      if (board.Piece(moveForward) == " ") {
         moves.push(new Move(pos, moveForward));
       }
       //check if I can move two spaces forward
       let moveForward2 = new V2D(pos.x, pos.y + 2);
       if (
-        this.Piece(moveForward2) == " " &&
-        this.Piece(moveForward) == " " &&
+        board.Piece(moveForward2) == " " &&
+        board.Piece(moveForward) == " " &&
         pos.y == 1
       ) {
         moves.push(new Move(pos, moveForward2));
@@ -998,18 +1109,29 @@ export class Board {
       //check if there is a piece to the left
       let moveLeft = new V2D(pos.x - 1, pos.y + 1);
       if (
-        this.Piece(moveLeft) != " " &&
-        this.Piece(moveLeft)?.color == "white"
+        board.Piece(moveLeft) != " " &&
+        board.Piece(moveLeft)?.color == "white"
       ) {
         moves.push(new Move(pos, moveLeft));
       }
       //check if there is a piece to the right
       let moveRight = new V2D(pos.x + 1, pos.y + 1);
       if (
-        this.Piece(moveRight) != " " &&
-        this.Piece(moveRight)?.color == "white"
+        board.Piece(moveRight) != " " &&
+        board.Piece(moveRight)?.color == "white"
       ) {
         moves.push(new Move(pos, moveRight));
+      }
+
+      if (board.enPassantTargetSquare != "-" && index <= 15 && index >= 8) {
+        let enPassantTarget = new V2D( board.enPassantTargetSquare.charCodeAt(0) - 97,  8-parseInt(board.enPassantTargetSquare[1]));
+        if( moveRight == enPassantTarget){
+          moves.push(new Move(pos, moveRight));
+        }
+        if( moveLeft == enPassantTarget){
+          moves.push(new Move(pos, moveLeft));
+        }
+
       }
     }
 
@@ -1018,7 +1140,7 @@ export class Board {
 
   private testFindPawnMoves() {
     let board = new Board();
-    let moves = this.findPawnMoves(board.Piece(new V2D(0, 6)));
+    let moves = this.findPawnMoves(board.Piece(new V2D(0, 6)), board);
     let tests = [];
     tests.push(moves.length == 2);
     // console.log(moves[0].toString());
@@ -1033,7 +1155,7 @@ export class Board {
     }
 
     tests = [];
-    moves = this.findPawnMoves(board.Pieces[16]);
+    moves = this.findPawnMoves(board.Pieces[16], board);
     // console.log(moves[0].toString());
     // console.log(moves[1].toString())
     tests.push(moves.length == 2);
@@ -1045,15 +1167,34 @@ export class Board {
         return;
       }
     }
+
+    board = new Board([]);
+ 
+    let piece = new Piece("a5", "black", pawn);
+    board.addPiece(piece);
+    piece = new Piece("a4", "white", pawn);
+    board.addPiece(piece);
+    moves = this.findPawnMoves(piece, board);
+    tests = [];
+    tests.push(moves.length == 0)
+    for (let i = 0; i < tests.length; i++) {
+      if (tests[i] == false) {
+        console.error("testFindPawnMoves failed");
+        return;
+      }
+    }
+
+
+
   }
 
-  private findRookMoves(piece: Piece): Move[] {
+  private findRookMoves(piece: Piece, board: Board): Move[] {
     let moves: Move[] = [];
     let index = piece.getIndex();
     let pos = new V2D(index % 8, Math.floor(index / 8));
     let color = piece.color;
     // this.displayBoard();
-    if (color != this.currentTurnColor) return moves;
+    if (color != board.currentTurnColor) return moves;
 
     //move forward as long as there is not pieces on the way, or I don't eat.
     if (color === "white") {
@@ -1061,9 +1202,9 @@ export class Board {
         let move = new V2D(pos.x, i);
         // console.log("this",this.Piece(move));
         // console.log(this.Piece(move) === " ")
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1073,9 +1214,9 @@ export class Board {
       //move backward as long as there is not pieces on the way, or I don't eat.
       for (let i = pos.y + 1; i <= 7; i++) {
         let move = new V2D(pos.x, i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1085,9 +1226,9 @@ export class Board {
       //move left as long as there is not pieces on the way, or I don't eat.
       for (let i = pos.x - 1; i >= 0; i--) {
         let move = new V2D(i, pos.y);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1097,9 +1238,9 @@ export class Board {
       //move right as long as there is not pieces on the way, or I don't eat.
       for (let i = pos.x + 1; i <= 7; i++) {
         let move = new V2D(i, pos.y);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1109,9 +1250,9 @@ export class Board {
     } else {
       for (let i = pos.y - 1; i >= 0; i--) {
         let move = new V2D(pos.x, i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1121,9 +1262,9 @@ export class Board {
       //move backward as long as there is not pieces on the way, or I don't eat.
       for (let i = pos.y + 1; i <= 7; i++) {
         let move = new V2D(pos.x, i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1133,9 +1274,9 @@ export class Board {
       //move left as long as there is not pieces on the way, or I don't eat.
       for (let i = pos.x - 1; i >= 0; i--) {
         let move = new V2D(i, pos.y);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1145,9 +1286,9 @@ export class Board {
       //move right as long as there is not pieces on the way, or I don't eat.
       for (let i = pos.x + 1; i <= 7; i++) {
         let move = new V2D(i, pos.y);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1159,12 +1300,12 @@ export class Board {
   }
 
   private testFindRookMoves() {
-    let testBoard = new Board(
+    let board = new Board(
       [],
       "rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2"
     );
-    let moves = testBoard.findRookMoves(this.Piece(new V2D(0, 7)));
-    // console.log(this.Piece(new V2D(0,7)));
+    let moves = board.findRookMoves(board.Piece(new V2D(0, 7)), board);
+    // console.log(board.Piece(new V2D(0,7)));
     let tests = [];
 
     tests.push(moves.length === 2);
@@ -1178,83 +1319,83 @@ export class Board {
     }
   }
 
-  private findKnightMoves(piece: Piece): Move[] {
+  private findKnightMoves(piece: Piece, board: Board): Move[] {
     let moves: Move[] = [];
     let index = piece.getIndex();
     let pos = new V2D(index % 8, Math.floor(index / 8));
     let color = piece.color;
-    if (color != this.currentTurnColor) return moves;
+    if (color != board.currentTurnColor) return moves;
 
     if (color === "white") {
       //move L shape up left
       if (pos.x - 2 >= 0 && pos.y - 1 >= 0) {
         let move = new V2D(pos.x - 2, pos.y - 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape up right
       if (pos.x + 2 <= 7 && pos.y - 1 >= 0) {
         let move = new V2D(pos.x + 2, pos.y - 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape down left
       if (pos.x - 2 >= 0 && pos.y + 1 <= 7) {
         let move = new V2D(pos.x - 2, pos.y + 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape down right
       if (pos.x + 2 <= 7 && pos.y + 1 <= 7) {
         let move = new V2D(pos.x + 2, pos.y + 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape left up
       if (pos.x - 1 >= 0 && pos.y - 2 >= 0) {
         let move = new V2D(pos.x - 1, pos.y - 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape left down
       if (pos.x - 1 >= 0 && pos.y + 2 <= 7) {
         let move = new V2D(pos.x - 1, pos.y + 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape right up
       if (pos.x + 1 <= 7 && pos.y - 2 >= 0) {
         let move = new V2D(pos.x + 1, pos.y - 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape right down
       if (pos.x + 1 <= 7 && pos.y + 2 <= 7) {
         let move = new V2D(pos.x + 1, pos.y + 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
         }
       }
@@ -1262,72 +1403,72 @@ export class Board {
       //move L shape up left
       if (pos.x - 2 >= 0 && pos.y - 1 >= 0) {
         let move = new V2D(pos.x - 2, pos.y - 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape up right
       if (pos.x + 2 <= 7 && pos.y - 1 >= 0) {
         let move = new V2D(pos.x + 2, pos.y - 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape down left
       if (pos.x - 2 >= 0 && pos.y + 1 <= 7) {
         let move = new V2D(pos.x - 2, pos.y + 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape down right
       if (pos.x + 2 <= 7 && pos.y + 1 <= 7) {
         let move = new V2D(pos.x + 2, pos.y + 1);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape left up
       if (pos.x - 1 >= 0 && pos.y - 2 >= 0) {
         let move = new V2D(pos.x - 1, pos.y - 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape left down
       if (pos.x - 1 >= 0 && pos.y + 2 <= 7) {
         let move = new V2D(pos.x - 1, pos.y + 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape right up
       if (pos.x + 1 <= 7 && pos.y - 2 >= 0) {
         let move = new V2D(pos.x + 1, pos.y - 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
       //move L shape right down
       if (pos.x + 1 <= 7 && pos.y + 2 <= 7) {
         let move = new V2D(pos.x + 1, pos.y + 2);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
         }
       }
@@ -1342,7 +1483,7 @@ export class Board {
 
     let piece = new Piece("c3", "white", knight)
     board.addPiece(piece);
-    let moves = board.findKnightMoves(piece);
+    let moves = board.findKnightMoves(piece, board);
     tests.push(moves.length === 8);
     
 
@@ -1350,13 +1491,13 @@ export class Board {
     piece = new Piece("c3", "black", knight)
     board.addPiece(piece);
     board.currentTurnColor = "black";
-    moves = board.findKnightMoves(piece);
+    moves = board.findKnightMoves(piece, board);
     tests.push(moves.length === 8);
 
     board = new Board([]);
     piece = new Piece("a1", "white", knight)
     board.addPiece(piece);
-    moves = board.findKnightMoves(piece);
+    moves = board.findKnightMoves(piece, board);
     tests.push(moves.length === 2);
 
     for(let i = 0; i < tests.length; i++) {
@@ -1369,21 +1510,21 @@ export class Board {
   }
 
 
-  private findBishopMoves(piece: Piece): Move[] {
+  private findBishopMoves(piece: Piece, board: Board): Move[] {
     let moves: Move[] = [];
     let index = piece.getIndex();
     let pos = new V2D(index % 8, Math.floor(index / 8));
     let color = piece.color;
-    if (color != this.currentTurnColor) return moves;
+    if (color != board.currentTurnColor) return moves;
 
     if (color === "white") {
       //move forward left as long as there is not pieces on the way, or I don't eat.
       for (let i = 1; i <= 7; i++) {
         if (pos.x - i < 0 || pos.y - i < 0) break;
         let move = new V2D(pos.x - i, pos.y - i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1394,9 +1535,9 @@ export class Board {
       for (let i = 1; i <= 7; i++) {
         if (pos.x + i > 7 || pos.y - i < 0) break;
         let move = new V2D(pos.x + i, pos.y - i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1407,9 +1548,9 @@ export class Board {
       for (let i = 1; i <= 7; i++) {
         if (pos.x - i < 0 || pos.y + i > 7) break;
         let move = new V2D(pos.x - i, pos.y + i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1420,9 +1561,9 @@ export class Board {
       for (let i = 1; i <= 7; i++) {
         if (pos.x + i > 7 || pos.y + i > 7) break;
         let move = new V2D(pos.x + i, pos.y + i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "black") {
+        } else if (board.Piece(move)?.color === "black") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1430,52 +1571,52 @@ export class Board {
         }
       }
     } else {
-      //move forward left as long as there is not pieces on the way, or I don't eat.
-      for (let i = 1; i <= 7; i++) {
-        if (pos.x - i < 0 || pos.y - i > 7) break;
-        let move = new V2D(pos.x - i, pos.y - i);
-        if (this.Piece(move) === " ") {
-          moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
-          moves.push(new Move(pos, move));
-          break;
-        } else {
-          break;
-        }
-      }
-      //move forward right as long as there is not pieces on the way, or I don't eat.
-      for (let i = 1; i <= 7; i++) {
-        if (pos.x + i > 7 || pos.y - i < 0) break;
-        let move = new V2D(pos.x + i, pos.y - i);
-        if (this.Piece(move) === " ") {
-          moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
-          moves.push(new Move(pos, move));
-          break;
-        } else {
-          break;
-        }
-      }
-      //move backward left as long as there is not pieces on the way, or I don't eat.
+      //move down left as long as there is not pieces on the way, or I don't eat.
       for (let i = 1; i <= 7; i++) {
         if (pos.x - i < 0 || pos.y + i > 7) break;
         let move = new V2D(pos.x - i, pos.y + i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
           break;
         } else {
           break;
         }
       }
-      //move backward right as long as there is not pieces on the way, or I don't eat.
+      //move down right as long as there is not pieces on the way, or I don't eat.
       for (let i = 1; i <= 7; i++) {
         if (pos.x + i > 7 || pos.y + i > 7) break;
         let move = new V2D(pos.x + i, pos.y + i);
-        if (this.Piece(move) === " ") {
+        if (board.Piece(move) === " ") {
           moves.push(new Move(pos, move));
-        } else if (this.Piece(move)?.color === "white") {
+        } else if (board.Piece(move)?.color === "white") {
+          moves.push(new Move(pos, move));
+          break;
+        } else {
+          break;
+        }
+      }
+      //move up left as long as there is not pieces on the way, or I don't eat.
+      for (let i = 1; i <= 7; i++) {
+        if (pos.x - i < 0 || pos.y - i < 0) break;
+        let move = new V2D(pos.x - i, pos.y - i);
+        if (board.Piece(move) === " ") {
+          moves.push(new Move(pos, move));
+        } else if (board.Piece(move)?.color === "white") {
+          moves.push(new Move(pos, move));
+          break;
+        } else {
+          break;
+        }
+      }
+      //move up right as long as there is not pieces on the way, or I don't eat.
+      for (let i = 1; i <= 7; i++) {
+        if (pos.x + i > 7 || pos.y - i < 0) break;
+        let move = new V2D(pos.x + i, pos.y - i);
+        if (board.Piece(move) === " ") {
+          moves.push(new Move(pos, move));
+        } else if (board.Piece(move)?.color === "white") {
           moves.push(new Move(pos, move));
           break;
         } else {
@@ -1492,7 +1633,7 @@ export class Board {
     // console.log(board.Pieces);
     let piece = new Piece("a2", "white", bishop);
     board.addPiece(piece);
-    let moves = board.findBishopMoves(piece);
+    let moves = board.findBishopMoves(piece, board);
     if (moves.length !== 7) {
       console.log("testFindBishopMoves failed 0");
       return;
@@ -1501,7 +1642,7 @@ export class Board {
     piece = new Piece("a2", "black", bishop);
     board.addPiece(piece);
     board.currentTurnColor = "black";
-    moves = board.findBishopMoves(piece);
+    moves = board.findBishopMoves(piece, board);
     if (moves.length !== 7) {
       console.log("testFindBishopMoves failed 1");
       return;
@@ -1512,7 +1653,7 @@ export class Board {
     board.currentTurnColor = "black";
     piece = new Piece("b3", "black", bishop);
     board.addPiece(piece);
-    moves = board.findBishopMoves(piece);
+    moves = board.findBishopMoves(piece, board);
     if (moves.length !== 9) {
       console.log("testFindBishopMoves failed 2");
       return;
@@ -1522,7 +1663,7 @@ export class Board {
     board.addPiece(piece);
     piece = new Piece("b3", "white", bishop);
     board.addPiece(piece);
-    moves = board.findBishopMoves(piece);
+    moves = board.findBishopMoves(piece, board);
     // console.log(moves.length)
     // console.log(moves);
     // board.displayBoard()
@@ -1531,6 +1672,203 @@ export class Board {
       return;
     }
     // console.log("testFindBishopMoves passed");
+  }
+
+  private findQueenMoves(piece: Piece, board: Board): Move[] {
+    let moves = this.findRookMoves(piece, board);
+    moves.push(...this.findBishopMoves(piece, board));
+    return moves;
+  }
+
+  private testFindQueenMoves() {
+    let board = new Board([]);
+    let piece = new Piece("a2", "white", queen);
+    board.addPiece(piece);
+    let moves = board.findQueenMoves(piece, board);
+    if (moves.length !== 21) {
+      console.log(moves);
+      console.error("testFindQueenMoves failed 0");
+      return;
+    }
+    board = new Board([]);
+    piece = new Piece("a2", "black", queen);
+    board.addPiece(piece);
+    board.currentTurnColor = "black";
+    moves = board.findQueenMoves(piece, board);
+    if (moves.length !== 21) {
+        board.displayBoard();
+        console.log(moves);
+        console.error("testFindQueenMoves failed 1");
+      return;
+    }
+    board = new Board([]);
+    piece = new Piece("a2", "white", queen);
+    board.addPiece(piece);
+    board.currentTurnColor = "black";
+    piece = new Piece("b3", "black", queen);
+    board.addPiece(piece);
+    moves = board.findQueenMoves(piece, board);
+    if (moves.length !== 23) {
+      console.error("testFindQueenMoves failed 2");
+      return;
+    }
+    board = new Board([]);
+    piece = new Piece("a2", "black", queen);
+    board.addPiece(piece);
+    piece = new Piece("b3", "white", queen);
+    board.addPiece(piece);
+    moves = board.findQueenMoves(piece, board);
+    if (moves.length !== 23) {
+      console.error("testFindQueenMoves failed 3");
+      return;
+    }
+    // console.log("testFindQueenMoves passed");
+  }
+
+  private findKingMoves(piece: Piece, board: Board): Move[] {
+    let moves: Move[] = [];
+    let pos = piece.getPos().pos;
+    let move = new V2D(pos.x, pos.y + 1);
+    if(piece.color === "black"){
+      if (board.Piece(move) === " " && pos.y + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x, pos.y - 1);
+      if (board.Piece(move) === " " && pos.y - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x + 1, pos.y);
+      if (board.Piece(move) === " " && pos.x + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x - 1, pos.y);
+      if (board.Piece(move) === " " && pos.x - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x + 1, pos.y + 1);
+      if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x - 1, pos.y + 1);
+      if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x + 1, pos.y - 1);
+      if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "white") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x - 1, pos.y - 1);
+      if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      }
+    }else{
+      if (board.Piece(move) === " " && pos.y + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x, pos.y - 1);
+      if (board.Piece(move) === " " && pos.y - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x + 1, pos.y);
+      if (board.Piece(move) === " " && pos.x + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x - 1, pos.y);
+      if (board.Piece(move) === " " && pos.x - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x + 1, pos.y + 1);
+      if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x - 1, pos.y + 1);
+      if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y + 1 <= 7) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x + 1, pos.y - 1);
+      if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      move = new V2D(pos.x - 1, pos.y - 1);
+      if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y - 1 >= 0) {
+        moves.push(new Move(pos, move));
+      } else if (board.Piece(move)?.color === "black") {
+        moves.push(new Move(pos, move));
+      }
+      
+    }
+     
+    return moves;
+  }
+
+  private testFindKingMoves() {
+    let board = new Board([]);
+    let piece = new Piece("a2", "white", king);
+    board.addPiece(piece);
+    let moves = board.findKingMoves(piece, board);
+    if (moves.length !== 5) {
+      console.error("testFindKingMoves failed 0");
+      return;
+    }
+    board = new Board([]);
+    piece = new Piece("a2", "black", king);
+    board.addPiece(piece);
+    board.currentTurnColor = "black";
+    moves = board.findKingMoves(piece, board);
+    if (moves.length !== 5) {
+      console.error("testFindKingMoves failed 1");
+      return;
+    }
+    board = new Board([]);
+    piece = new Piece("a2", "white", king);
+    board.addPiece(piece);
+    board.currentTurnColor = "black";
+    piece = new Piece("b3", "black", king);
+    board.addPiece(piece);
+    moves = board.findKingMoves(piece, board);
+    if (moves.length !== 8) {
+      console.error("testFindKingMoves failed 2");
+      return;
+    }
+    board = new Board([]);
+    piece = new Piece("a2", "black", king);
+    board.addPiece(piece);
+    piece = new Piece("b3", "white", king);
+    board.addPiece(piece);
+    moves = board.findKingMoves(piece, board);
+    if (moves.length !== 8) {
+      console.error("testFindKingMoves failed 3");
+      return;
+    }
+    // console.log("testFindKingMoves passed");
   }
 
   runAllTests() {
@@ -1542,6 +1880,11 @@ export class Board {
     this.testFindRookMoves();
     this.testFindKnightMoves();
     this.testFindBishopMoves();
+    this.testFindQueenMoves();
+    this.testFindKingMoves();
+    this.testFindPseudoLegalMoves();
+    this.testIsInCheck();
+    this.testFindLegalMoves();
 
     console.log("All tests ran for board class");
   }
@@ -1567,3 +1910,12 @@ export class TEST {
 //for king I must add castling.
 //for everything I must check if we are in check, and then add a loop at the bottom, than only returns moves,
 //that get us out of check.
+
+
+export function deepEqual(x: any, y: any): boolean{
+  return (x && y && typeof x === 'object' && typeof y === 'object') ?
+    (Object.keys(x).length === Object.keys(y).length) &&
+      Object.keys(x).reduce(function(isEqual, key) {
+        return isEqual && deepEqual(x[key], y[key]);
+      }, true) : (x === y);
+}
