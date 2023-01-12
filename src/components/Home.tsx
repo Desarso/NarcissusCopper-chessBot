@@ -1,15 +1,23 @@
 
-import { useDragDropContext, createDraggable } from './DragDropContext'
+import { onMount } from 'solid-js';
+import { useDragDropContext } from './DragDropContext'
 
 type Props = {}
 
 
 const Draggable = ({id}: any) => {
+  const { onDragStart, onDragEnd, createDraggable} = useDragDropContext();
     const draggable = createDraggable(id);
+
+    onDragStart(() =>{
+      console.log("drag Start");
+  }, draggable);
+
 
 
   return (
       <div class='draggable'
+      ref={draggable.ref}
       >
           Hi there
       </div>
@@ -17,13 +25,11 @@ const Draggable = ({id}: any) => {
 }
 
 function Home({}: Props) {
-    const { count, setCount, pageName, setPageName } = useDragDropContext();
-
 
 
   return (
     <div>
-        <Draggable/>
+        <Draggable id={"randomId"}/>
     </div>
   )
 }
