@@ -425,7 +425,7 @@ export class Board {
     return letter + number;
   }
 
-  private displayBoard() {
+  public displayBoard() {
     let line = "";
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
@@ -438,7 +438,8 @@ export class Board {
       if (line != undefined) console.log(`${8 - i}| ` + line);
       line = "";
     }
-    console.log("    a  b  c  d  e  f  g  h");
+    console.log("    _  _  _  _  _  _  _  _");
+    console.log("    A  B  C  D  E  F  G  H");
   }
 
   private fenToBoard(fen: string): string[] {
@@ -466,7 +467,7 @@ export class Board {
     return board;
   }
 
-  private boardToFen(): string {
+  public boardToFen(): string {
     let fen = "";
     let emptySpaces = 0;
     //write a a loop that converst my array of pieces into
@@ -517,7 +518,7 @@ export class Board {
     return "";
   }
 
-  private movePiece(start: string, end: string): void {
+  public movePiece(start: string, end: string): void {
     let newMove = new Move(undefined, undefined, start, end);
     newMove.boardEndIndex;
     //so move first gets the current piece index
@@ -936,7 +937,7 @@ export class Board {
     }
   }
 
-  private findLegalMoves(board: Board): any[] {
+  public findLegalMoves(board: Board): any[] {
     let moves = this.findPseudoLegalMoves(board);
     let legalMoves = [];
     for (let i = 0; i < moves.length; i++) {
@@ -977,7 +978,7 @@ export class Board {
     }
   }
 
-  private isInCheck(board: Board): boolean {
+  public isInCheck(board: Board): boolean {
     //we first copy the board, and change the turn to the opposite color
 
     let boardToSeeIfInCheck = new Board([], board.boardToFen());
