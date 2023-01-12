@@ -7,6 +7,14 @@ interface ContextProps {
     setPageName : Setter<string>
 }
 
+
+interface Droppable  {
+    id: string,
+    currentPosition : {x: number, y: number},
+}
+
+//I need a drag start assignable function for both draggable and droppable
+
 const DragDropContext = createContext<ContextProps>();
 
 
@@ -28,6 +36,7 @@ export function DragDropContextProvider(props: any) {
 
     const onDragStart = (callback: Function) => {
         dragStart = callback;
+        console.log(ass);
     }
 
     const onDragEnd = (callback: Function) => {
@@ -76,8 +85,12 @@ export function DragDropContextProvider(props: any) {
         }
         return {x: parseInt(position[0]), y: parseInt(position[1])};
     }
+   
 
-    onDragStart(() =>{
+    //I need to pass the function a droppable or draggable object
+    //this object will then be used to asign the functions that go off with observers
+    //to their respective elements.
+    onDragStart(({ass} : any) =>{
         console.log("drag Start");
     });
 

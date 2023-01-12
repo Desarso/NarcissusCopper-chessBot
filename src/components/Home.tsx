@@ -5,11 +5,12 @@ type Props = {}
 
 
 const Draggable = ({id}: any) => {
-    const draggable = createDraggable(id)
+    const draggable = createDraggable(id);
 
 
   return (
-      <div class='draggable'>
+      <div class='draggable'
+      >
           Hi there
       </div>
   )
