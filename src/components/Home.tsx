@@ -10,7 +10,7 @@ const Draggable = ({id}: any) => {
     const draggable = createDraggable(id);
 
     onDragStart(() =>{
-      console.log("drag Start");
+      // console.log("drag Start");
   }, draggable);
 
 
@@ -28,9 +28,14 @@ function Home({}: Props) {
 
 
   return (
-    <div>
+    <>
+      <div class="dropZone">
         <Draggable id={"randomId"}/>
-    </div>
+      </div>
+      <div class="dropZone">
+
+      </div>    
+    </>
   )
 }
 

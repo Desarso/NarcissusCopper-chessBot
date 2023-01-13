@@ -1,8 +1,8 @@
 import { Accessor, Setter, createContext, useContext, createSignal, onMount } from 'solid-js'
 
 interface ContextProps {
-    onDragStart: Setter<any>,
-    onDragEnd: Setter<any>,
+    onDragStart: Function,
+    onDragEnd: Function,
     createDraggable: Function,
 
 }
@@ -10,7 +10,7 @@ interface ContextProps {
 
 interface Draggable  {
     id: string,
-    currentPosition : {x: number, y: number},
+    startingPosition : {x: number, y: number},
     dragStart: Function,
     dragEnd: Function,
     ref: any
@@ -18,7 +18,7 @@ interface Draggable  {
 
 interface Droppable  {
     id: string,
-    currentPosition : {x: number, y: number},
+    startingPosition : {x: number, y: number},
     dragStart: Function,
     dragEnd: Function,
     ref: any
@@ -54,15 +54,30 @@ export function DragDropContextProvider(props: any) {
     //that updates draggable position, until mouse up is called.
 
 
+
+    //both the behaviour of mousemove and mouseup must be global to avoid errors
+    //we use mouse down on the specific subject for immediate drag responsivity
+    //and we use global moves and drops so that there is no funny business
+    //however, the drop also needs to be specific, so that if dropped on a droppable element it can do it.
+    //I also need to only enable dropable elements at certain times.
     onMount(() => {
         document.addEventListener("mousemove", (e) => {
             //this are general functions, I need to specify them.
             setMousePosition({x: e.clientX, y: e.clientY});
-            if(cursorDown()){
+            if(cursorDown() && target()){
                 target().style.transform = `translate(${mousePosition().x - startingMousePosition().x + previousPosition().x}px, ${mousePosition().y - startingMousePosition().y + previousPosition().y}px)`;
                 // console.log("starting mouse position: ", startingMousePosition());
                 // console.log("previous position: ", previousPosition());
             }
+        });
+        document.addEventListener("mouseup", () => {
+            console.log("mouse up");
+            console.log('target', target());
+            if(target()){
+                target().style.transform = `translate(${0}px, ${0}px)`;
+            }
+            setCursorDown(false);
+            setTarget(null);
         });
     });
     
@@ -70,31 +85,12 @@ export function DragDropContextProvider(props: any) {
     const onDragStart = (callback: any, draggable: Draggable) => {
         if(draggable){
             draggable.dragStart = callback;
-            onMount(() => {
-                draggable.ref.addEventListener("mousedown", () => {
-                setCursorDown(true);
-                setTarget(draggable.ref);
-                console.log("clicked");
-                });
-                draggable.ref.addEventListener("mouseup", () => {
-                    setTarget(null);
-                    setCursorDown(false);
-                    console.log("dragEnd");
-                    });
-            })
         }
     }
     //injection function
     const onDragEnd = (callback: Function, draggable: Draggable) => {
         if(draggable!== undefined){
             draggable.dragEnd = callback;
-            onMount(() => {
-                draggable.ref.addEventListener("mouseup", () => {
-                setTarget(null);
-                setCursorDown(false);
-                console.log("dragEnd");
-                });
-            })
         }
     }
 
@@ -123,7 +119,7 @@ export function DragDropContextProvider(props: any) {
     const createDraggable = (id: string) => {
         let draggable: Draggable = {
             id: id,
-            currentPosition: {x: 0, y: 0},
+            startingPosition: {x: 0, y: 0},
             dragStart: () => {
                 
             },
@@ -131,6 +127,24 @@ export function DragDropContextProvider(props: any) {
             },
             ref: null
         }
+
+        onMount(() => {
+            draggable.ref.addEventListener("mouseup", () => {
+                draggable.dragEnd();
+                setTarget(null);
+                setCursorDown(false);
+                draggable.ref.style.transform = `translate(${0}px, ${0}px)`;
+                console.log("dragEnd");
+            });
+            // draggable.ref.addEventListener("mousedown", (e : any) => {
+            //     draggable.dragStart();
+            //     setPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
+            //     setStartingMousePosition({x: e.clientX, y: e.clientY});
+            //     setCursorDown(true);
+            //     setTarget(draggable.ref);
+            //     // console.log("clicked");
+            //     });
+        })
     
     
     
