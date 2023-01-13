@@ -10,7 +10,11 @@ const Draggable = ({id}: any) => {
     const draggable = createDraggable(id);
 
     onDragStart(() =>{
-      // console.log("drag Start");
+       console.log("drag Start");
+  }, draggable);
+
+  onDragEnd(() =>{
+      console.log("drag End");
   }, draggable);
 
 

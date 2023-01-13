@@ -1,0 +1,13 @@
+So I need to make a droppable creator,
+Implement a way of deactivating dropables from the onDropFunction,
+needs to be an option from the front end
+
+Then I can get started on remaking the chessBoard, and adding touch functionality,
+I will try to make it as simple as possible, hopefully the chessLogic being seperate from the UI will help
+Then UI will obviously display info from the chessClasses, and also
+I need to run a board refresh on everyMove, I can make a function for that
+
+
+For every move
+Call legalMoves function and checkmateFunction, update, the board state. I also need to take the legal moves, and use that for the move suggestions to the opponent, 
+
