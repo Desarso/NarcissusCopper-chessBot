@@ -1,7 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .draggable{
     padding: 15%;
-    margin: 30px;
-    width: 70px;
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
@@ -18,10 +20,6 @@
           
 }
 
-.draggable:hover{
-    width: 110%;
-    background-color: rgba(0, 0, 0, 0.9);
-}
 
 html{
   height: 100%;

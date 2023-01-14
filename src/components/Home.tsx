@@ -16,8 +16,11 @@ const Draggable = ({ id }: any) => {
   }, draggable);
 
   return (
-    <div class="draggable" ref={draggable.ref}>
-      Hi there
+    <div class="flex justify-center w-[120px]" ref={draggable.ref}>
+      <div class="w-max text-md hover:scale-110 text-gray-800 font-bold draggable m-0 transform transition">
+        Hi there
+      </div>
+      
     </div>
   );
 };
