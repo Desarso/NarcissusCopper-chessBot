@@ -38,11 +38,14 @@ const ChessSquare = ({ id, className, draggable} : any) => {
     droppable.ref.style.boxShadow = "none";
   }, droppable);
 
+  let variable = "";
+
   return (
     <div
     id={id}
     class="dropZone"
     ref={droppable.ref}
+    placeHolder= {"dropMe"}
     >
     <Show when={draggable != undefined}>
       <Draggable id={id} />

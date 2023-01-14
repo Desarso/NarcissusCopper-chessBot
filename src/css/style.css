@@ -68,6 +68,12 @@ html{
 
 }
 
+.dropZone:empty::before{
+  content: "Drop Here";
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
 .chessBoard{
   display: inline-flex;
   align-items: center;
