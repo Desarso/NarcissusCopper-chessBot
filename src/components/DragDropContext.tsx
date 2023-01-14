@@ -11,6 +11,9 @@ interface ContextProps {
   onDragStart: Function;
   onDragEnd: Function;
   createDraggable: Function;
+  createDroppable: Function;
+  onHoverOver: Function
+  onHoverOut: Function
 }
 
 interface Draggable {
@@ -19,14 +22,17 @@ interface Draggable {
   dragStart: Function;
   dragEnd: Function;
   ref: any;
+  rectangle: any
 }
 
 interface Droppable {
   id: string;
   startingPosition: { x: number; y: number };
-  dragStart: Function;
-  dragEnd: Function;
+  hoverOver: Function;
+  hoverOut: Function;
   ref: any;
+  rectangle: any;
+  hovering: boolean;
 }
 
 //I need a drag start assignable function for both draggable and droppable
@@ -43,14 +49,16 @@ export function DragDropContextProvider(props: any) {
     x: 0,
     y: 0,
   });
+  const [droppables, setDropables] = createSignal([] as Droppable[]);
   const [cursorDown, setCursorDown] = createSignal(false);
-  const [target, setTarget] = createSignal({});
+  const [target, setTarget] = createSignal(null);
+  const [previousTarget, setPreviousTarget] = createSignal(null);
   const [previousPosition, setPreviousPosition] = createSignal({ x: 0, y: 0 });
 
   //global dran and drop event listeners
   //click down is not global since they are specific to elements only.
   onMount(() => {
-    document.addEventListener("mousemove", (e) => {
+    document.addEventListener("pointermove", (e) => {
       //this are general functions, I need to specify them.
       setMousePosition({ x: e.clientX, y: e.clientY });
       if (cursorDown() && target()) {
@@ -61,16 +69,23 @@ export function DragDropContextProvider(props: any) {
         }px)`;
         // console.log("starting mouse position: ", startingMousePosition());
         // console.log("previous position: ", previousPosition());
+        target().rectangle = target().ref.getBoundingClientRect();
+        // console.log(target().rectangle)
+
       }
     });
-    document.addEventListener("mouseup", () => {
+    document.addEventListener("pointerup", () => {
+      if (target() == null) return;
       target().dragEnd();
     //   console.log("mouse up");
     //   console.log("target", target());
       if (target()?.ref) {
         target().ref.style.transform = `translate(${0}px, ${0}px)`;
+        target().ref.getAttribute('style');
+        // console.log(target().ref.style)
       }
       setCursorDown(false);
+      setPreviousTarget(target());
       setTarget(null);
     });
   });
@@ -87,6 +102,17 @@ export function DragDropContextProvider(props: any) {
       draggable.dragEnd = callback;
     }
   };
+
+  const onHoverOver = (callback: Function, droppable: Droppable) => {
+    if(droppable !== undefined){
+        droppable.hoverOver = callback;
+    }
+  }
+  const onHoverOut = (callback: Function, droppable: Droppable) => {
+    if(droppable !== undefined){
+        droppable.hoverOut = callback;
+    }
+  }
 
   function getPreviousPosition(style: string) {
     if (style === null) return { x: 0, y: 0 };
@@ -106,8 +132,8 @@ export function DragDropContextProvider(props: any) {
       dragStart: () => {},
       dragEnd: () => {},
       ref: null,
+      rectangle: null
     };
-
     onMount(() => {
     //   draggable.ref.addEventListener("mouseup", () => {
     //     draggable.dragEnd();
@@ -116,21 +142,72 @@ export function DragDropContextProvider(props: any) {
     //     draggable.ref.style.transform = `translate(${0}px, ${0}px)`;
     //     console.log("dragEnd");
     //   });
-      draggable.ref.addEventListener("mousedown", (e : any) => {
+      draggable.ref.addEventListener("pointerdown", (e : any) => {
           draggable.dragStart();
           setPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
           setStartingMousePosition({x: e.clientX, y: e.clientY});
           setCursorDown(true);
           setTarget(draggable);
+          draggable.rectangle = draggable.ref.getBoundingClientRect();
           });
     });
 
     return draggable;
   };
 
+  const createDroppable = (id: string) => {
+    let droppable: Droppable = {
+      id: id,
+      startingPosition: { x: 0, y: 0 },
+      hoverOver: () => {},
+      hoverOut: () => {},
+      ref: null,
+      rectangle: null,
+      hovering: false
+    }
+    //how do we know when something is hovering over?
+    //the draggable needs to send a message to the droppable
+    setDropables([...droppables(), droppable]);
+
+    onMount(() => {
+      droppable.rectangle = droppable.ref.getBoundingClientRect();
+      document.addEventListener("pointermove", () => {
+        if(target() == null) return;
+        if (target().rectangle == null) return;
+          let rect1 = target().rectangle;
+          let rect2 = droppable.rectangle;
+          if (rect1.top > rect2.bottom ||
+              rect1.right < rect2.left ||
+              rect1.bottom < rect2.top ||
+              rect1.left > rect2.right
+                ) {
+                  if(!droppable.hovering) return;
+                  droppable.hovering = false;
+                  droppable.hoverOut(target());
+                } else {
+                  if(droppable.hovering) return;
+                  droppable.hovering = true;
+                  droppable.hoverOver(target());
+                }
+          
+
+      });
+      document.addEventListener("pointerup", () => {
+        if(!droppable.hovering) return;
+        droppable.hovering = false;
+        droppable.hoverOut(previousTarget());
+        if(previousTarget() == null) return;
+        droppable.ref.appendChild(previousTarget().ref);
+          
+
+      });
+    });
+    return droppables()[droppables().length - 1];
+ }
+
   return (
     <DragDropContext.Provider
-      value={{ onDragEnd, onDragStart, createDraggable }}
+      value={{ onDragEnd, onDragStart, createDraggable, onHoverOver, createDroppable, onHoverOut }}
     >
       {props.children}
     </DragDropContext.Provider>
