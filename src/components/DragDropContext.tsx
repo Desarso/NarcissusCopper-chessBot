@@ -174,8 +174,8 @@ export function DragDropContextProvider(props: any) {
       document.addEventListener("pointermove", () => {
         if(target() == null) return;
         if (target().rectangle == null) return;
-          let rect1 = target().rectangle;
-          let rect2 = droppable.rectangle;
+          let rect1 = target().ref.getBoundingClientRect();
+          let rect2 = droppable.ref.getBoundingClientRect();
           if (rect1.top > rect2.bottom ||
               rect1.right < rect2.left ||
               rect1.bottom < rect2.top ||
