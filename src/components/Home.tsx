@@ -48,7 +48,6 @@ const ChessSquare = ({ id, className, draggable} : any) => {
     id={id}
     class="dropZone"
     ref={droppable.ref}
-    placeHolder= {"dropMe"}
     >
     <Show when={draggable != undefined}>
       <Draggable id={id} />

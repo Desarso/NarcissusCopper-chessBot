@@ -20,8 +20,6 @@
     "vite-plugin-solid": "^2.3.0"
   },
   "dependencies": {
-    "@thisbeyond/solid-dnd": "^0.6.1",
-    "solid-dnd-directive": "^0.2.0",
     "solid-js": "^1.4.7"
   }
 }

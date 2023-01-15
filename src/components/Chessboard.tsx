@@ -1,17 +1,8 @@
 // type Props = {};
-import "../css/style.css"
 import { Move, TEST, Board } from "../Classes/chessClasses";
-import {
-  DragDropProvider,
-  DragDropSensors,
-  useDragDropContext,
-  createDraggable,
-  createDroppable,
-  DragOverlay,
-} from "@thisbeyond/solid-dnd";
 import { For } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
-import Home from "./Home";
+import ChessSquare from "./ChessSquare";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
@@ -21,10 +12,21 @@ let board = new Board();
 
 
 
+
+
+
 function Chessboard({}) {
   return <div class="chessBoard">
           <DragDropContextProvider>
-            <Home/>
+            <For each={board.board}>
+              {(square, index) => (
+                <ChessSquare 
+                  pieceClassName={board.board[index()]}
+                  className={`chessSquare ${index() % 16 <8 ? index() % 2 == 0 ? "lighterBackground" : "" : index() % 2 == 0 ? "" : "lighterBackground"}`}
+                  />
+              )}
+            </For>
+
           </DragDropContextProvider>
           
         </div>;

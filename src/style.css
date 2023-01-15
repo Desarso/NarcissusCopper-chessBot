@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html, body, #root {
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+}
+
+#root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chessBoard .chessSquare {
+  width: 10vmin;
+  height: 10vmin;
+  max-width: 10vmin;
+  max-height: 10vmin;
+  border: 1vmin solid transparent;
+  color: gray;
+  background-color: #76a2a3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: border 0.08s ease-in-out;
+}
+
+.chessBoard {
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 12.5%);
+  gap: 0px;
+  border: 1px solid black;
+}
+
+.piece {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url(./allPieces.svg);
+  /* background-size: 60vw; */
+  background-size: 600%;
+  background-position-y: 100%;
+  background-repeat: no-repeat;
+  width: calc(100% + 2vh);
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+
+.k {
+  background-position-x: 0%;
+}
+
+.r {
+  background-position-x: 80%;
+}
+
+.q {
+  background-position-x: 20%;
+}
+
+.p {
+  background-position-x: 100%;
+}
+
+.b {
+  background-position-x: 40%;
+}
+
+.n {
+  background-position-x: 60%;
+}
+
+.K {
+  background-position-x: 0%;
+  background-position-y: 0%;
+}
+
+.R {
+  background-position-x: 80%;
+  background-position-y: 0%;
+}
+
+.Q {
+  background-position-x: 20%;
+  background-position-y: 0%;
+}
+
+.P {
+  background-position-x: 100%;
+  background-position-y: 0%;
+}
+
+.B {
+  background-position-x: 40%;
+  background-position-y: 0%;
+}
+
+.N {
+  background-position-x: 60%;
+  background-position-y: 0%;
+}
+
+.chessBoard .lighterBackground {
+  background-color: #b6e4b6;
+}/*# sourceMappingURL=style.css.map */
