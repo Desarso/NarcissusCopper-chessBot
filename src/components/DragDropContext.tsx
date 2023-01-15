@@ -17,7 +17,6 @@ interface ContextProps {
 }
 
 interface Draggable {
-  id: string;
   startingPosition: { x: number; y: number };
   dragStart: Function;
   dragEnd: Function;
@@ -33,6 +32,7 @@ interface Droppable {
   ref: any;
   rectangle: any;
   hovering: boolean;
+  occupied: boolean;
 }
 
 //I need a drag start assignable function for both draggable and droppable
@@ -54,6 +54,8 @@ export function DragDropContextProvider(props: any) {
   const [target, setTarget] = createSignal(null);
   const [previousTarget, setPreviousTarget] = createSignal(null);
   const [previousPosition, setPreviousPosition] = createSignal({ x: 0, y: 0 });
+  const [overlapped, setOverlapped] = createSignal(null);
+  const [hovered, setHovered] = createSignal(null);
 
   //global dran and drop event listeners
   //click down is not global since they are specific to elements only.
@@ -67,10 +69,11 @@ export function DragDropContextProvider(props: any) {
         }px, ${
           mousePosition().y - startingMousePosition().y + previousPosition().y
         }px)`;
-        // console.log("starting mouse position: ", startingMousePosition());
-        // console.log("previous position: ", previousPosition());
+        target().ref.style.zIndex = 100;
         target().rectangle = target().ref.getBoundingClientRect();
-        // console.log(target().rectangle)
+        if(overlapped()?.length > 0){
+          setHovered(findHovered(overlapped()));
+        }
 
       }
     });
@@ -81,7 +84,7 @@ export function DragDropContextProvider(props: any) {
     //   console.log("target", target());
       if (target()?.ref) {
         target().ref.style.transform = `translate(${0}px, ${0}px)`;
-        target().ref.getAttribute('style');
+        target().ref.style.zIndex = 0;
         // console.log(target().ref.style)
       }
       setCursorDown(false);
@@ -102,7 +105,7 @@ export function DragDropContextProvider(props: any) {
       draggable.dragEnd = callback;
     }
   };
-
+   //injection function
   const onHoverOver = (callback: Function, droppable: Droppable) => {
     if(droppable !== undefined){
         droppable.hoverOver = callback;
@@ -114,20 +117,9 @@ export function DragDropContextProvider(props: any) {
     }
   }
 
-  function getPreviousPosition(style: string) {
-    if (style === null) return { x: 0, y: 0 };
-    // console.log("this is the function input", style)
-    let ass = style.split("translate(")[0];
-    let position;
-    if (ass) {
-      position = style.split("translate(")[1].split(")")[0].split("px, ");
-    }
-    return { x: parseInt(position[0]), y: parseInt(position[1]) };
-  }
 
   const createDraggable = (id: string) => {
     let draggable: Draggable = {
-      id: id,
       startingPosition: { x: 0, y: 0 },
       dragStart: () => {},
       dragEnd: () => {},
@@ -155,6 +147,24 @@ export function DragDropContextProvider(props: any) {
     return draggable;
   };
 
+
+  //what currently happens is that the droppable element detects
+  //if there is a target() element and that is has a rectangle propery defined
+  //then if that is the case, it then checks if this property overlaps it's own
+
+  //what we need is the draggable to check which elements is it overlapping,
+  //and then it needs to send a message to the droppable that it is overlapping the most
+  //this is because it can overlap multiple droppables at the same time
+  //this is done by checking the area of the overlap, which is just basic math
+
+  //right now we have an event listener in the droppable for pointermove
+  //we need the droppable to be able to receive messages from the draggable
+  
+  //what we can do is have a global array of droppables that are being hovered,
+  //so if there is overlap, we can add it to the array, but that also means if there is not overlap
+  //we need to remove from array, and that seems very computationally expensive
+  //
+
   const createDroppable = (id: string) => {
     let droppable: Droppable = {
       id: id,
@@ -163,7 +173,8 @@ export function DragDropContextProvider(props: any) {
       hoverOut: () => {},
       ref: null,
       rectangle: null,
-      hovering: false
+      hovering: false,
+      occupied: false
     }
     //how do we know when something is hovering over?
     //the draggable needs to send a message to the droppable
@@ -171,6 +182,9 @@ export function DragDropContextProvider(props: any) {
 
     onMount(() => {
       droppable.rectangle = droppable.ref.getBoundingClientRect();
+      if(droppable.ref.children.length > 0){
+        droppable.occupied = true;
+      }
       document.addEventListener("pointermove", () => {
         if(target() == null) return;
         if (target().rectangle == null) return;
@@ -181,22 +195,37 @@ export function DragDropContextProvider(props: any) {
               rect1.bottom < rect2.top ||
               rect1.left > rect2.right
                 ) {
+                  removeHovered(droppable);
                   if(!droppable.hovering) return;
                   droppable.hovering = false;
                   droppable.hoverOut(target());
                 } else {
-                  if(droppable.hovering) return;
-                  droppable.hovering = true;
-                  droppable.hoverOver(target());
+                  if(droppable.ref === hovered()?.ref){
+                    droppable.hovering = true;
+                    droppable.hoverOver(target());
+                  }else{
+                    droppable.hovering = false;
+                    droppable.hoverOut(target());
+                  }
+                  addHovered(droppable);
+                  
                 }
+    
           
 
       });
       document.addEventListener("pointerup", () => {
+        if(droppable.ref.children.length === 0){
+          droppable.occupied = false;
+        }
+        if(droppable.ref.children.length > 0){
+          droppable.occupied = true;
+        }
         if(!droppable.hovering) return;
         droppable.hovering = false;
         droppable.hoverOut(previousTarget());
         if(previousTarget() == null) return;
+        if(droppable.occupied) return;
         droppable.ref.appendChild(previousTarget().ref);
           
 
@@ -205,13 +234,88 @@ export function DragDropContextProvider(props: any) {
     return droppables()[droppables().length - 1];
  }
 
+
+ function getPreviousPosition(style: string) {
+  if (style === null) return { x: 0, y: 0 };
+  // console.log("this is the function input", style)
+  let ass = style.split("translate(")[0];
+  let position;
+  if (ass) {
+    position = style.split("translate(")[1].split(")")[0].split("px, ");
+  }
+  return { x: parseInt(position[0]), y: parseInt(position[1]) };
+}
+
+function addHovered(droppable: Droppable) {
+  if(overlapped() == null) setOverlapped([droppable]);
+  if(overlapped().includes(droppable)) return;
+  if(!overlapped()?.includes(droppable)) setOverlapped([...overlapped(), droppable]);
+}
+
+function removeHovered(droppable: Droppable) {
+  if(overlapped() == null) return;
+  if(!overlapped()?.includes(droppable)) return;
+  if(overlapped().includes(droppable)) setOverlapped(overlapped()?.filter((d) => d !== droppable));
+
+}
+
+function findHovered(overlapped: Droppable[])  {
+  if(overlapped == null) return;
+  let targetRect = target().ref.getBoundingClientRect();
+  // let hovered= "ass";
+  let hovered = overlapped.sort((a, b) => {
+    //we are given two rectangles, we must compare with target()
+    //and return same but calculate correctly
+    let arect = a.ref.getBoundingClientRect();
+    let brect = b.ref.getBoundingClientRect();
+    let awidht;
+    let aheight;
+    let bwidth;
+    let bheight;
+    let areaA;
+    let areaB;
+
+    //bottom is actually top, need to reverse y coords
+    if(targetRect.x > arect.x){
+      awidht = arect.right - targetRect.x;
+    }else{
+      awidht = targetRect.right - arect.x;
+    }
+    if(targetRect.bottom > arect.bottom){
+      aheight = arect.bottom - targetRect.top;
+    }else{
+      aheight = targetRect.bottom - arect.top;
+    }
+    areaA = awidht * aheight;
+
+    if(targetRect.x > brect.x){
+      bwidth = brect.right - targetRect.x;
+    }else{
+      bwidth = targetRect.right - brect.x;
+    }
+    if(targetRect.bottom > brect.bottom){
+      bheight = brect.bottom - targetRect.top;
+    }else{
+      bheight = targetRect.bottom - brect.top;
+    }
+
+    areaB = bwidth * bheight;
+
+   
+    return areaB - areaA;
+  });
+  return hovered[0];
+}
+
   return (
     <DragDropContext.Provider
       value={{ onDragEnd, onDragStart, createDraggable, onHoverOver, createDroppable, onHoverOut }}
     >
       {props.children}
-    </DragDropContext.Provider>
+    </DragDropContext.Provider>   
   );
 }
 
 export const useDragDropContext = () => useContext(DragDropContext)!;
+
+

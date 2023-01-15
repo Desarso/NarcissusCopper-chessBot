@@ -23,6 +23,7 @@ function Chessboard({}) {
                 <ChessSquare 
                   pieceClassName={board.board[index()]}
                   className={`chessSquare ${index() % 16 <8 ? index() % 2 == 0 ? "lighterBackground" : "" : index() % 2 == 0 ? "" : "lighterBackground"}`}
+                  id={generateRandomID()}
                   />
               )}
             </For>
@@ -33,6 +34,11 @@ function Chessboard({}) {
 }
 
 export default Chessboard;
+
+
+function generateRandomID() {
+    return Math.random().toString(36).substr(2, 9);
+}
 
 //all board positions will be represented using a number and a letter in the standard chess notations
 //all moves will be a string of two positions or 4 if its castling

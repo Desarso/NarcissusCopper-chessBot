@@ -6,6 +6,7 @@ import { useDragDropContext } from "./DragDropContext";
 type Props = {
     pieceClassName : string,
     className : string,
+    id : string
 }
 
 
@@ -16,16 +17,18 @@ type Props = {
         onHoverOver((e: any) => {
         // console.log("hover over");
         // console.log(e);
-        droppable.ref.style.boxShadow = "inset 0px 0px 20px 20px rgba(0,0,0,0.3)";
+        droppable.ref.classList.add("hovered");
     
         }, droppable);
     
         onHoverOut((e: any) => {
         // console.log("hover out");
-        droppable.ref.style.boxShadow = "none";
+        droppable.ref.classList.remove("hovered");
         }, droppable);
     
-        let variable = "";
+       if(draggable().getAttribute('class').length === 0){
+        draggable = undefined;
+       }
     
         return (
         <div
@@ -41,9 +44,9 @@ type Props = {
     
   }
 
-    const Draggable = ({ id, className }: any) => {
+    const Draggable = ({className }: any) => {
         const { onDragStart, onDragEnd, createDraggable } = useDragDropContext();
-        const draggable = createDraggable(id);
+        const draggable = createDraggable();
     
         onDragStart(() => {
         // console.log("drag Start");
@@ -63,15 +66,15 @@ type Props = {
         );
   };
 
-function ChessSquare({pieceClassName, className}: Props) {
+function ChessSquare({pieceClassName, className, id}: Props) {
   return (
     <Droppable 
         className={className}
         draggable={
         <Draggable
-             id="1" 
              className={`${pieceClassName != " " ? pieceClassName + " piece" : ""}`} 
         />}
+        id={id}
         
     />
   )

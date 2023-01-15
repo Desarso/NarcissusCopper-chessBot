@@ -27,8 +27,15 @@ html, body, #root {
     justify-content: center;
     align-items: center;
     transition: border 0.08s ease-in-out;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 
+  .hovered{
+    border-color: white !important;
+    }
   .chessBoard{
 
     max-width: 100%;
