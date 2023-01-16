@@ -13,15 +13,19 @@ interface ContextProps {
   createDraggable: Function;
   createDroppable: Function;
   onHoverOver: Function
-  onHoverOut: Function
+  onHoverOut: Function,
+  onGlobalDragStart: Function
+  onGlobalDragEnd: Function
 }
 
 interface Draggable {
+  id: string;
   startingPosition: { x: number; y: number };
-  dragStart: Function;
+  dragStart: Function[];
   dragEnd: Function;
   ref: any;
   rectangle: any
+  data: any
 }
 
 interface Droppable {
@@ -33,6 +37,7 @@ interface Droppable {
   rectangle: any;
   hovering: boolean;
   occupied: boolean;
+  droppable: boolean;
 }
 
 //I need a drag start assignable function for both draggable and droppable
@@ -56,6 +61,8 @@ export function DragDropContextProvider(props: any) {
   const [previousPosition, setPreviousPosition] = createSignal({ x: 0, y: 0 });
   const [overlapped, setOverlapped] = createSignal(null);
   const [hovered, setHovered] = createSignal(null);
+  const globalDragStart: Function[] = [];
+  const globalDragEnd: Function[] = [];
 
   //global dran and drop event listeners
   //click down is not global since they are specific to elements only.
@@ -74,12 +81,14 @@ export function DragDropContextProvider(props: any) {
         if(overlapped()?.length > 0){
           setHovered(findHovered(overlapped()));
         }
-
       }
     });
     document.addEventListener("pointerup", () => {
       if (target() == null) return;
-      target().dragEnd();
+      target().dragEnd(hovered());
+      globalDragEnd.forEach((callback) => {
+        callback();
+      });
     //   console.log("mouse up");
     //   console.log("target", target());
       if (target()?.ref) {
@@ -96,9 +105,20 @@ export function DragDropContextProvider(props: any) {
   //injection function
   const onDragStart = (callback: any, draggable: Draggable) => {
     if (draggable !== undefined) {
-      draggable.dragStart = callback;
+      draggable.dragStart.push(callback) ;
     }
   };
+
+  const onGlobalDragStart = (callback: any) => {
+    globalDragStart.push(callback);
+  };
+
+  const onGlobalDragEnd = (callback: any) => {
+    globalDragEnd.push(callback);
+  }
+
+
+  
   //injection function
   const onDragEnd = (callback: Function, draggable: Draggable) => {
     if (draggable !== undefined) {
@@ -120,11 +140,13 @@ export function DragDropContextProvider(props: any) {
 
   const createDraggable = (id: string) => {
     let draggable: Draggable = {
+      id: id,
       startingPosition: { x: 0, y: 0 },
-      dragStart: () => {},
+      dragStart: [],
       dragEnd: () => {},
       ref: null,
-      rectangle: null
+      rectangle: null,
+      data: {}
     };
     onMount(() => {
     //   draggable.ref.addEventListener("mouseup", () => {
@@ -135,7 +157,12 @@ export function DragDropContextProvider(props: any) {
     //     console.log("dragEnd");
     //   });
       draggable.ref.addEventListener("pointerdown", (e : any) => {
-          draggable.dragStart();
+        for(let i = 0; i < draggable.dragStart.length; i++){
+            draggable.dragStart[i](draggable);
+        }
+        for(let i = 0; i < globalDragStart.length; i++){
+            globalDragStart[i](draggable);
+        }
           setPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
           setStartingMousePosition({x: e.clientX, y: e.clientY});
           setCursorDown(true);
@@ -174,7 +201,8 @@ export function DragDropContextProvider(props: any) {
       ref: null,
       rectangle: null,
       hovering: false,
-      occupied: false
+      occupied: false,
+      droppable: true
     }
     //how do we know when something is hovering over?
     //the draggable needs to send a message to the droppable
@@ -201,6 +229,7 @@ export function DragDropContextProvider(props: any) {
                   droppable.hoverOut(target());
                 } else {
                   if(droppable.ref === hovered()?.ref){
+                    if(droppable.hovering) return;
                     droppable.hovering = true;
                     droppable.hoverOver(target());
                   }else{
@@ -215,17 +244,22 @@ export function DragDropContextProvider(props: any) {
 
       });
       document.addEventListener("pointerup", () => {
-        if(droppable.ref.children.length === 0){
-          droppable.occupied = false;
-        }
-        if(droppable.ref.children.length > 0){
-          droppable.occupied = true;
-        }
+        // if(droppable.ref.children.length === 0){
+        //   droppable.occupied = false;
+        // }
+        // if(droppable.ref.children.length > 0){
+        //   droppable.occupied = true;
+        // }
         if(!droppable.hovering) return;
         droppable.hovering = false;
         droppable.hoverOut(previousTarget());
         if(previousTarget() == null) return;
-        if(droppable.occupied) return;
+        // if(droppable.occupied) return;
+        if(droppable.droppable === false) return;
+        if(droppable.ref.children.length > 0){
+          droppable.ref.children[0].remove();
+        }
+        
         droppable.ref.appendChild(previousTarget().ref);
           
 
@@ -262,7 +296,6 @@ function removeHovered(droppable: Droppable) {
 function findHovered(overlapped: Droppable[])  {
   if(overlapped == null) return;
   let targetRect = target().ref.getBoundingClientRect();
-  // let hovered= "ass";
   let hovered = overlapped.sort((a, b) => {
     //we are given two rectangles, we must compare with target()
     //and return same but calculate correctly
@@ -304,12 +337,13 @@ function findHovered(overlapped: Droppable[])  {
    
     return areaB - areaA;
   });
+
   return hovered[0];
 }
 
   return (
     <DragDropContext.Provider
-      value={{ onDragEnd, onDragStart, createDraggable, onHoverOver, createDroppable, onHoverOut }}
+      value={{ onDragEnd, onDragStart, createDraggable, onHoverOver, createDroppable, onHoverOut, onGlobalDragStart, onGlobalDragEnd }}
     >
       {props.children}
     </DragDropContext.Provider>   

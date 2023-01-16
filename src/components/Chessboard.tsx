@@ -6,14 +6,32 @@ import ChessSquare from "./ChessSquare";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
+
+
 let board = new Board();
-// board.displayBoard();
-// console.log(board.board)
+// board.movePiece("e2", "e2");
+board.displayBoard();
+// let legalMoves = board.findLegalMoves(board);
+// console.log(legalMoves);
+// console.log(board.boardToFen())
+
+
+let boardIds = getBoardIds();
+
+function getBoardIds(){
+    let boardIds = [];
+    for(let i = 0; i < 8; i++){
+        for(let j = 0; j < 8; j++){
+            boardIds.push(`${String.fromCharCode(97+j)}${8-i}`);
+        }
+    }
+    return boardIds;
+}
 
 
 
 
-
+let id = 0;
 
 function Chessboard({}) {
   return <div class="chessBoard">
@@ -23,7 +41,9 @@ function Chessboard({}) {
                 <ChessSquare 
                   pieceClassName={board.board[index()]}
                   className={`chessSquare ${index() % 16 <8 ? index() % 2 == 0 ? "lighterBackground" : "" : index() % 2 == 0 ? "" : "lighterBackground"}`}
-                  id={generateRandomID()}
+                  id={boardIds[index()]}
+                  board = {board}
+                  draggableId={generateRandomID()}
                   />
               )}
             </For>

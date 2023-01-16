@@ -14,6 +14,14 @@ html, body, #root {
   justify-content: center;
 }
 
+.circle {
+  border-radius: 100%;
+  border: 1vmin solid transparent;
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 30%;
+  height: 30%;
+}
+
 .chessBoard .chessSquare {
   width: 10vmin;
   height: 10vmin;
@@ -59,6 +67,13 @@ html, body, #root {
   height: 100%;
   margin: 0px;
   padding: 0px;
+}
+.piece .circle {
+  position: absolute;
+  border-color: rgba(0, 0, 0, 0.2);
+  width: 120%;
+  height: 120%;
+  background-color: transparent;
 }
 
 .k {

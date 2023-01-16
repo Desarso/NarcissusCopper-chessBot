@@ -15,6 +15,14 @@ html, body, #root {
     justify-content: center;
 }
 
+.circle{
+    border-radius: 100%;
+    border: 1vmin solid transparent;
+    background-color: rgb(0, 0, 0, .2);
+    width: calc(30%);
+    height: calc(30%);
+}
+
 .chessBoard .chessSquare {
     width: 10vmin;
     height: 10vmin;
@@ -54,12 +62,19 @@ html, body, #root {
     background-image: url(./allPieces.svg);
     /* background-size: 60vw; */
     background-size: 600% ;
-    background-position-y: 100% ;
+    background-position-y: 100% + 2px ;
     background-repeat: no-repeat;
     width: calc(100% + 2vh);
     height: 100%;
     margin: 0px;
     padding: 0px;
+    .circle{
+        position: absolute;
+        border-color:  rgb(0, 0, 0, .2);
+        width: calc(120%);
+        height: calc(120%);
+        background-color: transparent;
+    }
 }
 .k{
     background-position-x: 0%;

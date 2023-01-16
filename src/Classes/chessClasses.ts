@@ -318,6 +318,7 @@ export class Board {
   legalMoves: Move[] = [];
   inCheck = false;
   checkMate = false;
+  capturedPieces: Piece[] = [];
 
   //constructor creates a board with all the pieces in their starting positions
   constructor(board?: string[], fen?: string) {
@@ -519,6 +520,7 @@ export class Board {
   }
 
   public movePiece(start: string, end: string): void {
+    //all this function does is change the position of the piece independent of the board.
     let newMove = new Move(undefined, undefined, start, end);
     newMove.boardEndIndex;
     //so move first gets the current piece index
@@ -540,12 +542,22 @@ export class Board {
       this.enPassantTargetSquare = enPassant;
     }
     //then it sets the piece's position to  end position
+    if(this.getPieceIndex(end) !== -1){
+      console.log("piece captured");
+      let capturedPieceIndex = this.getPieceIndex(end);
+      let capturedPiece = this.Pieces[capturedPieceIndex];
+      this.capturedPieces.push(capturedPiece);
+      this.Pieces.splice(capturedPieceIndex, 1);
+
+    } 
     piece.move(end);
+
     this.currentTurnColor =
       this.currentTurnColor === "white" ? "black" : "white";
 
     //then it sets the fen to the new fen
     this.fen = this.boardToFen();
+    this.board = this.fenToBoard(this.fen);
   }
 
   private getPieceIndex(position: string): number {
