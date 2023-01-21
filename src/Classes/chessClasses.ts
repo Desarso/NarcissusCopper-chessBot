@@ -137,6 +137,7 @@ export class Position {
   moveTo(position: string) {
     this.position = position;
     this.boardIndex = this.convertToBoardIndex(position);
+    this.pos = new V2D(this.boardIndex % 8, Math.floor(this.boardIndex / 8));
   }
 
   getPosition() {
@@ -403,6 +404,11 @@ export class Board {
         : (this.currentTurnColor = "black");
       this.halfMoveClock = parseInt(parts[4]);
       this.fullMoveNumber = parseInt(parts[5]);
+    }else if(fen != undefined){
+      if(!fen.match(fenregex)){
+        throw new Error("Invalid fen: "
+        + fen)
+      }
     }
 
     this.Pieces = [];
@@ -528,26 +534,66 @@ export class Board {
     //then it gets the piece at that index
     let piece = this.Pieces[pieceIndex];
 
+    if(piece?.type === undefined){
+     
+      this.displayBoard();
+      console.log(this.Pieces)
+      console.log(this.fen);
+      console.log(start)
+      throw new Error("Invalid move");
+      
+
+    }
+
+    if(piece.type != 'p'){
+      this.halfMoveClock++;
+    }
+
+
     //check if the piece is a pawn, and it if moved twice.
+    // console.log(piece);
+
     if (
       piece.type == "p" &&
       Math.abs(piece.getIndex() - newMove.boardEndIndex) == 16
     ) {
-      let enPassant;
+      let enPassant = '-';
       if (piece.color === "white") {
         enPassant = this.convertToPosition(newMove.boardEndIndex + 8);
       } else {
         enPassant = this.convertToPosition(newMove.boardEndIndex - 8);
       }
       this.enPassantTargetSquare = enPassant;
+    }else{
+      this.enPassantTargetSquare = '-';
     }
+     if(piece.type === 'k'){
+      if(this.castlingRights.length === 2){
+        this.castlingRights = '-';
+      }else {
+        if(piece.color === 'white'){
+          this.castlingRights = this.castlingRights.replace('KQ', '');
+        }else{
+          this.castlingRights = this.castlingRights.replace('kq', '');
+        }
+      }
+
+     
+     }
+
+     if(this.currentTurnColor === "black"){
+        this.fullMoveNumber++;
+     }
+
     //then it sets the piece's position to  end position
+    //for some reason I am calling move piece, on dragStart
     if(this.getPieceIndex(end) !== -1){
       console.log("piece captured");
       let capturedPieceIndex = this.getPieceIndex(end);
       let capturedPiece = this.Pieces[capturedPieceIndex];
       this.capturedPieces.push(capturedPiece);
       this.Pieces.splice(capturedPieceIndex, 1);
+      this.halfMoveClock = 0;
 
     } 
     piece.move(end);
@@ -556,6 +602,7 @@ export class Board {
       this.currentTurnColor === "white" ? "black" : "white";
 
     //then it sets the fen to the new fen
+    //this is wrong, can't simply convert board to fen.
     this.fen = this.boardToFen();
     this.board = this.fenToBoard(this.fen);
   }
@@ -803,7 +850,7 @@ export class Board {
     // console.log("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
     for (let i = 0; i < tests.length; i++) {
       if (!tests[i]) {
-        throw new Error("Board to fen failed, test " + (i + 1) + " failed");
+        throw new Error("Board to fen failed, test " + (i + 1) + " failed"+ board.boardToFen());
       }
     }
     // console.log("Board to fen passed");
@@ -951,12 +998,21 @@ export class Board {
 
   public findLegalMoves(board: Board): any[] {
     let moves = this.findPseudoLegalMoves(board);
+    // board.displayBoard();
+    // console.log(board.fen);
+    // for(let i = 0; i < moves.length; i++) {
+    //   let piece = this.getPieceAtPosition(moves[i].start);
+    //   console.log("piece at index", i ,"is", piece)
+    // }
+    // console.log(board.Pieces)
     let legalMoves = [];
     for (let i = 0; i < moves.length; i++) {
       let newBoard = new Board([], board.boardToFen());
       newBoard.movePiece(moves[i].start, moves[i].end);
       newBoard.currentTurnColor = newBoard.currentTurnColor === "white" ? "black" : "white";
       if (!this.isInCheck(newBoard)) {
+        // newBoard.displayBoard()
+        // console.log(newBoard.fen)
         legalMoves.push(moves[i]);
       }
     }
@@ -976,6 +1032,8 @@ export class Board {
 
     board = new Board([], "rnbqkbnr/1ppp1ppp/8/p3Q3/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 0 3")
     moves = this.findLegalMoves(board);
+    // console.log(moves, "test 2");
+    // board.displayBoard();
     tests.push(moves.length == 3);
 
     board = new Board([], "rnbqkbnr/p1p1pppp/1p6/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3")
@@ -985,7 +1043,7 @@ export class Board {
 
     for (let i = 0; i < tests.length; i++) {
       if (!tests[i]) {
-        throw new Error("Find legal moves failed, test " + (i + 1) + " failed");
+        throw new Error("Find legal moves failed, test " + (i + 1) + " failed" );
       }
     }
   }
@@ -994,6 +1052,16 @@ export class Board {
     //we first copy the board, and change the turn to the opposite color
 
     let boardToSeeIfInCheck = new Board([], board.boardToFen());
+    let empty = true;
+    for(let i = 0; i < boardToSeeIfInCheck.board.length; i++) {
+      if(boardToSeeIfInCheck.board[i] != "-") {
+          empty = false;
+      }
+    }
+    if(empty) {
+      console.log("empty board")
+      console.log(board.boardToFen())
+    }
     boardToSeeIfInCheck.currentTurnColor = boardToSeeIfInCheck.currentTurnColor == "white" ? "black" : "white";
 
     let opponentMoves = boardToSeeIfInCheck.findPseudoLegalMoves(boardToSeeIfInCheck);
@@ -1005,6 +1073,15 @@ export class Board {
         currentKingIndex = board.Pieces[i].getIndex();
       }
     }
+   if(opponentMoves.length == 0) {
+      Error("No opponent moves found, this should not happen");
+      console.log("main board");
+      board.displayBoard()
+      console.log(board.fen);
+      console.log("thingy");
+      boardToSeeIfInCheck.displayBoard()
+      console.log(boardToSeeIfInCheck.fen);
+   }
     //now we check if any of the opponent moves can eat the king
     for(let i = 0; i < opponentMoves.length; i++) {
       if(opponentMoves[i].boardEndIndex == currentKingIndex) {

@@ -112,6 +112,7 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
             startingIndex = draggable.ref.parentElement.id;
             let legalMoves = board.findLegalMoves(board);
             let legalPieceMoves = [];
+            console.log("start")
         
             for(let i = 0; i < legalMoves.length; i++){
                 if(legalMoves[i].start == startingIndex){
@@ -122,6 +123,7 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
         }, draggable);
     
         onDragEnd(async (e: any) => {
+            console.log("end")
             if(e === null) return;
             e.occupied = false;
             // console.log(e);
@@ -130,10 +132,6 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
             await delay(1);
             let oppositeColor;
             if(!e.ref.children[0]) return;
-            // console.log(e.ref.children[0].id);
-            // console.log(draggable.id)
-            // console.log(draggable.ref.parentElement.id);
-            // console.log(e.occupied)
             if(e.ref.children[0].id === draggable.id){
                 endingIndex = draggable.ref.parentElement.id;
                 if(endingIndex === startingIndex) return;
