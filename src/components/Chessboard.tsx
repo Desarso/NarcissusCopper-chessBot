@@ -34,6 +34,51 @@ function getBoardIds(){
 let id = 0;
 
 function Chessboard({}) {
+  //need to keep track of board more dynamically so that it updates better
+  
+  function updateBoard(){
+    let UIboard =  document.querySelectorAll('.chessSquare');
+    //there is UI problem.
+
+    //for the mismatch there should be 2 mismatches
+    //one will the the piece
+    //on will be the empty space
+    //all I need to do is figure out the two ID's
+    //for the elements
+    //then I grab the children from the populated square,
+    //and put it in the  emtpy square
+    //then I re-check to make sure the board matches.
+    //this is purely UI I don't need to update the board
+    let mismatchStart = "";
+    let mismatchEnd = "";
+    for(let i = 0; i < UIboard.length; i++){
+      if(UIboard[i].children[0] != undefined){
+        if(UIboard[i].children[0].classList[0] != board.board[i]){
+          //if there is a mismatch, then we need to update the UI board
+          //first I need to figure what the mismatch is.
+          // console.log(UIboard[i].children[0].parentElement.id)
+
+          // console.log("mismatch");
+          mismatchStart = UIboard[i].id;
+        }
+      }else{
+        if(board.board[i] != " "){
+          // console.log("mismatch");
+          mismatchEnd = UIboard[i].id;
+        }
+      }
+    }
+    if(mismatchStart != "" && mismatchEnd != ""){
+      console.log("Mismatch end: " + mismatchEnd);
+      console.log("Mismatch start: " + mismatchStart);
+      let piece = document.getElementById(mismatchStart).children[0];
+      let endSpot = document.getElementById(mismatchEnd);
+      endSpot.appendChild(piece);
+      // console.log(piece);
+    }
+  }
+
+
   return <div class="chessBoard">
           <DragDropContextProvider>
             <For each={board.board}>
@@ -43,6 +88,7 @@ function Chessboard({}) {
                   className={`chessSquare ${index() % 16 <8 ? index() % 2 == 0 ? "lighterBackground" : "" : index() % 2 == 0 ? "" : "lighterBackground"}`}
                   id={boardIds[index()]}
                   board = {board}
+                  updateBoard = {updateBoard}
                   draggableId={generateRandomID()}
                   />
               )}
@@ -59,6 +105,8 @@ export default Chessboard;
 function generateRandomID() {
     return Math.random().toString(36).substr(2, 9);
 }
+
+
 
 //all board positions will be represented using a number and a letter in the standard chess notations
 //all moves will be a string of two positions or 4 if its castling

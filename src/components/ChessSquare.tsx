@@ -9,7 +9,8 @@ type Props = {
     className : string,
     id : string
     board : any,
-    draggableId : string
+    draggableId : string,
+    updateBoard : any
 }
 
 
@@ -19,7 +20,7 @@ type Props = {
 
 
 
-function ChessSquare({pieceClassName, className, id, board, draggableId}: Props) {
+function ChessSquare({pieceClassName, className, id, board, draggableId, updateBoard}: Props) {
 
 
     const Droppable = ({ id, className, draggable, draggableClass} : any) => {
@@ -78,6 +79,8 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
                 pieceCircles[i].classList.remove('circle');
             }
 
+      
+
             
         })
 
@@ -112,7 +115,7 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
             startingIndex = draggable.ref.parentElement.id;
             let legalMoves = board.findLegalMoves(board);
             let legalPieceMoves = [];
-            console.log("start")
+            // console.log("start")
         
             for(let i = 0; i < legalMoves.length; i++){
                 if(legalMoves[i].start == startingIndex){
@@ -123,7 +126,7 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
         }, draggable);
     
         onDragEnd(async (e: any) => {
-            console.log("end")
+            // console.log("end")
             if(e === null) return;
             e.occupied = false;
             // console.log(e);
@@ -136,12 +139,21 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
                 endingIndex = draggable.ref.parentElement.id;
                 if(endingIndex === startingIndex) return;
                 // console.log("legal move");
+                let previousBoard = board.board;
                 board.movePiece(startingIndex, endingIndex);
+                let newBoard = board.board;
+                let numberOfChanges = 0;
+                updateBoard();
                 board.displayBoard();
+                //here I need to help the UI update
+                //so for example I should be able to find the differences
+                //from the previous board
+                //and apply it to the UI.
+            
             }
             
         }, draggable);
-    
+    2
         return (
         <section
             ref={draggable.ref}
@@ -156,6 +168,8 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
 
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+    //so I would like the change in board to reflect a change in the UI
+    //this seems a bit difficult since an update to board does not seem to trigger re-render.
   return (
     <Droppable 
         className={className}
@@ -171,3 +185,5 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
 }
 
 export default ChessSquare
+
+

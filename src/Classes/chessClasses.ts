@@ -567,6 +567,8 @@ export class Board {
     }else{
       this.enPassantTargetSquare = '-';
     }
+
+
      if(piece.type === 'k'){
       if(this.castlingRights.length === 2){
         this.castlingRights = '-';
@@ -577,9 +579,24 @@ export class Board {
           this.castlingRights = this.castlingRights.replace('kq', '');
         }
       }
-
-     
+  
+      let startPos = new Position(start);
+      let endPos = new Position(end);
+      if(startPos.pos.x - endPos.pos.x === 2){
+        let rookStart = this.convertToPosition(startPos.boardIndex - 4);
+        let rookEnd = this.convertToPosition(startPos.boardIndex - 1);
+        //the problem here is that the king and rook move are just one move not two and so the whole thing is wrong.
+        //instead of calling move piece I need to call the inner piece function.
+        let rook = this.getPieceAtBoardIndex(startPos.boardIndex - 4);
+        rook.move(rookEnd);
      }
+      if(startPos.pos.x - endPos.pos.x === -2){
+        let rookStart = this.convertToPosition(startPos.boardIndex + 3);
+        let rookEnd = this.convertToPosition(startPos.boardIndex + 1);
+        let rook = this.getPieceAtBoardIndex(startPos.boardIndex + 3);
+        rook.move(rookEnd);
+      }
+    }
 
      if(this.currentTurnColor === "black"){
         this.fullMoveNumber++;
@@ -606,6 +623,7 @@ export class Board {
     this.fen = this.boardToFen();
     this.board = this.fenToBoard(this.fen);
   }
+
 
   private getPieceIndex(position: string): number {
     let index = -1;
@@ -1819,6 +1837,9 @@ export class Board {
     let moves: Move[] = [];
     let pos = piece.getPos().pos;
     let move = new V2D(pos.x, pos.y + 1);
+    //here I need to add a move that is castling in witch
+    //the king can move two squares in either direction depending on the castling rights of the board state
+    //
     if(piece.color === "black"){
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
@@ -1864,7 +1885,25 @@ export class Board {
       move = new V2D(pos.x - 1, pos.y - 1);
       if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
+      }else if(board.Piece(move)?.color === "white"){
+        moves.push(new Move(pos, move));
       }
+      //black king side castling
+      //problem is I am removing castling rights when finding move before actually moving.
+      move = new V2D(pos.x + 2, pos.y);
+      if (board.Piece(move) === " " && pos.x + 2 <= 7 && pos.y >= 0) {
+        if(board.Piece(new V2D(pos.x + 1, pos.y)) === " " && board.castlingRights.includes("k") ){
+          moves.push(new Move(pos, move));
+      }
+    }
+      //black queen side castling
+      move = new V2D(pos.x - 2, pos.y);
+      if (board.Piece(move) === " " && pos.x - 2 >= 0 && pos.y >= 0) {
+        if(board.Piece(new V2D(pos.x - 1, pos.y)) === " " && board.Piece(move) === " " && board.castlingRights.includes("q") ){
+          moves.push(new Move(pos, move));
+      }
+    }
+
     }else{
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
@@ -1913,6 +1952,23 @@ export class Board {
       } else if (board.Piece(move)?.color === "black") {
         moves.push(new Move(pos, move));
       }
+      //white king side castling
+      move = new V2D(pos.x + 2, pos.y);
+      if (board.Piece(move) === " " && pos.x + 2 <= 7 && pos.y >= 0) {
+        if(board.Piece(new V2D(pos.x + 1, pos.y)) === " " && board.castlingRights.includes("K") ){
+          moves.push(new Move(pos, move));
+        }
+    }
+      //white queen side castling
+      move = new V2D(pos.x - 2, pos.y);
+      if (board.Piece(move) === " " && pos.x - 2 >= 0 && pos.y >= 0) {
+        if(board.Piece(new V2D(pos.x - 1, pos.y)) === " " && board.Piece(move) === " " && board.castlingRights.includes("Q") ){
+          moves.push(new Move(pos, move));
+        }
+      }
+
+
+
       
     }
      
