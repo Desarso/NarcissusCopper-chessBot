@@ -519,7 +519,7 @@ export class Board {
     return fen;
   }
 
-  private getPieceAtBoardIndex(index: number): any {
+  public getPieceAtBoardIndex(index: number): any {
     for (let j = 0; j < this.Pieces.length; j++) {
       if (this.Pieces[j].getIndex() === index) {
         return this.Pieces[j];
@@ -678,7 +678,7 @@ export class Board {
     return index;
   }
 
-  private getPieceAtPosition(position: string): any {
+  public getPieceAtPosition(position: string): any {
     let piece = "";
     for (let i = 0; i < this.Pieces.length; i++) {
       let piece = this.Pieces[i];
