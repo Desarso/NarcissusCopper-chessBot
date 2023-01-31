@@ -1,15 +1,9 @@
-current bugs 
+current bugs
 
-the black pawn don't seem to be able to eat white pieces sideways,
-there is an error using the movePiece command to eat pieces.
 
-Black queen can't move diagonally,
-pawns can't eat non pawns.
+pawsn can not be crowned
 
-Need to keep entire game history so that I can go back,
-which mean I need to have pgf for the games. 
-
-Also need a checkmate indicator.
+there is no checkmate indicator
 
 
 

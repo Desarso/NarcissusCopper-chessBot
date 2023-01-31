@@ -449,7 +449,7 @@ export class Board {
     console.log("    A  B  C  D  E  F  G  H");
   }
 
-  private fenToBoard(fen: string): string[] {
+  public fenToBoard(fen: string): string[] {
     let board = [];
     let fenArray = fen.split(" ");
     let fenBoard = fenArray[0];
@@ -469,6 +469,9 @@ export class Board {
           board.push(piece);
         }
       }
+    }
+    if(board.length === 63){
+      board.push(" ");
     }
 
     return board;
@@ -550,12 +553,43 @@ export class Board {
     }
 
 
-    //check if the piece is a pawn, and it if moved twice.
-    // console.log(piece);
+      //checking if en-passant is possible and if the current move is a pawn
+    if(this.enPassantTargetSquare != '-' && piece.type === 'p'){
+        let startPos = new Position(start);
+        let endPos = new Position(end);
+  
+        if(piece.color === 'white' && startPos.pos.y === 3 && endPos.position === end){
+            //all I need to do here is remove the old piece from it's current spot.
+            //so what we need to do is target the square that is 8 spaces away from the en-peasant square
+            //since the piece is white, then it would be +8;
+            let pieceToRemoveIndex = endPos.boardIndex + 8;
+            let pieceToRemove = this.getPieceAtBoardIndex(pieceToRemoveIndex);
+            this.board[pieceToRemoveIndex] = ' ';
+            this.Pieces.splice(this.Pieces.indexOf(pieceToRemove), 1);
+          }
+        if(piece.color === 'black' && startPos.pos.y === 4 && endPos.position === end){
+          //all I need to do here is remove the old piece from it's current spot.
+          //so what we need to do is target the square that is 8 spaces away from the en-peasant square
+          //since the piece is black, then it would be -8;
+          let pieceToRemoveIndex = endPos.boardIndex - 8;
+          let pieceToRemove = this.getPieceAtBoardIndex(pieceToRemoveIndex);
+          this.board[pieceToRemoveIndex] = ' ';
+          this.Pieces.splice(this.Pieces.indexOf(pieceToRemove), 1);
+        }
 
+
+        // this.inCheck = this.isInCheck(this);
+  
+        
+        
+    }
+
+
+//set en-passant target square on pawn double move
     if (
       piece.type == "p" &&
       Math.abs(piece.getIndex() - newMove.boardEndIndex) == 16
+
     ) {
       let enPassant = '-';
       if (piece.color === "white") {
@@ -567,6 +601,11 @@ export class Board {
     }else{
       this.enPassantTargetSquare = '-';
     }
+
+
+
+    
+
 
 
      if(piece.type === 'k'){
@@ -622,6 +661,8 @@ export class Board {
     //this is wrong, can't simply convert board to fen.
     this.fen = this.boardToFen();
     this.board = this.fenToBoard(this.fen);
+    this.inCheck = this.isInCheck(this);
+    // console.log("inside",this.isInCheck(this));
   }
 
 
@@ -1015,7 +1056,7 @@ export class Board {
   }
 
   public findLegalMoves(board: Board): any[] {
-    let moves = this.findPseudoLegalMoves(board);
+    let moves = board.findPseudoLegalMoves(board);
     // board.displayBoard();
     // console.log(board.fen);
     // for(let i = 0; i < moves.length; i++) {
@@ -1068,8 +1109,9 @@ export class Board {
 
   public isInCheck(board: Board): boolean {
     //we first copy the board, and change the turn to the opposite color
-
+    // console.log(board);
     let boardToSeeIfInCheck = new Board([], board.boardToFen());
+
     let empty = true;
     for(let i = 0; i < boardToSeeIfInCheck.board.length; i++) {
       if(boardToSeeIfInCheck.board[i] != "-") {
@@ -1082,7 +1124,7 @@ export class Board {
     }
     boardToSeeIfInCheck.currentTurnColor = boardToSeeIfInCheck.currentTurnColor == "white" ? "black" : "white";
 
-    let opponentMoves = boardToSeeIfInCheck.findPseudoLegalMoves(boardToSeeIfInCheck);
+    let opponentMoves = board.findPseudoLegalMoves(boardToSeeIfInCheck);
 
     //first we get the index of the king from the actual board
     let currentKingIndex;
@@ -1890,15 +1932,16 @@ export class Board {
       }
       //black king side castling
       //problem is I am removing castling rights when finding move before actually moving.
+      //King can only castle if it's not in check
       move = new V2D(pos.x + 2, pos.y);
-      if (board.Piece(move) === " " && pos.x + 2 <= 7 && pos.y >= 0) {
+      if (board.Piece(move) === " " && pos.x + 2 === 6 && pos.y === 0 && this.inCheck === false) {
         if(board.Piece(new V2D(pos.x + 1, pos.y)) === " " && board.castlingRights.includes("k") ){
           moves.push(new Move(pos, move));
       }
     }
       //black queen side castling
       move = new V2D(pos.x - 2, pos.y);
-      if (board.Piece(move) === " " && pos.x - 2 >= 0 && pos.y >= 0) {
+      if (board.Piece(move) === " " && pos.x - 2 === 2 && pos.y === 0 && this.inCheck === false) {
         if(board.Piece(new V2D(pos.x - 1, pos.y)) === " " && board.Piece(move) === " " && board.castlingRights.includes("q") ){
           moves.push(new Move(pos, move));
       }
@@ -1954,14 +1997,14 @@ export class Board {
       }
       //white king side castling
       move = new V2D(pos.x + 2, pos.y);
-      if (board.Piece(move) === " " && pos.x + 2 <= 7 && pos.y >= 0) {
+      if (board.Piece(move) === " " && pos.x + 2 === 6 && pos.y === 7 && this.inCheck === false) {
         if(board.Piece(new V2D(pos.x + 1, pos.y)) === " " && board.castlingRights.includes("K") ){
           moves.push(new Move(pos, move));
         }
     }
       //white queen side castling
       move = new V2D(pos.x - 2, pos.y);
-      if (board.Piece(move) === " " && pos.x - 2 >= 0 && pos.y >= 0) {
+      if (board.Piece(move) === " " && pos.x - 2 === 2 && pos.y === 7 && this.inCheck === false) {
         if(board.Piece(new V2D(pos.x - 1, pos.y)) === " " && board.Piece(move) === " " && board.castlingRights.includes("Q") ){
           moves.push(new Move(pos, move));
         }
@@ -1981,7 +2024,7 @@ export class Board {
     board.addPiece(piece);
     let moves = board.findKingMoves(piece, board);
     if (moves.length !== 5) {
-      console.error("testFindKingMoves failed 0");
+      console.error("testFindKingMoves failed 0", moves);
       return;
     }
     board = new Board([]);

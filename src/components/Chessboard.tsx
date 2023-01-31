@@ -35,48 +35,62 @@ let id = 0;
 
 function Chessboard({}) {
   //need to keep track of board more dynamically so that it updates better
-  
+
   function updateBoard(){
     let UIboard =  document.querySelectorAll('.chessSquare');
-    //there is UI problem.
+    let UIArray = [];
 
-    //for the mismatch there should be 2 mismatches
-    //one will the the piece
-    //on will be the empty space
-    //all I need to do is figure out the two ID's
-    //for the elements
-    //then I grab the children from the populated square,
-    //and put it in the  emtpy square
-    //then I re-check to make sure the board matches.
-    //this is purely UI I don't need to update the board
-    let mismatchStart = "";
-    let mismatchEnd = "";
+    //I need to get an array version of the UI board
+    //the is a big problem the pieces are not draggable after I switch them
     for(let i = 0; i < UIboard.length; i++){
       if(UIboard[i].children[0] != undefined){
-        if(UIboard[i].children[0].classList[0] != board.board[i]){
-          //if there is a mismatch, then we need to update the UI board
-          //first I need to figure what the mismatch is.
-          // console.log(UIboard[i].children[0].parentElement.id)
+        UIArray.push(UIboard[i].children[0].classList[0]);
+    }else{
+      UIArray.push(" ");
+    }
+  }
 
-          // console.log("mismatch");
-          mismatchStart = UIboard[i].id;
-        }
-      }else{
-        if(board.board[i] != " "){
-          // console.log("mismatch");
-          mismatchEnd = UIboard[i].id;
+    //I just need to loop thru 64 times, and check that the
+    //board and UI match, and if they don't I just force the UI to match the board
+
+    let pieceBuffer;
+    let squareBuffer;
+    for(let i =0; i<64;i++){
+      if(UIArray[i] != board.board[i]){
+        if(UIArray[i] == " " && board.board[i] != " "){
+          //here I need to create an element and append it to the UI
+          //this is a big problem because I can't simply create a draggable I need to move an existing piece.
+          // let piece = document.createElement("section");
+          // piece.classList.add(board.board[i]);
+          // piece.classList.add("piece");
+          // piece.id = generateRandomID();
+          // UIboard[i].appendChild(piece);
+          squareBuffer = UIboard[i];
+          if(pieceBuffer != undefined){
+            UIboard[i].appendChild(pieceBuffer);
+            pieceBuffer = undefined;
+          }
+        }else if(UIArray[i] != " " && board.board[i] == " "){
+          //here I need to remove the element from the UI
+          //here I remove the piece, and I will only actually remove it later
+          //if the piece buffer is still fill after the loop problem is I might find the piece before I find the square
+          pieceBuffer = UIboard[i].children[0];
+          if(squareBuffer != undefined){
+            squareBuffer.appendChild(pieceBuffer);
+            pieceBuffer = undefined;
+            squareBuffer = undefined;
+          }
         }
       }
     }
-    if(mismatchStart != "" && mismatchEnd != ""){
-      console.log("Mismatch end: " + mismatchEnd);
-      console.log("Mismatch start: " + mismatchStart);
-      let piece = document.getElementById(mismatchStart).children[0];
-      let endSpot = document.getElementById(mismatchEnd);
-      endSpot.appendChild(piece);
-      // console.log(piece);
+    if(pieceBuffer != undefined){
+      pieceBuffer?.parentElement?.removeChild(pieceBuffer);
     }
+
+
+
   }
+
 
 
   return <div class="chessBoard">

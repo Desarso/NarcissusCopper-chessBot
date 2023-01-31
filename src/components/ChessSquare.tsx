@@ -143,8 +143,10 @@ function ChessSquare({pieceClassName, className, id, board, draggableId, updateB
                 board.movePiece(startingIndex, endingIndex);
                 let newBoard = board.board;
                 let numberOfChanges = 0;
+                console.log(board.inCheck);
                 updateBoard();
-                board.displayBoard();
+                // board.displayBoard();
+                // console.log(board.fen);
                 //here I need to help the UI update
                 //so for example I should be able to find the differences
                 //from the previous board
