@@ -10,20 +10,10 @@ there is no checkmate indicator
 
 the app is set I need to add backspace as well as crowning
 
-
-//so the way I am going to revert my game is that I need to run the game moves backward,
-//this is difficult becuase the fen string also needs to revert to the previous arrangement
-//the easiest way to do this would be to just have a stack of board, but I want to be able to traverse the game
-//so need to able to go forwards and backwards, and then choose a different move, so 
-//in conclusion, I can push the fen strings, into an array, then the back button basically grabs the previous fen string, 
-//create a new board, and then replaces the current board with that board,
-//then I just run update board.
-//much easier to implement than the portable game format, maybe it's like messed up with it's probably fine.
-//here's the thing update board will need to take pieces from the stack.
-//if it's the same type it does not really matter, but for the board update, I basically want to 
-// remove all the pieces from the UI and into an array, loop 64 times, and then paste the correct piece,
-//into the correct board position according to the board
-//so it is completely independent of anything else, and it is slightly more computational than the current update function.
+//there are hella bugs, the worst one is the fact that the board will randomly miss checks.
 
 
 
+//in particular kings don't seem to be able to recognize pawn attacks
+//yup they are completely blind to pawn attacks.
+//I am able to move into a move tha immediatly eats me afterwards.

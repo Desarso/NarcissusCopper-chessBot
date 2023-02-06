@@ -1066,8 +1066,15 @@ export class Board {
     // console.log(board.Pieces)
     let legalMoves = [];
     for (let i = 0; i < moves.length; i++) {
+      //I create an identical board
       let newBoard = new Board([], board.boardToFen());
+      
+      //I perform one of the pseudomoves in the clone board
       newBoard.movePiece(moves[i].start, moves[i].end);
+
+      //board is in white's turn, when I clone the board, and perform move that is already blacks turn
+      //if black can do anything to eat my king it is not allowed
+      //but for some reason I swithc the turn back to white, to check if white is in check.
       newBoard.currentTurnColor = newBoard.currentTurnColor === "white" ? "black" : "white";
       if (!this.isInCheck(newBoard)) {
         // newBoard.displayBoard()
@@ -1110,8 +1117,11 @@ export class Board {
   public isInCheck(board: Board): boolean {
     //we first copy the board, and change the turn to the opposite color
     // console.log(board);
+
+    //I clone the board yet again, this time as white's turn after having already made a move
     let boardToSeeIfInCheck = new Board([], board.boardToFen());
 
+    //I create a new identical board
     let empty = true;
     for(let i = 0; i < boardToSeeIfInCheck.board.length; i++) {
       if(boardToSeeIfInCheck.board[i] != "-") {
@@ -1122,17 +1132,26 @@ export class Board {
       console.log("empty board")
       console.log(board.boardToFen())
     }
+
+    //I change the turn back to black even though I did not move, so I went back and forth
     boardToSeeIfInCheck.currentTurnColor = boardToSeeIfInCheck.currentTurnColor == "white" ? "black" : "white";
 
+
+    //I think find the oppoinsing moves for black
     let opponentMoves = board.findPseudoLegalMoves(boardToSeeIfInCheck);
 
-    //first we get the index of the king from the actual board
+    //then I get the index for a king
+    //now my oponent moves is the opposite of the current turn color
+    //then I get the index from the current board that was passed in
     let currentKingIndex;
     for(let i =0; i < board.Pieces.length; i++) {
       if(board.Pieces[i].type == "k" && board.Pieces[i].color == board.currentTurnColor) {
         currentKingIndex = board.Pieces[i].getIndex();
       }
     }
+
+
+
    if(opponentMoves.length == 0) {
       Error("No opponent moves found, this should not happen");
       console.log("main board");
@@ -1142,7 +1161,14 @@ export class Board {
       boardToSeeIfInCheck.displayBoard()
       console.log(boardToSeeIfInCheck.fen);
    }
+
+
+
     //now we check if any of the opponent moves can eat the king
+    //then we run all of the opponent moves, and if the moves eat the king then we don't return true.
+    //this is odd, becasue basically, we look at the move towards pawn, we do it in clone board, we switch turn back and forth
+    //so it is back to the opposite color
+    //then we check if any of it's pseudomoves eat the king.
     for(let i = 0; i < opponentMoves.length; i++) {
       if(opponentMoves[i].boardEndIndex == currentKingIndex) {
         return true;
