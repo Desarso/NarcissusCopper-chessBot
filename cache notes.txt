@@ -1,0 +1,44 @@
+need to add pgf or whatever is called for full move history,
+also I am yet to add castling and pawn promotion;
+
+It's very simple I have a front end engine that checks when a pawn
+makes it to the end zone, then I have a UI pop-up for user input
+that then calls the move function but since it is a pawn to the end zone
+it needs to also have a promotion piece type so that the piece,
+that it is actually replaced with is the promoted piece
+
+
+
+Also need a checkmate indicator or end game indicator.
+
+
+
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For later: 
+
+Add game timers, add numbers and letters to UI board, and the pieces
+that have been taken to the side, make a better UI with optional live texting,
+maybe even voice comms. Take free inspiration from chess.com.
+
+Make your front end much simpler, think about the things you want the app,
+to be able to do, get rid of the things that will take time or are unnecesary.
+
+I short I want you to be able to play against real players, and to add a friends list.
+Then you should be able to challenge players to a game, which would then send you a notification.
+This would shop up as a pop-up request, as well as being in your notifications button.
+
+Also you should be able to play with different AI's at different levels.
+Chess.com makes the UI very friendly by making use of characters, and each of them 
+has character attributes associated with them. I would suggest you use a similar idea
+however, use AI generated faces for the AI profiles, and the use the 
+GPT-3 ai to come up with different responses.
+
+
+
+
+
+

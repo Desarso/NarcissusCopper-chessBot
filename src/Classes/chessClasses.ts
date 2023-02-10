@@ -479,17 +479,24 @@ export class Board {
     let emptySpaces = 0;
     //write a a loop that converst my array of pieces into
     //a fen string);
+    //I am not addind the necesary spacing after moving the rook. on the bttom corner
+    //I am looping 64 times.
+
     for (let i = 0; i < 64; i++) {
       let Piece = this.getPieceAtBoardIndex(i);
       if (Piece === "") {
         emptySpaces++;
-        if (emptySpaces === 8 && i !== 63) {
+        if (emptySpaces === 8) {
           fen += emptySpaces;
-          fen += "/";
+          if(i != 63){
+            fen += "/";
+          }
           emptySpaces = 0;
-        } else if (i % 8 === 7 && i !== 63) {
+        } else if (i % 8 === 7) {
           fen += emptySpaces;
-          fen += "/";
+          if(i != 63){
+            fen += "/";
+          }
           emptySpaces = 0;
         }
       } else {
@@ -547,7 +554,11 @@ export class Board {
 
     if(piece.type != 'p'){
       this.halfMoveClock++;
+    }else{
+      this.halfMoveClock = 0;
     }
+
+  
 
 
     //check if the piece is a pawn, and it if moved twice.
@@ -585,10 +596,26 @@ export class Board {
         this.fullMoveNumber++;
      }
 
+     if(piece.type === 'r'){
+        if(piece.color === 'white'){
+          if(piece.getIndex() === 0){
+            this.castlingRights = this.castlingRights.replace('Q', '');
+          }else if(piece.getIndex() === 7){
+            this.castlingRights = this.castlingRights.replace('K', '');
+          }
+        }else{
+          if(piece.getIndex() === 56){
+            this.castlingRights = this.castlingRights.replace('q', '');
+          }else if(piece.getIndex() === 63){
+          this.castlingRights = this.castlingRights.replace('k', '');
+          }
+        }
+     }
+
     //then it sets the piece's position to  end position
     //for some reason I am calling move piece, on dragStart
     if(this.getPieceIndex(end) !== -1){
-      console.log("piece captured");
+      //logs whenever piece capture is possible
       let capturedPieceIndex = this.getPieceIndex(end);
       let capturedPiece = this.Pieces[capturedPieceIndex];
       this.capturedPieces.push(capturedPiece);
@@ -1820,6 +1847,7 @@ export class Board {
     let pos = piece.getPos().pos;
     let move = new V2D(pos.x, pos.y + 1);
     if(piece.color === "black"){
+      //
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
       } else if (board.Piece(move)?.color === "white") {
@@ -1866,6 +1894,7 @@ export class Board {
         moves.push(new Move(pos, move));
       }
     }else{
+      move = new V2D(pos.x, pos.y + 1);
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
       } else if (board.Piece(move)?.color === "black") {

@@ -111,8 +111,10 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
         onDragStart(() => {
             startingIndex = draggable.ref.parentElement.id;
             let legalMoves = board.findLegalMoves(board);
+            let psedoLegalMoves = board.findPseudoLegalMoves(board);
+            console.log(psedoLegalMoves);
             let legalPieceMoves = [];
-            console.log("start")
+            // console.log("start")
         
             for(let i = 0; i < legalMoves.length; i++){
                 if(legalMoves[i].start == startingIndex){
@@ -123,7 +125,7 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
         }, draggable);
     
         onDragEnd(async (e: any) => {
-            console.log("end")
+            // console.log("end")
             if(e === null) return;
             e.occupied = false;
             // console.log(e);
@@ -137,7 +139,6 @@ function ChessSquare({pieceClassName, className, id, board, draggableId}: Props)
                 if(endingIndex === startingIndex) return;
                 // console.log("legal move");
                 board.movePiece(startingIndex, endingIndex);
-                board.displayBoard();
             }
             
         }, draggable);
