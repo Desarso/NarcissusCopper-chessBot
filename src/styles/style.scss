@@ -127,4 +127,53 @@ html, body, #root {
 
 .chessBoard .lighterBackground{
     background-color: #b6e4b6;
-  }
+}
+
+.chessInlay{
+position: absolute;
+justify-content: center;
+align-items: center;
+width: 10vmin;
+height: 40vmin;
+max-width: 10vmin;
+max-height: 40vmin;
+display: flex;
+flex-direction: column;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+z-index: 10;
+
+    .chessInlaySquare{
+        display: flex;
+        width: 10vmin;
+        height: 10vmin;
+        max-width: 10vmin;
+        max-height: 10vmin; 
+        background-color: white;
+        border: 1vmin solid transparent;
+    }
+}
+
+.ml-\[1\]{
+    margin-left: 10vmin;
+}
+.ml-\[2\]{
+    margin-left: 20vmin;
+}
+.ml-\[3\]{
+    margin-left: 30vmin;
+}
+.ml-\[4\]{
+    margin-left: 40vmin;
+}
+.ml-\[5\]{
+    margin-left: 50vmin;
+}
+.ml-\[6\]{
+    margin-left: 60vmin;
+}
+.ml-\[7\]{
+    margin-left: 70vmin;
+}

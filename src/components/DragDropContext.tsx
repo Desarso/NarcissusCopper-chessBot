@@ -257,6 +257,8 @@ export function DragDropContextProvider(props: any) {
         // if(droppable.occupied) return;
         if(droppable.droppable === false) return;
         if(droppable.ref.children.length > 0){
+          //right here I am removing the children, if the droppable is occupied
+          //what I need to do it take this child and send it back to the event
           droppable.ref.children[0].remove();
         }
         

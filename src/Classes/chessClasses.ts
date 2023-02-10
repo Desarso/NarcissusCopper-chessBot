@@ -449,7 +449,7 @@ export class Board {
     console.log("    A  B  C  D  E  F  G  H");
   }
 
-  private fenToBoard(fen: string): string[] {
+  public fenToBoard(fen: string): string[] {
     let board = [];
     let fenArray = fen.split(" ");
     let fenBoard = fenArray[0];
@@ -469,6 +469,9 @@ export class Board {
           board.push(piece);
         }
       }
+    }
+    if(board.length === 63){
+      board.push(" ");
     }
 
     return board;
@@ -523,7 +526,7 @@ export class Board {
     return fen;
   }
 
-  private getPieceAtBoardIndex(index: number): any {
+  public getPieceAtBoardIndex(index: number): any {
     for (let j = 0; j < this.Pieces.length; j++) {
       if (this.Pieces[j].getIndex() === index) {
         return this.Pieces[j];
@@ -561,12 +564,43 @@ export class Board {
   
 
 
-    //check if the piece is a pawn, and it if moved twice.
-    // console.log(piece);
+      //checking if en-passant is possible and if the current move is a pawn
+    if(this.enPassantTargetSquare != '-' && piece.type === 'p'){
+        let startPos = new Position(start);
+        let endPos = new Position(end);
+  
+        if(piece.color === 'white' && startPos.pos.y === 3 && endPos.position === end){
+            //all I need to do here is remove the old piece from it's current spot.
+            //so what we need to do is target the square that is 8 spaces away from the en-peasant square
+            //since the piece is white, then it would be +8;
+            let pieceToRemoveIndex = endPos.boardIndex + 8;
+            let pieceToRemove = this.getPieceAtBoardIndex(pieceToRemoveIndex);
+            this.board[pieceToRemoveIndex] = ' ';
+            this.Pieces.splice(this.Pieces.indexOf(pieceToRemove), 1);
+          }
+        if(piece.color === 'black' && startPos.pos.y === 4 && endPos.position === end){
+          //all I need to do here is remove the old piece from it's current spot.
+          //so what we need to do is target the square that is 8 spaces away from the en-peasant square
+          //since the piece is black, then it would be -8;
+          let pieceToRemoveIndex = endPos.boardIndex - 8;
+          let pieceToRemove = this.getPieceAtBoardIndex(pieceToRemoveIndex);
+          this.board[pieceToRemoveIndex] = ' ';
+          this.Pieces.splice(this.Pieces.indexOf(pieceToRemove), 1);
+        }
 
+
+        // this.inCheck = this.isInCheck(this);
+  
+        
+        
+    }
+
+
+//set en-passant target square on pawn double move
     if (
       piece.type == "p" &&
       Math.abs(piece.getIndex() - newMove.boardEndIndex) == 16
+
     ) {
       let enPassant = '-';
       if (piece.color === "white") {
@@ -578,6 +612,13 @@ export class Board {
     }else{
       this.enPassantTargetSquare = '-';
     }
+
+
+
+    
+
+
+
      if(piece.type === 'k'){
       if(this.castlingRights.length === 2){
         this.castlingRights = '-';
@@ -588,9 +629,24 @@ export class Board {
           this.castlingRights = this.castlingRights.replace('kq', '');
         }
       }
-
-     
+  
+      let startPos = new Position(start);
+      let endPos = new Position(end);
+      if(startPos.pos.x - endPos.pos.x === 2){
+        let rookStart = this.convertToPosition(startPos.boardIndex - 4);
+        let rookEnd = this.convertToPosition(startPos.boardIndex - 1);
+        //the problem here is that the king and rook move are just one move not two and so the whole thing is wrong.
+        //instead of calling move piece I need to call the inner piece function.
+        let rook = this.getPieceAtBoardIndex(startPos.boardIndex - 4);
+        rook.move(rookEnd);
      }
+      if(startPos.pos.x - endPos.pos.x === -2){
+        let rookStart = this.convertToPosition(startPos.boardIndex + 3);
+        let rookEnd = this.convertToPosition(startPos.boardIndex + 1);
+        let rook = this.getPieceAtBoardIndex(startPos.boardIndex + 3);
+        rook.move(rookEnd);
+      }
+    }
 
      if(this.currentTurnColor === "black"){
         this.fullMoveNumber++;
@@ -632,7 +688,10 @@ export class Board {
     //this is wrong, can't simply convert board to fen.
     this.fen = this.boardToFen();
     this.board = this.fenToBoard(this.fen);
+    this.inCheck = this.isInCheck(this);
+    // console.log("inside",this.isInCheck(this));
   }
+
 
   private getPieceIndex(position: string): number {
     let index = -1;
@@ -646,7 +705,7 @@ export class Board {
     return index;
   }
 
-  private getPieceAtPosition(position: string): any {
+  public getPieceAtPosition(position: string): any {
     let piece = "";
     for (let i = 0; i < this.Pieces.length; i++) {
       let piece = this.Pieces[i];
@@ -1024,7 +1083,7 @@ export class Board {
   }
 
   public findLegalMoves(board: Board): any[] {
-    let moves = this.findPseudoLegalMoves(board);
+    let moves = board.findPseudoLegalMoves(board);
     // board.displayBoard();
     // console.log(board.fen);
     // for(let i = 0; i < moves.length; i++) {
@@ -1034,8 +1093,15 @@ export class Board {
     // console.log(board.Pieces)
     let legalMoves = [];
     for (let i = 0; i < moves.length; i++) {
+      //I create an identical board
       let newBoard = new Board([], board.boardToFen());
+      
+      //I perform one of the pseudomoves in the clone board
       newBoard.movePiece(moves[i].start, moves[i].end);
+
+      //board is in white's turn, when I clone the board, and perform move that is already blacks turn
+      //if black can do anything to eat my king it is not allowed
+      //but for some reason I swithc the turn back to white, to check if white is in check.
       newBoard.currentTurnColor = newBoard.currentTurnColor === "white" ? "black" : "white";
       if (!this.isInCheck(newBoard)) {
         // newBoard.displayBoard()
@@ -1077,8 +1143,12 @@ export class Board {
 
   public isInCheck(board: Board): boolean {
     //we first copy the board, and change the turn to the opposite color
+    // console.log(board);
 
+    //I clone the board yet again, this time as white's turn after having already made a move
     let boardToSeeIfInCheck = new Board([], board.boardToFen());
+
+    //I create a new identical board
     let empty = true;
     for(let i = 0; i < boardToSeeIfInCheck.board.length; i++) {
       if(boardToSeeIfInCheck.board[i] != "-") {
@@ -1089,17 +1159,26 @@ export class Board {
       console.log("empty board")
       console.log(board.boardToFen())
     }
+
+    //I change the turn back to black even though I did not move, so I went back and forth
     boardToSeeIfInCheck.currentTurnColor = boardToSeeIfInCheck.currentTurnColor == "white" ? "black" : "white";
 
-    let opponentMoves = boardToSeeIfInCheck.findPseudoLegalMoves(boardToSeeIfInCheck);
 
-    //first we get the index of the king from the actual board
+    //I think find the oppoinsing moves for black
+    let opponentMoves = board.findPseudoLegalMoves(boardToSeeIfInCheck);
+
+    //then I get the index for a king
+    //now my oponent moves is the opposite of the current turn color
+    //then I get the index from the current board that was passed in
     let currentKingIndex;
     for(let i =0; i < board.Pieces.length; i++) {
       if(board.Pieces[i].type == "k" && board.Pieces[i].color == board.currentTurnColor) {
         currentKingIndex = board.Pieces[i].getIndex();
       }
     }
+
+
+
    if(opponentMoves.length == 0) {
       Error("No opponent moves found, this should not happen");
       console.log("main board");
@@ -1109,7 +1188,14 @@ export class Board {
       boardToSeeIfInCheck.displayBoard()
       console.log(boardToSeeIfInCheck.fen);
    }
+
+
+
     //now we check if any of the opponent moves can eat the king
+    //then we run all of the opponent moves, and if the moves eat the king then we don't return true.
+    //this is odd, becasue basically, we look at the move towards pawn, we do it in clone board, we switch turn back and forth
+    //so it is back to the opposite color
+    //then we check if any of it's pseudomoves eat the king.
     for(let i = 0; i < opponentMoves.length; i++) {
       if(opponentMoves[i].boardEndIndex == currentKingIndex) {
         return true;
@@ -1846,6 +1932,9 @@ export class Board {
     let moves: Move[] = [];
     let pos = piece.getPos().pos;
     let move = new V2D(pos.x, pos.y + 1);
+    //here I need to add a move that is castling in witch
+    //the king can move two squares in either direction depending on the castling rights of the board state
+    //
     if(piece.color === "black"){
       //
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
@@ -1892,7 +1981,26 @@ export class Board {
       move = new V2D(pos.x - 1, pos.y - 1);
       if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
+      }else if(board.Piece(move)?.color === "white"){
+        moves.push(new Move(pos, move));
       }
+      //black king side castling
+      //problem is I am removing castling rights when finding move before actually moving.
+      //King can only castle if it's not in check
+      move = new V2D(pos.x + 2, pos.y);
+      if (board.Piece(move) === " " && pos.x + 2 === 6 && pos.y === 0 && this.inCheck === false) {
+        if(board.Piece(new V2D(pos.x + 1, pos.y)) === " " && board.castlingRights.includes("k") ){
+          moves.push(new Move(pos, move));
+      }
+    }
+      //black queen side castling
+      move = new V2D(pos.x - 2, pos.y);
+      if (board.Piece(move) === " " && pos.x - 2 === 2 && pos.y === 0 && this.inCheck === false) {
+        if(board.Piece(new V2D(pos.x - 1, pos.y)) === " " && board.Piece(move) === " " && board.castlingRights.includes("q") ){
+          moves.push(new Move(pos, move));
+      }
+    }
+
     }else{
       move = new V2D(pos.x, pos.y + 1);
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
@@ -1942,6 +2050,23 @@ export class Board {
       } else if (board.Piece(move)?.color === "black") {
         moves.push(new Move(pos, move));
       }
+      //white king side castling
+      move = new V2D(pos.x + 2, pos.y);
+      if (board.Piece(move) === " " && pos.x + 2 === 6 && pos.y === 7 && this.inCheck === false) {
+        if(board.Piece(new V2D(pos.x + 1, pos.y)) === " " && board.castlingRights.includes("K") ){
+          moves.push(new Move(pos, move));
+        }
+    }
+      //white queen side castling
+      move = new V2D(pos.x - 2, pos.y);
+      if (board.Piece(move) === " " && pos.x - 2 === 2 && pos.y === 7 && this.inCheck === false) {
+        if(board.Piece(new V2D(pos.x - 1, pos.y)) === " " && board.Piece(move) === " " && board.castlingRights.includes("Q") ){
+          moves.push(new Move(pos, move));
+        }
+      }
+
+
+
       
     }
      
@@ -1954,7 +2079,7 @@ export class Board {
     board.addPiece(piece);
     let moves = board.findKingMoves(piece, board);
     if (moves.length !== 5) {
-      console.error("testFindKingMoves failed 0");
+      console.error("testFindKingMoves failed 0", moves);
       return;
     }
     board = new Board([]);
