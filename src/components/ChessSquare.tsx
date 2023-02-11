@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 import { className } from "solid-js/web";
 import { useDragDropContext } from "./DragDropContext";
-import board from "./Chessboard";
+import board from "./WhiteChessboard";
 
 type Props = {
   pieceClassName: string;

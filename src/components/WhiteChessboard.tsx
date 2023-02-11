@@ -8,7 +8,9 @@ mainTest.runAllTests();
 
 
 
-let board = new Board();
+export let board = new Board();
+
+
 // board.movePiece("e2", "e2");
 board.displayBoard();
 // let legalMoves = board.findLegalMoves(board);
@@ -18,6 +20,9 @@ board.displayBoard();
 
 let boardIds = getBoardIds();
 
+
+//this gets the white board IDs
+//black board ID's are the same array but reversed
 function getBoardIds(){
     let boardIds = [];
     for(let i = 0; i < 8; i++){
@@ -33,20 +38,28 @@ function getBoardIds(){
 
 let id = 0;
 
-function Chessboard({}) {
+function WhiteChessboard({}) {
   //need to keep track of board more dynamically so that it updates better
   let eatenPieces : any = [];
 
+
+  //this is the inlay responsible for pawn promotion
   const [displayInlay, setDisplayInlay] = createSignal(false);
   const [displayInlayX, setDisplayInlayX] = createSignal("00");
   const [inlaySelection, setInlaySelection] = createSignal("");
 
   function updateBoard(){
+
     let UIboard =  document.querySelectorAll('.chessSquare');
     let UIArray = [];
 
-    //I need to get an array version of the UI board
-    //the is a big problem the pieces are not draggable after I switch them
+    //I get the UI classes and create an array to make comparison easier
+    //for black pieces all I need to do to make updateBoard work is to reverse the array
+    //and then I can use the same code
+
+    //I reverse the array to make sure the algorithm works for black pieces
+    //UIBoard = reverseArray(UIBoard);
+
     for(let i = 0; i < UIboard.length; i++){
       if(UIboard[i].children[0] != undefined){
         UIArray.push(UIboard[i].children[0].classList[0]);
@@ -55,30 +68,28 @@ function Chessboard({}) {
     }
   }
 
-    //I just need to loop thru 64 times, and check that the
-    //board and UI match, and if they don't I just force the UI to match the board
+    //I loop thur the board and check mismatches, I use a space and piecebuffer
+    //since I am only checking for one piece at a time
 
     let pieceBuffer;
     let squareBuffer;
+
     for(let i =0; i<64;i++){
+
+      //here I check if there is a piece missing on the UI
+      //if so I check if pieceBuffer exists
+      //if so append, else  I mark the squareBuffer
       if(UIArray[i] != board.board[i]){
         if(UIArray[i] == " " && board.board[i] != " "){
-          //here I need to create an element and append it to the UI
-          //this is a big problem because I can't simply create a draggable I need to move an existing piece.
-          // let piece = document.createElement("section");
-          // piece.classList.add(board.board[i]);
-          // piece.classList.add("piece");
-          // piece.id = generateRandomID();
-          // UIboard[i].appendChild(piece);
           squareBuffer = UIboard[i];
           if(pieceBuffer != undefined){
             UIboard[i].appendChild(pieceBuffer);
             pieceBuffer = undefined;
           }
+        //here I check if there is a piece on the UI that is not on the board
+        //if so I insert the piece into the piece buffer
+        //if there is a square buffer I append the piece to the square buffer
         }else if(UIArray[i] != " " && board.board[i] == " "){
-          //here I need to remove the element from the UI
-          //here I remove the piece, and I will only actually remove it later
-          //if the piece buffer is still fill after the loop problem is I might find the piece before I find the square
           pieceBuffer = UIboard[i].children[0];
           if(squareBuffer != undefined){
             squareBuffer.appendChild(pieceBuffer);
@@ -88,6 +99,7 @@ function Chessboard({}) {
         }
       }
     }
+    //if there is a piece buffer left over I remove it
     if(pieceBuffer != undefined){
       pieceBuffer?.parentElement?.removeChild(pieceBuffer);
     }
@@ -176,7 +188,7 @@ function handleSelection(selection: string){
         </div>;
 }
 
-export default Chessboard;
+export default WhiteChessboard;
 
 
 function generateRandomID() {

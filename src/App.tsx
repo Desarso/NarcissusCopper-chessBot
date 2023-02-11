@@ -1,11 +1,11 @@
 import type { Component } from 'solid-js';
 import './style.css';
-import  Chessboard  from './components/Chessboard';
+import Home from './components/Home';
 
 
 const App: Component = () => {
   return (
-      <Chessboard/>
+     <Home/>
 
   );
 };
