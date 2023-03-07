@@ -11,7 +11,14 @@ there is no checkmate indicator
 the app is set I need to add backspace as well as crowning
 
 //there are hella bugs, the worst one is the fact that the board will randomly miss checks.
-
+there is a strange rook2.move is not function error
+I have no idea what it means.
+//it only seems to happen when I eat the rook
+//it probably has to do with the Board
+castling rights not updating after I have eaten a rook
+//or some error in the castling mechanics
+//so I should make sure the castling mechanics check the the rook EXISTS
+//or make sure that the rook being eaten gets rid of the castling rights
 
 
 //in particular kings don't seem to be able to recognize pawn attacks
