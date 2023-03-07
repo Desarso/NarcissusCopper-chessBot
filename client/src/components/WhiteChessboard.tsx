@@ -126,10 +126,10 @@ function handleSelection(selection: string){
   board.board[parseInt(displayInlayX())] = selection;
   board.displayBoard();
   console.log(piece);
-  let UIPiece = document.getElementById(piece.position.position).children[0];
+  let UIPiece = document.getElementById(piece.position.position)?.children[0];
   console.log("previous type:" +previousType);
-  UIPiece.classList.remove(previousType.toUpperCase());
-  UIPiece.classList.add(selection.toUpperCase());
+  UIPiece?.classList.remove(previousType.toUpperCase());
+  UIPiece?.classList.add(selection.toUpperCase());
   
   updateBoard();
 }
