@@ -1,0 +1,26 @@
+
+  type Game {
+    id: ID!
+    blackBoardId: String!
+    whiteBoardId: String!
+    fen: String!
+    turn : String!
+  }
+
+#need to add a subscription for game
+  type Query {
+    getGames: [Game!]!
+    getGame (id: ID!): Game!
+  }
+
+  type Mutation {
+    createGame (fen: String!, blackBoardId: String!, whiteBoardId: String!): Game!
+    changeFen (id: ID!, fen: String!): Game!
+    changeTurn (id: ID!, turn: String!): Game!
+  }
+
+    type Subscription {
+       game(id: ID!): Game!
+    }
+
+
