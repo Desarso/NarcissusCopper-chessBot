@@ -1,0 +1,5 @@
+Step 1:
+    Add Graphql server to aws
+    test to see if you can access it from the the dev instace
+
+    Make sure it works first, so I guess you need to finish the multiplayer functionality first
