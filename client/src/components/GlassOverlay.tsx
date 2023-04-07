@@ -1,11 +1,15 @@
-import { createSignal } from "solid-js"
+import { createSignal, onMount } from "solid-js"
 
 
-type Props = {}
+type Props = {
+  userName: any;
+  userId: any;
+}
 
-const GlassOverlay = (props: Props) => {
+const GlassOverlay = ({userName, userId}: Props) => {
 
   const [username, setUsername] = createSignal("");
+  const [userid, setUserid] = createSignal("");
 
   const onButtonCLick = () => {
     //here I add the username to the session and local storage
@@ -16,18 +20,55 @@ const GlassOverlay = (props: Props) => {
       alert("Please enter a username");
       return;
     }
+    if(username() == userName()){
+      console.log("userid: ", userid);
+      console.log("username: ", usernameInputed);
+      console.log("kept from local storage");
+      let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
+      inputElement.value = "";
+      setUsername("");
+      return;
+    }
     console.log("userid: ", userid);
     console.log("username: ", usernameInputed);
+    sessionStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: userid, userName: usernameInputed}));
+    localStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: userid, userName: usernameInputed}));
     let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
     inputElement.value = "";
     setUsername("");
   }
 
+  onMount(() => {
+    //add evnet listener to the enter key
+    document.addEventListener("keyup", function(event) {
+      if (event.key === "Enter") {
+        onButtonCLick();
+      }
+
+ 
+    })
+    console.log("username: ", username());
+    console.log(userName());
+    if(userName() != "") {
+      setUsername(userName());
+      setUserid(userId());
+      let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
+      inputElement.value = username();
+    }
+    // let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
+    // let userid = generateUserid();
+    // let usernameInputed = username();
+    // console.log("userid: ", userid);
+    // console.log("username: ", usernameInputed);
+    // inputElement.value = "";
+    // setUsername("");
+  })
+
 
   return (
     <div class="glassOverlay">
+        <label for="username">Choose your username</label>
         <div class="userNameInput">
-          <label for="username">Choose your username</label>
           <input type="username" placeholder="username" id="userNameInput"onKeyUp={e=>setUsername(e.target?.value)}/>
         </div>
         <button class="submitUsernameButton" onClick={() => onButtonCLick()}>

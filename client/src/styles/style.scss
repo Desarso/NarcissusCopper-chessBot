@@ -197,11 +197,12 @@ z-index: 10;
 
         position: absolute;
         display: flex;
-        margin-top: 20vmin;
-        margin-right: 10vmin;
+        margin-top: 30vmin;
         width: 40vmin;
         height: 8vmin;
         border-radius: 5px;
+        //add a shadow to the button
+        box-shadow: 5px 5px 10px rgba(142, 54, 54, 0.66), -5px -5px 10px hsla(0, 75%, 75%, 0.66);
 
         color: rgba(0, 0, 0, 0.642);
         font-weight: 600;
@@ -219,7 +220,8 @@ z-index: 10;
         transition: 0.3s;
 
         &:hover{
-            background-color: rgba(234, 89, 89, 0.964);
+            // background-color: rgba(234, 89, 89, 0.964);
+            box-shadow: inset 5px 5px 10px rgba(142, 54, 54, 0.66),inset -5px -5px 10px hsla(0, 75%, 75%, 0.66);
             cursor: pointer;
         }
 
@@ -233,30 +235,31 @@ z-index: 10;
 
     }
 
+    label{
+        position: absolute;
+        margin-bottom: 28vmin;
+        //make all caps
+        text-transform: uppercase;
+        //make the font stand out and be nice
+        font-family: 'Roboto', sans-serif;
+        //change the color
+        color: rgba(0, 0, 0, 0.642);
+        font-weight: 600;
+        //make the font size responsive
+        font-size: 5vmin;
+        //make letters thicker
+        letter-spacing: 0.05em;
+        //make font thicker
+        
+
+        width: 100;
+    }
 
     .userNameInput{
 
       
   
-        label{
-            position: absolute;
-            margin-bottom: 28vmin;
-            //make all caps
-            text-transform: uppercase;
-            //make the font stand out and be nice
-            font-family: 'Roboto', sans-serif;
-            //change the color
-            color: rgba(0, 0, 0, 0.642);
-            font-weight: 600;
-            //make the font size responsive
-            font-size: 5vmin;
-            //make letters thicker
-            letter-spacing: 0.05em;
-            //make font thicker
-            
-
-            width: 100;
-        }
+       
     
 
         &:focus-within{
