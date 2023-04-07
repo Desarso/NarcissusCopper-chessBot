@@ -7,6 +7,7 @@ html, body, #root {
     width: 100%;
     height: 100%;
     padding: 0px;
+    background-color: rgb(8, 18, 51);
 }
 
 #root{
@@ -48,6 +49,7 @@ html, body, #root {
 
     max-width: 100%;
     display: grid;
+    border-radius: 5%;
     grid-template-columns: repeat(8, calc(12.5%));
     gap: 0px;
     border: 1px solid black;
@@ -176,4 +178,141 @@ z-index: 10;
 }
 .ml-\[7\]{
     margin-left: 70vmin;
+}
+
+
+.glassOverlay{
+    position: absolute;
+    width: 90vmin;
+    height: 90vmin;
+    z-index: 100;
+    background-color: rgba(255, 255, 255, 0.205);
+    border-radius: 10%;
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    
+    .submitUsernameButton{
+
+        position: absolute;
+        display: flex;
+        margin-top: 20vmin;
+        margin-right: 10vmin;
+        width: 40vmin;
+        height: 8vmin;
+        border-radius: 5px;
+
+        color: rgba(0, 0, 0, 0.642);
+        font-weight: 600;
+        //make the font size responsive
+        font-size: 5vmin;
+        //make letters thicker
+        letter-spacing: 0.05em;
+        background-color: rgba(234, 89, 89, 0.664);
+        font-family: 'Roboto', sans-serif;
+        font-size: 5vmin;
+        font-weight: 600;
+        // color: rgb(255, 255, 255);
+        justify-content: center ;
+        align-items: center;
+        transition: 0.3s;
+
+        &:hover{
+            background-color: rgba(234, 89, 89, 0.964);
+            cursor: pointer;
+        }
+
+        .arrow{
+            margin-left: 10px;
+            height: 8vmin;
+
+        }
+        
+
+
+    }
+
+
+    .userNameInput{
+
+      
+  
+        label{
+            position: absolute;
+            margin-bottom: 28vmin;
+            //make all caps
+            text-transform: uppercase;
+            //make the font stand out and be nice
+            font-family: 'Roboto', sans-serif;
+            //change the color
+            color: rgba(0, 0, 0, 0.642);
+            font-weight: 600;
+            //make the font size responsive
+            font-size: 5vmin;
+            //make letters thicker
+            letter-spacing: 0.05em;
+            //make font thicker
+            
+
+            width: 100;
+        }
+    
+
+        &:focus-within{
+            outline: 2px solid white;
+        }
+
+
+    input{
+            margin: none;
+            border: none;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            padding: 5px;
+
+            &::placeholder {
+                color:rgba(0, 0, 0, 0.642);
+            }
+
+            &::-webkit-input-placeholder {
+                color:rgba(0, 0, 0, 0.642);
+            }
+            &::-moz-placeholder {
+                color:rgba(0, 0, 0, 0.642);
+            }
+            
+            &::-ms-placeholder {
+                color:rgba(0, 0, 0, 0.642);
+            }
+
+            &:focus{
+                outline: none;
+            }
+    
+
+        
+         
+    }
+        display: flex;
+        width: 50vmin;
+        align-items: center;
+        font-size: 3vmin;
+        justify-content: center;
+        height: 8vmin;
+        border: none;
+        border: black 2px solid;
+        border-radius: 10px;
+        background-color: transparent;
+        padding: 2vmin;
+        transition: 0.1s;
+
+        &:hover{
+            background-color: rgba(255, 255, 255, 0.205);
+            cursor: pointer;
+        }
+    }
+
+
 }

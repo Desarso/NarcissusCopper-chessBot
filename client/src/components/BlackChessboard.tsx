@@ -176,6 +176,7 @@ function handleSelection(selection: string){
             <For each={board.board}>
               {(square, index) => (
                 <ChessSquare 
+                  style={index() == 0 ?`border-top-left-radius: 40%;` : index() == 7 ? `border-top-right-radius: 40%;` : index() == 56 ? `border-bottom-left-radius: 40%;` : index() == 63 ? `border-bottom-right-radius: 40%;` : `border-radius: 0%;`}
                   pieceClassName={board.board[((board.board.length-1) - index())]}
                   className={`chessSquare ${((board.board.length-1) - index()) % 16 <8 ? ((board.board.length-1) - index()) % 2 == 0 ? "lighterBackground" : "" : ((board.board.length-1) - index()) % 2 == 0 ? "" : "lighterBackground"}`}
                   id={boardIds[((board.board.length-1) - index())]}

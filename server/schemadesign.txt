@@ -1,0 +1,32 @@
+lets' thing about the schema design based on the workflow we are gonna do when running the program
+
+
+The user will go the website, they will be prompted to get a username, which will be save to both session
+storage, as well as local storage for autocomplete later
+
+Then the user is taken to a list of users, and this list needs to be a subscription,
+so I need to keep track of users, so the users will have an ID, and a username, and we will only show them
+if they are currently on the website, meaning that the site is active, so we want to only do this if the current tab is open.
+or some other way to keep track of browser activity.
+
+Then the game starts, a new game is created in the backend, with a specific id, that is stored in session storage.
+We also want a timer but we can do that later
+
+The game is created, and there is a subscription to the game, when a move is made, the game fen is updated,
+and we simply update the game using the updated fen. We only let the users move their respective pieces, 
+and the boards are switched, the colors are choosen randomly, when the game is created. 
+
+
+Let's thinkg about the prompting, a user needs to be able to promp anothe user for a game, so there needs to be 
+a request or messages objects, and the other user is able to update this object, so the users, need to be subscribed
+to messages, when on the waititing screen, and then from the message object which will contain both of the users Id's
+they can create a game, from the receving user. When the players are in a game, they are removed from the lobby, and they 
+do no receive message subscription unless they are in the lobby.
+
+The user data, needs to be created in the front end, and stored in the graphql, but only in cache. 
+
+
+Step 1. Create username creation window
+Step 2. Create workflow for user creation in the front end, session storage, local storage, and graphql
+Step 3. Create the notification or message sending system
+Step 4. set up the game creation, and updating system. 

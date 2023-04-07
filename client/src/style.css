@@ -6,6 +6,7 @@ html, body, #root {
   width: 100%;
   height: 100%;
   padding: 0px;
+  background-color: rgb(8, 18, 51);
 }
 
 #root {
@@ -47,6 +48,7 @@ html, body, #root {
 .chessBoard {
   max-width: 100%;
   display: grid;
+  border-radius: 5%;
   grid-template-columns: repeat(8, 12.5%);
   gap: 0px;
   border: 1px solid black;
@@ -186,4 +188,100 @@ html, body, #root {
 
 .ml-\[7\] {
   margin-left: 70vmin;
+}
+
+.glassOverlay {
+  position: absolute;
+  width: 90vmin;
+  height: 90vmin;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.205);
+  border-radius: 10%;
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.glassOverlay .submitUsernameButton {
+  position: absolute;
+  display: flex;
+  margin-top: 20vmin;
+  margin-right: 10vmin;
+  width: 40vmin;
+  height: 8vmin;
+  border-radius: 5px;
+  color: rgba(0, 0, 0, 0.642);
+  font-weight: 600;
+  font-size: 5vmin;
+  letter-spacing: 0.05em;
+  background-color: rgba(234, 89, 89, 0.664);
+  font-family: "Roboto", sans-serif;
+  font-size: 5vmin;
+  font-weight: 600;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s;
+}
+.glassOverlay .submitUsernameButton:hover {
+  background-color: rgba(234, 89, 89, 0.964);
+  cursor: pointer;
+}
+.glassOverlay .submitUsernameButton .arrow {
+  margin-left: 10px;
+  height: 8vmin;
+}
+.glassOverlay .userNameInput {
+  display: flex;
+  width: 50vmin;
+  align-items: center;
+  font-size: 3vmin;
+  justify-content: center;
+  height: 8vmin;
+  border: none;
+  border: black 2px solid;
+  border-radius: 10px;
+  background-color: transparent;
+  padding: 2vmin;
+  transition: 0.1s;
+}
+.glassOverlay .userNameInput label {
+  position: absolute;
+  margin-bottom: 28vmin;
+  text-transform: uppercase;
+  font-family: "Roboto", sans-serif;
+  color: rgba(0, 0, 0, 0.642);
+  font-weight: 600;
+  font-size: 5vmin;
+  letter-spacing: 0.05em;
+  width: 100;
+}
+.glassOverlay .userNameInput:focus-within {
+  outline: 2px solid white;
+}
+.glassOverlay .userNameInput input {
+  margin: none;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  padding: 5px;
+}
+.glassOverlay .userNameInput input::placeholder {
+  color: rgba(0, 0, 0, 0.642);
+}
+.glassOverlay .userNameInput input::-webkit-input-placeholder {
+  color: rgba(0, 0, 0, 0.642);
+}
+.glassOverlay .userNameInput input::-moz-placeholder {
+  color: rgba(0, 0, 0, 0.642);
+}
+.glassOverlay .userNameInput input::-ms-placeholder {
+  color: rgba(0, 0, 0, 0.642);
+}
+.glassOverlay .userNameInput input:focus {
+  outline: none;
+}
+.glassOverlay .userNameInput:hover {
+  background-color: rgba(255, 255, 255, 0.205);
+  cursor: pointer;
 }

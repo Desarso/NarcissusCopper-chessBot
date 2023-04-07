@@ -15,6 +15,7 @@ type Props = {
   setDisplayInlay: any;
   setDisplayInlayX: any;
   inlaySelection: any;
+  style: any;
 };
 
 function ChessSquare({
@@ -29,6 +30,7 @@ function ChessSquare({
   setDisplayInlayX,
   inlaySelection,
   displayInlay,
+  style,
 }: Props) {
   const Droppable = ({ id, className, draggable, draggableClass }: any) => {
     const {
@@ -95,7 +97,7 @@ function ChessSquare({
     }
 
     return (
-      <div id={id} class={className} ref={droppable.ref}>
+      <div id={id} class={className} ref={droppable.ref} style={style}>
         <Show when={draggable != undefined}>{draggable}</Show>
       </div>
     );
