@@ -188,6 +188,7 @@ function handleSelection(selection: string){
                   setDisplayInlayX = {setDisplayInlayX}
                   inlaySelection = {inlaySelection}
                   displayInlay = {displayInlay}
+                  color="black"
                   />
               )}
             </For>

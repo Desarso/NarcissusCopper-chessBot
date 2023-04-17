@@ -1,19 +1,15 @@
 import { createYoga, createPubSub} from "graphql-yoga";
 import { createServer } from "node:http";
 import { importSchema } from "graphql-import";
-import { makeExecutableSchema } from '@graphql-tools/schema'
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import {game, User, Move} from "./gameStructs";
+
 
 
 const typeDefs = importSchema("./schema.gql");
 
 
-interface game {
-    id: string;
-    blackBoardId: string;
-    whiteBoardId: string;
-    fen: string;
-    turn : string;
-}
+
 
 
 
@@ -23,8 +19,6 @@ const games: game[] = [];
 const pubSub = createPubSub<{
     game: [payload: game]
 }>()
-
-
 
 
 
@@ -51,15 +45,15 @@ const resolvers = {
   Mutation: {
     createGame: (
       _: unknown,
-      { fen, blackBoardId, whiteBoardId }: { fen: string, blackBoardId: string, whiteBoardId: string },
+      { fen }: { fen: string},
       {pubSub}: any
     ) => {
       const game = {
         id: `${games.length + 1}`,
-        blackBoardId,
-        whiteBoardId,
         fen,
         turn: "white",
+        moves: [],
+        users: [],
       
       };
       pubSub.publish('game', game.id, game)

@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 import { className } from "solid-js/web";
 import { useDragDropContext } from "./DragDropContext";
 import board from "./WhiteChessboard";
@@ -16,6 +16,7 @@ type Props = {
   setDisplayInlayX: any;
   inlaySelection: any;
   style: any;
+  color: string;
 };
 
 function ChessSquare({
@@ -31,7 +32,19 @@ function ChessSquare({
   inlaySelection,
   displayInlay,
   style,
+  color,
 }: Props) {
+  onMount(() => {
+    window.movePiece = function(start, end){
+      board.movePiece(start, end);
+      updateBoard();
+    };
+  });
+
+  const [moves, setMoves] = createSignal([]);
+
+
+
   const Droppable = ({ id, className, draggable, draggableClass }: any) => {
     const {
       onHoverOver,
@@ -99,6 +112,7 @@ function ChessSquare({
     return (
       <div id={id} class={className} ref={droppable.ref} style={style}>
         <Show when={draggable != undefined}>{draggable}</Show>
+        {/* <div class="number">1</div> */}
       </div>
     );
   };
@@ -142,6 +156,7 @@ function ChessSquare({
         // console.log("legal move");
         let previousBoard = board.board;
         board.movePiece(startingIndex, endingIndex);
+        setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
         if (previousChild.classList.contains("piece")) {
           eatenPieces.push(previousChild);
           console.log(eatenPieces);
@@ -151,19 +166,12 @@ function ChessSquare({
         let numberOfChanges = 0;
         console.log(board.inCheck);
         let piece = board.getPieceAtPosition(endingIndex);
-        if (piece.type === "p") {
-          if (piece.color === "white") {
-            if (endingIndex[1] === "8") {
-              setDisplayInlay(true);
-              setDisplayInlayX(piece.position.pos.x);
-            }
-          } else {
-            if (endingIndex[1] === "1") {
+        if (piece.type === "p" && piece.color === color) {
+            if (endingIndex[1] === "8" || endingIndex[1] === "1") {
               setDisplayInlay(true);
               setDisplayInlayX(piece.position.pos.x);
             }
           }
-        }
         //I'm gonna implement the crowning logic here,
         //there is a problem, the board is going to have a pawn of opposite color
         //at the end of the board

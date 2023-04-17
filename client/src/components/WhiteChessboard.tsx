@@ -168,6 +168,7 @@ function handleSelection(selection: string){
             <For each={board.board}>
               {(square, index) => (
                 <ChessSquare 
+                  style={index() == 0 ?`border-top-left-radius: 40%;` : index() == 7 ? `border-top-right-radius: 40%;` : index() == 56 ? `border-bottom-left-radius: 40%;` : index() == 63 ? `border-bottom-right-radius: 40%;` : `border-radius: 0%;`}
                   pieceClassName={board.board[index()]}
                   className={`chessSquare ${index() % 16 <8 ? index() % 2 == 0 ? "lighterBackground" : "" : index() % 2 == 0 ? "" : "lighterBackground"}`}
                   id={boardIds[index()]}
@@ -179,6 +180,7 @@ function handleSelection(selection: string){
                   setDisplayInlayX = {setDisplayInlayX}
                   inlaySelection = {inlaySelection}
                   displayInlay = {displayInlay}
+                  color = "white"
                   />
               )}
             </For>

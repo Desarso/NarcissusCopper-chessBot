@@ -40,6 +40,15 @@ html, body, #root {
   -ms-user-select: none;
   user-select: none;
 }
+.chessBoard .chessSquare .number {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 1.5vmin;
+  font-weight: 900;
+  color: white;
+  margin: 0.5vmin;
+}
 
 .hovered {
   border-color: white !important;
@@ -202,6 +211,42 @@ html, body, #root {
   justify-content: center;
   align-items: center;
 }
+.glassOverlay .list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 60%;
+  border: 2px solid black;
+  border-bottom: 0px;
+  border-radius: 5px;
+}
+.glassOverlay .list .listItem {
+  display: inline-flex;
+  padding: 1vmin;
+  padding-left: 3vmin;
+  border-bottom: 2px solid black;
+  border-radius: 5px;
+  font-weight: 600;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 5vmin;
+}
+.glassOverlay .list .listItem:hover {
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.205);
+}
+.glassOverlay .list .listItem .catLogo {
+  width: 10vmin;
+  height: 10vmin;
+  margin-right: 3vmin;
+  margin-left: 2vmin;
+  background-size: cover;
+  border-radius: 50%;
+  outline: 3px solid white;
+}
+.glassOverlay .list .listItem button {
+  color: rgba(255, 127, 7, 0.592);
+}
 .glassOverlay .submitUsernameButton {
   position: absolute;
   display: flex;
@@ -284,4 +329,4 @@ html, body, #root {
 .glassOverlay .userNameInput:hover {
   background-color: rgba(255, 255, 255, 0.205);
   cursor: pointer;
-}
+}/*# sourceMappingURL=style.css.map */

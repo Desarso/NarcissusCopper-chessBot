@@ -2,11 +2,12 @@ import { createSignal, onMount } from "solid-js"
 
 
 type Props = {
-  userName: any;
-  userId: any;
+  oldUserName: any;
+  oldUserId: any;
+  setSessionStorageUser: any;
 }
 
-const GlassOverlay = ({userName, userId}: Props) => {
+const GlassOverlay = ({oldUserName, oldUserId, setSessionStorageUser}: Props) => {
 
   const [username, setUsername] = createSignal("");
   const [userid, setUserid] = createSignal("");
@@ -14,25 +15,31 @@ const GlassOverlay = ({userName, userId}: Props) => {
   const onButtonCLick = () => {
     //here I add the username to the session and local storage
     //but first I need to generate a user ID
-    let userid = generateUserid();
+    let newUserID = generateUserid();
     let usernameInputed = username();
     if(usernameInputed == "") {
       alert("Please enter a username");
       return;
     }
-    if(username() == userName()){
-      console.log("userid: ", userid);
+    if(username() == oldUserName()){
+      console.log("i am right here")
+      console.log("userid: ", userid());
       console.log("username: ", usernameInputed);
+      let currentID = userid();
+      let currentName = usernameInputed;
       console.log("kept from local storage");
-      let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
-      inputElement.value = "";
-      setUsername("");
+      sessionStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: currentID, userName: currentName}));
+      setSessionStorageUser(true)
+      console.log("made it here")
+      // let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
+      // inputElement.value = "";
+      // setUsername("");
       return;
     }
     console.log("userid: ", userid);
     console.log("username: ", usernameInputed);
-    sessionStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: userid, userName: usernameInputed}));
-    localStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: userid, userName: usernameInputed}));
+    sessionStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: newUserID, userName: usernameInputed}));
+    localStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: newUserID, userName: usernameInputed}));
     let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
     inputElement.value = "";
     setUsername("");
@@ -47,11 +54,12 @@ const GlassOverlay = ({userName, userId}: Props) => {
 
  
     })
-    console.log("username: ", username());
-    console.log(userName());
-    if(userName() != "") {
-      setUsername(userName());
-      setUserid(userId());
+    console.log("username: " + username());
+    console.log("oldUserName " + oldUserName());
+    console.log("oldUserId " + oldUserId());
+    if(oldUserName() != "") {
+      setUsername(oldUserName());
+      setUserid(oldUserId());
       let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
       inputElement.value = username();
     }
@@ -95,3 +103,6 @@ function generateUserid() {
 
 
 }
+
+
+70179348562267666923

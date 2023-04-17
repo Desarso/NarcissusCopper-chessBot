@@ -1,8 +1,20 @@
-
+type User{
+  id: ID!
+  userName: String!
+  ip: String!
+}
+  
+type Move{
+   from: String!
+    to: String!
+    endFen: String!
+}
+  
+  
   type Game {
     id: ID!
-    blackBoardId: String!
-    whiteBoardId: String!
+    users: [User!]!
+    moves: [Move!]!
     fen: String!
     turn : String!
   }
@@ -14,7 +26,7 @@
   }
 
   type Mutation {
-    createGame (fen: String!, blackBoardId: String!, whiteBoardId: String!): Game!
+    createGame (fen: String!): Game!
     changeFen (id: ID!, fen: String!): Game!
     changeTurn (id: ID!, turn: String!): Game!
   }
