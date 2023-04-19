@@ -21,6 +21,7 @@ const getUsers = gql`
     getUsers {
       id
       username
+      cat_url
     }
   }
 `;
@@ -38,17 +39,25 @@ const userSub = gql`
     users {
       id
       username
+      cat_url
     }
   }
 `;
 
 const addUser = gql`
-  mutation ($id: ID!, $username: String!) {
-    addUser(id: $id, username: $username) {
+  mutation ($id: ID!, $username: String!, $cat_url: String!) {
+    addUser(id: $id, username: $username, cat_url: $cat_url) {
       id
     }
   }
 `;
+
+const updateTime = gql`
+  mutation ($id: ID!) {
+    updateLastSeen(id: $id) {
+      id
+    }
+  }`
 
 type Props = {};
 
@@ -61,48 +70,47 @@ function Home({}: Props) {
   const [oldUserId, setUserId]: any = createSignal("");
   const [sessionStorageUser, setSessionStorageUser]: any = createSignal(false);
   const [inGame, setInGame]: any = createSignal(false);
-  const [users, { mutate, refetch } ]: any = createResource(() =>
-     client.query({
-      query: getUsers,
-    }).then((result: any) => {
-      return result.data.getUsers;
-    }
-  ));
+  const [users, setUsers]: any = createSignal([]);
 
 
-  client
-  .subscribe({
-    query: userSub,
-  })
-  .subscribe({
-    next: (result: any) => {
-      console.log("sub triggered")
-      console.log("users", result.data.users);
-      mutate(result.data.users);
-      return result.data.users;
-    },
-  })
+
 
   onMount(async () => {
+    //check for user in local storage and session storage
     await checkforUser();
-    //I also need to subscribe to users in the graphql
-    subscribeToUsers();
-    //mutate graphql to add the currentUser
+    await client
+      .query({ 
+        query: getUsers
+       })
+       .then((result: any) => {
+        console.log("users from query", result.data.getUsers);
+        setUsers(result.data.getUsers);
+      return result.data.getUsers;
+    });
+    
+    setInterval(updateLastSeen, 6000);
+
+
+    //set online in local storage to true
     localStorage.setItem("gabrielmalek/online", "true");
+
+    //this function try to remove the user from graphql when the user leaves
+    //and also set online to false
     window.onbeforeunload = function () {
       //only if user is not in a game, and only in the lobby
       if (inGame() == false) {
         //mutate graphql to remove the currentUser
+        removeUserFromGraphql();
       }
-      removeUserFromGraphql();
       localStorage.setItem("gabrielmalek/online", "false");
     };
     window.onclose = function () {
       //only if user is not in a game, and only in the lobby
       if (inGame() == false) {
         //mutate graphql to remove the currentUser
+        removeUserFromGraphql();
       }
-      removeUserFromGraphql();
+    
       localStorage.setItem("gabrielmalek/online", "false");
     };
 
@@ -110,11 +118,55 @@ function Home({}: Props) {
       //only if user is not in a game, and only in the lobby
       if (inGame() == false) {
         //mutate graphql to remove the currentUser
+        removeUserFromGraphql();
       }
-      removeUserFromGraphql();
+     
       localStorage.setItem("gabrielmalek/online", "false");
     };
   });
+
+   //subscribe to users in graphql
+   client
+   .subscribe({
+     query: userSub,
+   })
+   .subscribe({
+     next: (result: any) => {
+      //  console.log("users from sub", result.data.users);
+      //  console.log(users())
+      console.log("sub triggered")
+       if(!UserInList(oldUserId(), result.data.users)
+        || (!UserInList(oldUserId(), users()) 
+        ||(users().length != result.data.users.length))
+       ){
+
+          setUsers(result.data.users);
+          console.log("mutated")
+       }
+      //  console.log(result.data.users)
+      //  console.log(users().length, result.data.users.length)
+       
+       return result.data.users;
+     },
+   })
+
+
+  function updateLastSeen() {
+    //update the last seen time in graphql
+    client
+    .mutate({
+      mutation: updateTime,
+      variables: {
+        id: oldUserId(),
+      },
+    })
+    .then((result: any) => {
+      console.log("updated last seen");
+    });
+
+
+
+  }
 
   async function checkforUser() {
     //check for user in local storage
@@ -145,28 +197,82 @@ function Home({}: Props) {
     }
   }
 
+
+  function UserInList(id: string, list: any) {
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id == id) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async function getRandomCatLink(){
+    //fetch https://api.thecatapi.com/v1/images/search
+    const response = await fetch('https://api.thecatapi.com/v1/images/search')
+    const data = await response.json()
+    return data[0].url
+}
+
   async function addUserToGraphql() {
-    //add user to graphql, need to check if user already exists, by first fetching a user by ID from graphql
+
+    //add user to graphql onyl if the user is not in the graphql already
     console.log("id", oldUserId());
     console.log("username", oldUserName());
     console.log("adding user to graphql");
-    await client
+    console.log("users",users())
+    let cat_url = await getRandomCatLink();
+    console.log("cat_url", cat_url)
+
+    if(users() == undefined){
+      client
       .mutate({
         mutation: addUser,
         variables: {
           id: oldUserId(),
           username: oldUserName(),
+          cat_url: cat_url
         },
       })
       .then((result): any => {
         console.log("added user to graphql");
         console.log(result);
         console.log("users from here",users())
+
       });
+      return;
+    }
+    if(UserInList(oldUserId(), users()) == false){
+      console.log("user not in list");
+      await client
+      .mutate({
+        mutation: addUser,
+        variables: {
+          id: oldUserId(),
+          username: oldUserName(),
+          cat_url: cat_url
+        },
+      })
+      .then((result): any => {
+        console.log("added user to graphql");
+        console.log(result);
+        console.log("users from here",users());
+
+      });
+    }
+
+
+    
+
+     
   }
 
   function removeUserFromGraphql() {
     //remove user from graphql
+    if(users() == undefined){
+      return;
+    }
+
     console.log("removing user from graphql");
     client
       .mutate({
@@ -181,9 +287,6 @@ function Home({}: Props) {
       });
   }
 
-  function subscribeToUsers() {
-    //subscribe to users in graphql
-  }
 
   return (
     <>

@@ -92,16 +92,21 @@ const resolvers = {
         },
     addUser: (
       _: unknown,
-      { id, username }: { id: string; username: string },
+      { id, username, cat_url }: { id: string; username: string, cat_url: string},
       {pubSub}: any
     ) => {
       const user : User={
         id: id,
         username: username,
-        ip: "whatever",
+        last_seen: Date.now().toString(),
+        cat_url: cat_url
       };
+      if( users.find((user) => user.id === id) ){
+          return user;
+      }
       users.push(user);
       pubSub.publish("users",users)
+      removeOldUsers();
       return user;
     },
     deleteUser: (_: unknown, { id }: { id: string }, {pubSub}: any) => {
@@ -113,7 +118,25 @@ const resolvers = {
         return user;
       }
       return false;
-    }
+    },
+    updateLastSeen: (_: unknown, { id }: { id: string}, {pubSub}: any) => {
+        let user = users.find((user) => user.id === id);
+        if (user) {
+            console.log("updating last seen")
+            user.last_seen = Date.now().toString();
+            pubSub.publish("users",users)
+            return user;
+        }else{
+            user = {
+                id: "-1",
+                username: "unknown",
+                last_seen: Date.now().toString(),
+                cat_url: "https://i.imgur.com/3ZQ3X9M.png"
+            }
+
+            return user;
+        }
+      }
   },
   Subscription: {
     game: {
@@ -135,7 +158,32 @@ const resolvers = {
 };
 
 
+function checkUsers(){
+    users.forEach((user) => {
+        if (parseInt(user.last_seen) < Date.now() - 10000){
+            deleteUser(user.id)
+        }
+    })
+}
 
+function deleteUser(id: string){
+    const userIndex = users.findIndex((user) => user.id === id);
+    if (userIndex !== -1) {
+      let user = users[userIndex]
+      users.splice(userIndex, 1);
+      pubSub.publish("users",users)
+      return user;
+    }
+    return false;
+}
+
+
+let clearOldUsers: any;
+
+function removeOldUsers(){
+  clearOldUsers = setInterval(checkUsers, 10000);
+}
+     
 
 
 const schema = makeExecutableSchema({
