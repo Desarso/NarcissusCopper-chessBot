@@ -61,13 +61,14 @@ function Home({}: Props) {
   const [oldUserId, setUserId]: any = createSignal("");
   const [sessionStorageUser, setSessionStorageUser]: any = createSignal(false);
   const [inGame, setInGame]: any = createSignal(false);
-  const [users, setUsers ]: any = createSignal([]);
-
-  setUsers(client.query({
+  const [users, { mutate, refetch } ]: any = createResource(() =>
+     client.query({
       query: getUsers,
     }).then((result: any) => {
       return result.data.getUsers;
-    }));
+    }
+  ));
+
 
   client
   .subscribe({
@@ -77,7 +78,7 @@ function Home({}: Props) {
     next: (result: any) => {
       console.log("sub triggered")
       console.log("users", result.data.users);
-      setUsers(result.data.users);
+      mutate(result.data.users);
       return result.data.users;
     },
   })
