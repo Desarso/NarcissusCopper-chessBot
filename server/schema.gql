@@ -1,38 +1,39 @@
-type User{
+type User {
   id: ID!
-  userName: String!
+  username: String!
   ip: String!
 }
-  
-type Move{
-   from: String!
-    to: String!
-    endFen: String!
+
+type Move {
+  from: String!
+  to: String!
+  endFen: String!
 }
-  
-  
-  type Game {
-    id: ID!
-    users: [User!]!
-    moves: [Move!]!
-    fen: String!
-    turn : String!
-  }
+
+type Game {
+  id: ID!
+  users: [User!]!
+  moves: [Move!]!
+  fen: String!
+  turn: String!
+}
 
 #need to add a subscription for game
-  type Query {
-    getGames: [Game!]!
-    getGame (id: ID!): Game!
-  }
+type Query {
+  getGames: [Game!]!
+  getGame(id: ID!): Game!
+  getUsers: [User!]!
+}
 
-  type Mutation {
-    createGame (fen: String!): Game!
-    changeFen (id: ID!, fen: String!): Game!
-    changeTurn (id: ID!, turn: String!): Game!
-  }
+type Mutation {
+  createGame(fen: String!): Game!
+  addUser(id: ID!, username: String!): User!
+  deleteUser(id: ID!): User!
+  changeFen(id: ID!, fen: String!): Game!
+  changeTurn(id: ID!, turn: String!): Game!
+}
 
-    type Subscription {
-       game(id: ID!): Game!
-    }
-
-
+type Subscription {
+  game(id: ID!): Game!
+  users: [User!]!
+}
