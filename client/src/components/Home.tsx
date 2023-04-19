@@ -17,10 +17,11 @@ function Home({}: Props) {
   const [oldUserId, setUserId]: any = createSignal("");
   const [sessionStorageUser, setSessionStorageUser]: any = createSignal(false);
   const [inGame, setInGame]: any = createSignal(false);
+  
 
 
-  onMount(() => {
-    checkforUser();
+  onMount(async () => {
+    await checkforUser();
     //I also need to subscribe to users in the graphql
     subscribeToUsers();
     //mutate graphql to add the currentUser
@@ -29,13 +30,14 @@ function Home({}: Props) {
       //only if user is not in a game, and only in the lobby
       if(inGame() == false){
         //mutate graphql to remove the currentUser
+        removeUserFromGraphql()
       }
       localStorage.setItem("gabrielmalek/online", "false");
       
     }
   })
 
-  function checkforUser() {
+  async function checkforUser() {
     //check for user in local storage
     //check for user in session storage
     //check for user in graphql
@@ -43,11 +45,13 @@ function Home({}: Props) {
     let chessDataJson = JSON.parse(chessData!);
     if(chessData == null) {
      console.log("session storage null");
+
     }else{
       setSessionStorageUser(true);
       console.log("session storage not null");
       setUserId(chessDataJson.userId);
       setUserName(chessDataJson.userName);
+      addUserToGraphql()
       return;
     }
     chessData= localStorage.getItem("gabrielmalek/chess.data");
@@ -64,6 +68,16 @@ function Home({}: Props) {
   
   }
 
+  function addUserToGraphql() {
+    //add user to graphql
+    console.log("adding user to graphql");
+  }
+
+  function removeUserFromGraphql() {
+    //remove user from graphql
+  }
+
+
   function subscribeToUsers() {
     //subscribe to users in graphql
   }
@@ -76,13 +90,14 @@ function Home({}: Props) {
         oldUserName={oldUserName}
         oldUserId={oldUserId}
         setSessionStorageUser={setSessionStorageUser}
+        addUserToGraphql={addUserToGraphql}
         />
     </Show>
     <Show when={sessionStorageUser()}>
       <UsersList
         users={[
           "Desarso",
-          "Yourmom",
+          "Someone",
         ]}
       />
     </Show>

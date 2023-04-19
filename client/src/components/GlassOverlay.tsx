@@ -5,9 +5,10 @@ type Props = {
   oldUserName: any;
   oldUserId: any;
   setSessionStorageUser: any;
+  addUserToGraphql: any;
 }
 
-const GlassOverlay = ({oldUserName, oldUserId, setSessionStorageUser}: Props) => {
+const GlassOverlay = ({oldUserName, oldUserId, setSessionStorageUser, addUserToGraphql}: Props) => {
 
   const [username, setUsername] = createSignal("");
   const [userid, setUserid] = createSignal("");
@@ -22,7 +23,6 @@ const GlassOverlay = ({oldUserName, oldUserId, setSessionStorageUser}: Props) =>
       return;
     }
     if(username() == oldUserName()){
-      console.log("i am right here")
       console.log("userid: ", userid());
       console.log("username: ", usernameInputed);
       let currentID = userid();
@@ -31,9 +31,7 @@ const GlassOverlay = ({oldUserName, oldUserId, setSessionStorageUser}: Props) =>
       sessionStorage.setItem("gabrielmalek/chess.data", JSON.stringify({userId: currentID, userName: currentName}));
       setSessionStorageUser(true)
       console.log("made it here")
-      // let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
-      // inputElement.value = "";
-      // setUsername("");
+      addUserToGraphql();
       return;
     }
     console.log("userid: ", userid);
@@ -43,6 +41,8 @@ const GlassOverlay = ({oldUserName, oldUserId, setSessionStorageUser}: Props) =>
     let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
     inputElement.value = "";
     setUsername("");
+    setSessionStorageUser(true);
+    addUserToGraphql();
   }
 
   onMount(() => {
