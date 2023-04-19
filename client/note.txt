@@ -1,0 +1,14 @@
+I need to think about how to update the user leaving the page
+
+So the user object should have a last seen property
+Everytime the user updates the graphql in any way it should update the last seen property to the current time
+Then every let's say 2 minutes the back end will loop thru the current users online, and if the last seen property is longer than 
+say 3 minutes it will remove that user.
+So the user will by default update it's last seen property every 2 minutes.
+It should keep a copy of it's own data, so that it know if it needs to update.
+
+
+//how can I keep local storage, session, and backend in sync?
+//well this is what I need to design.
+
+I check if the users exists in session or local storage, for front end actions.
