@@ -14,11 +14,14 @@ const typeDefs = importSchema("./schema.gql");
 
 
 const games: game[] = [];
+const users: User[] = [];
 
 
 const pubSub = createPubSub<{
-    game: [payload: game]
+    game: [payload: game],
+    users: [payload: User[]]
 }>()
+
 
 
 
@@ -41,6 +44,7 @@ const resolvers = {
       }
       return null;
     },
+    getUsers: () => users,
   },
   Mutation: {
     createGame: (
@@ -85,7 +89,31 @@ const resolvers = {
                 return game;
             }
             return null;
-        }
+        },
+    addUser: (
+      _: unknown,
+      { id, username }: { id: string; username: string },
+      {pubSub}: any
+    ) => {
+      const user : User={
+        id: id,
+        username: username,
+        ip: "whatever",
+      };
+      users.push(user);
+      pubSub.publish("users",users)
+      return user;
+    },
+    deleteUser: (_: unknown, { id }: { id: string }, {pubSub}: any) => {
+      const userIndex = users.findIndex((user) => user.id === id);
+      if (userIndex !== -1) {
+        let user = users[userIndex]
+        users.splice(userIndex, 1);
+        pubSub.publish("users",users)
+        return user;
+      }
+      return false;
+    }
   },
   Subscription: {
     game: {
@@ -95,7 +123,14 @@ const resolvers = {
             return iterator
         },
         resolve: (payload: any) => payload
-    }
+    },
+    users: {
+        subscribe:(_: unknown,{}, {pubSub}: any) => {
+            const iterator = pubSub.subscribe("users");
+            return iterator
+        },
+        resolve: (payload: any) => payload
+      }
   }
 };
 

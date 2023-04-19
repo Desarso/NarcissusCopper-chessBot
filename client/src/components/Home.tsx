@@ -1,8 +1,25 @@
-import { createSignal, onMount, Show } from "solid-js";
+import { createReaction, createResource, createSignal, onMount, Show } from "solid-js";
 import WhiteChessboard from "./WhiteChessboard";
 import BlackChessboard from "./BlackChessboard";
 import GlassOverlay from "./glassOverlay";
 import UsersList from "./UsersList";
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client/core';
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql",
+  cache: new InMemoryCache(),
+});
+
+const getUsers = gql`
+  query{
+    getUsers{
+      id
+      username
+    }
+  }
+    `
+
+
 
 type Props = {};
 
@@ -17,7 +34,16 @@ function Home({}: Props) {
   const [oldUserId, setUserId]: any = createSignal("");
   const [sessionStorageUser, setSessionStorageUser]: any = createSignal(false);
   const [inGame, setInGame]: any = createSignal(false);
-  
+    const [users, { refetch }]: any = createResource(() => 
+  client.query({
+      query: getUsers,
+    })
+    .then((result) => {
+      console.log("fetched",result.data.getUsers);
+      return result.data.getUsers;
+    })
+  );
+
 
 
   onMount(async () => {
