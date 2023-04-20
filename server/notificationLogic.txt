@@ -1,0 +1,20 @@
+So when the user clicks on the user in the list, that is not themselves. 
+They will send a mutate id.
+
+What we want is to send a notification to the specific user. 
+
+I want to create a subscription only to my specific user.
+
+So I want to create a subscription that only returns an array, of my notifications.
+
+Workflow
+-click on users
+-triggers function that will randomly select color, and ready data
+-functions send a mutate query that creates a notification for that specific userID
+-subscription to individual subscriptions, will trigger a pop up to ask for gameplay
+-notification is deleted upon click, or upon expiring, in around 2 minutes. Or if the user goes offline.
+-Upon accepting, a create game mutate is triggered. This needs to check in the backend that both players are still online.
+-A game is created, both players are assigned a color, and their boards are displayed appropriately.
+-all moves from opponent are animated, and one can not move the opposing pieces.
+-pieces that are consumed are shown below.
+-name tag is shown

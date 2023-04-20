@@ -1,3 +1,12 @@
+export interface Notifications{
+    gameId: string;
+    requesterID: string;
+    requesterColor: string;
+    receiverID: string;
+}
+
+
+
 export interface User{
     id: string;
     username: string;
