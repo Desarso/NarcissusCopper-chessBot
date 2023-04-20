@@ -12,3 +12,14 @@ It should keep a copy of it's own data, so that it know if it needs to update.
 //well this is what I need to design.
 
 I check if the users exists in session or local storage, for front end actions.
+
+
+So whenever, I am subscribing to the users, including myself, but I want to
+update a parameter inside the user object whenever I take any action.
+
+This seems kinda hard, maybe I should do this on the front end.  I simply add a function, to all my query functions
+//that mutates my user. 
+
+Then the graphql server, will have a loop function every two minutes, it will only trigger, if there are users in the list.
+So basically it checkes the users age, if it more than a certain amount, it deletes them, and then. If there are still users on the list, it will
+re-run the function. Otherwise, it exists. Also the function get's triggered, upon a user being added, if it is the first user being added. 

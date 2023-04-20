@@ -1,9 +1,11 @@
-import { createSignal, onMount } from "solid-js"
+import { createResource, createSignal, onMount } from "solid-js"
 
 
-type Props = {}
+type Props = {
+  catLink: String;
+}
 
-function CatLogo({}: Props) {
+function CatLogo({catLink}: Props) {
 
     async function getRandomCatLink(){
         //fetch https://api.thecatapi.com/v1/images/search
@@ -14,22 +16,26 @@ function CatLogo({}: Props) {
 
   
 
-    const [catLink, setCatLink] = createSignal("");
+    // const [catLink, {refetch}] = createResource(async () =>{
+    //     return getRandomCatLink()
+    // });
 
-    onMount(async () => {
-      const catLink = await getRandomCatLink()
-      console.log(catLink)
-      setCatLink(catLink)
-  });
+
+
+
+    // onMount(async() => {
+    //   const catLink = await getRandomCatLink()
+    //   console.log(catLink)
+    //   await setCatLink(catLink)
+    // });
 
 
 
   return (
     <div 
     class="catLogo"
-    style={`background-image: url(${catLink()})`}
+    style={`background-image: url(${catLink})`}
     >
-        {/* <img src={catLink()} alt="cat logo" /> */}
     </div>
   )
   

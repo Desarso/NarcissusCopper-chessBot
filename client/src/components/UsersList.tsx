@@ -18,10 +18,18 @@ function UsersList({users}: Props) {
     <div class="glassOverlay">
         <ul class="list">
           <For each={users()}>
-            {(user) => <li class="listItem"><div class="text">{user.username}</div><CatLogo/><button onClick={()=> console.log(users())}>🠮</button></li>}
+            {(user) => 
+            <li class="listItem">
+              <div class="text">{user.username}</div>
+              <CatLogo
+                catLink={user.cat_url}
+              />
+              <button 
+                onClick={()=> console.log(users())}>
+                  🠮
+              </button>
+            </li>}
           </For>
-          {/* <li class="listItem">Desarso<CatLogo/></li>
-          <li class="listItem">Yourmom<CatLogo/></li> */}
         </ul>
     </div>
   )

@@ -10,7 +10,8 @@ export interface Notifications{
 export interface User{
     id: string;
     username: string;
-    ip: string;
+    last_seen: string;
+    cat_url: string;
 }
 
 export interface Move{
