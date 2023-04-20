@@ -1,4 +1,4 @@
-export interface Notifications{
+export interface Notification{
     gameId: string;
     requesterID: string;
     requesterColor: string;
@@ -7,11 +7,13 @@ export interface Notifications{
 
 
 
+
 export interface User{
     id: string;
     username: string;
     last_seen: string;
     cat_url: string;
+    notification: Notification[];
 }
 
 export interface Move{

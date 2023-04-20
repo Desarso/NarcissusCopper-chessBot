@@ -87,42 +87,8 @@ function Home({}: Props) {
         setUsers(result.data.getUsers);
       return result.data.getUsers;
     });
-    
-    setInterval(updateLastSeen, 6000);
+ 
 
-
-    //set online in local storage to true
-    localStorage.setItem("gabrielmalek/online", "true");
-
-    //this function try to remove the user from graphql when the user leaves
-    //and also set online to false
-    window.onbeforeunload = function () {
-      //only if user is not in a game, and only in the lobby
-      if (inGame() == false) {
-        //mutate graphql to remove the currentUser
-        removeUserFromGraphql();
-      }
-      localStorage.setItem("gabrielmalek/online", "false");
-    };
-    window.onclose = function () {
-      //only if user is not in a game, and only in the lobby
-      if (inGame() == false) {
-        //mutate graphql to remove the currentUser
-        removeUserFromGraphql();
-      }
-    
-      localStorage.setItem("gabrielmalek/online", "false");
-    };
-
-    window.onunload = function () {
-      //only if user is not in a game, and only in the lobby
-      if (inGame() == false) {
-        //mutate graphql to remove the currentUser
-        removeUserFromGraphql();
-      }
-     
-      localStorage.setItem("gabrielmalek/online", "false");
-    };
   });
 
    //subscribe to users in graphql
@@ -134,7 +100,8 @@ function Home({}: Props) {
      next: (result: any) => {
       //  console.log("users from sub", result.data.users);
       //  console.log(users())
-      console.log("sub triggered")
+      // console.log("sub triggered");
+
        if(!UserInList(oldUserId(), result.data.users)
         || (!UserInList(oldUserId(), users()) 
         ||(users().length != result.data.users.length))
@@ -142,7 +109,7 @@ function Home({}: Props) {
 
           setUsers(result.data.users);
           console.log("mutated")
-       }
+       };
       //  console.log(result.data.users)
       //  console.log(users().length, result.data.users.length)
        
@@ -161,7 +128,7 @@ function Home({}: Props) {
       },
     })
     .then((result: any) => {
-      console.log("updated last seen");
+      // console.log("updated last seen");
     });
 
 
@@ -182,6 +149,8 @@ function Home({}: Props) {
       await setUserId(chessDataJson.userId);
       await setUserName(chessDataJson.userName);
       await setSessionStorageUser(true);
+      updateLastSeen();
+      setInterval(updateLastSeen, 6000);
       await addUserToGraphql();
       return;
     }
@@ -267,25 +236,6 @@ function Home({}: Props) {
      
   }
 
-  function removeUserFromGraphql() {
-    //remove user from graphql
-    if(users() == undefined){
-      return;
-    }
-
-    console.log("removing user from graphql");
-    client
-      .mutate({
-        mutation: deleteUser,
-        variables: {
-          id: oldUserId(),
-        },
-      })
-      .then((result) => {
-        console.log("removed user from graphql");
-        console.log(result);
-      });
-  }
 
 
   return (
@@ -294,8 +244,11 @@ function Home({}: Props) {
         <GlassOverlay
           oldUserName={oldUserName}
           oldUserId={oldUserId}
+          setOldUserName={setUserName}
+          setOldUserId={setUserId}
           setSessionStorageUser={setSessionStorageUser}
           addUserToGraphql={addUserToGraphql}
+          updateLastSeen={updateLastSeen}
         />
       </Show>
       <Show when={sessionStorageUser()}>

@@ -1,4 +1,10 @@
 
+type Notification {
+  gameId: String!
+  requesterID: String!
+  requesterColor: String!
+  receiverID: String!
+}
 
 
 type User {
@@ -6,6 +12,7 @@ type User {
   username: String!
   last_seen: String!
   cat_url: String!
+  notifications: [Notification!]!
 }
 
 

@@ -2,7 +2,7 @@ import { createYoga, createPubSub} from "graphql-yoga";
 import { createServer } from "node:http";
 import { importSchema } from "graphql-import";
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import {game, User, Move} from "./gameStructs";
+import {game, User, Move, Notification} from "./gameStructs";
 
 
 
@@ -95,11 +95,13 @@ const resolvers = {
       { id, username, cat_url }: { id: string; username: string, cat_url: string},
       {pubSub}: any
     ) => {
+      const notification: Notification[] = [];
       const user : User={
         id: id,
         username: username,
         last_seen: Date.now().toString(),
-        cat_url: cat_url
+        cat_url: cat_url,
+        notification: notification
       };
       if( users.find((user) => user.id === id) ){
           return user;
@@ -122,20 +124,12 @@ const resolvers = {
     updateLastSeen: (_: unknown, { id }: { id: string}, {pubSub}: any) => {
         let user = users.find((user) => user.id === id);
         if (user) {
-            console.log("updating last seen")
+            // console.log("updating last seen")
             user.last_seen = Date.now().toString();
             pubSub.publish("users",users)
             return user;
-        }else{
-            user = {
-                id: "-1",
-                username: "unknown",
-                last_seen: Date.now().toString(),
-                cat_url: "https://i.imgur.com/3ZQ3X9M.png"
-            }
-
-            return user;
         }
+        return false;
       }
   },
   Subscription: {

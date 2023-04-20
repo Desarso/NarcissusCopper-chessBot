@@ -18,3 +18,12 @@ Workflow
 -all moves from opponent are animated, and one can not move the opposing pieces.
 -pieces that are consumed are shown below.
 -name tag is shown
+
+Game object Workflow
+-upon moving a mutate function will add a move to the game object array of moves.
+-both users will be subscribed to the game.
+-if the subscripion triggered by the game contains a move, from other user, then the move is accepted.
+-We should also keep track of total moves, to make sure we don't update board to a previous state.
+-Eventually I would like to be able to have a back track button, that is able to display the previous moves.
+-similarly to chess.com.
+-Upon game completion, a screen pops up, showing the winner, and the game object is deleted, and well as the subscripton which is ended. 
