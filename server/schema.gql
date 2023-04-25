@@ -52,4 +52,5 @@ type Mutation {
 type Subscription {
   game(id: ID!): Game!
   users: [User!]!
+  notifications: [Notification!]!
 }
