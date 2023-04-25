@@ -11,6 +11,7 @@ import GlassOverlay from "./GlassOverlay";
 import UsersList from "./UsersList";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
 
+
 const client = new ApolloClient({
   uri: "http://localhost:4000/graphql",
   cache: new InMemoryCache(),
@@ -236,6 +237,12 @@ function Home({}: Props) {
      
   }
 
+  function playChess(user: any){
+    console.log("sending notification to", user.username);
+    //when this function runs I need to create a notification for the user
+    //so I send a mutation using the id to the graphql
+  }
+
 
 
   return (
@@ -252,7 +259,11 @@ function Home({}: Props) {
         />
       </Show>
       <Show when={sessionStorageUser()}>
-        <UsersList users={users} />
+        <UsersList 
+          users={users} 
+          userId={oldUserId}
+          playChess={playChess}
+          />
       </Show>
 
       <Show when={true}>{/* <WhiteChessboard/> */}</Show>

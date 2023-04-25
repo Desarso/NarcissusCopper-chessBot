@@ -171,6 +171,19 @@ html, body, #root {
   border: 1vmin solid transparent;
 }
 
+.modal-content {
+  width: 60vmin !important;
+  height: 20vmin !important;
+  min-width: 100%;
+  min-height: 100%;
+}
+.modal-content .modal-header {
+  background-color: #76a2a3;
+}
+.modal-content .modal-body, .modal-content .modal-footer {
+  background-color: #91c2c3;
+}
+
 .ml-\[1\] {
   margin-left: 10vmin;
 }
@@ -219,6 +232,7 @@ html, body, #root {
   border: 2px solid black;
   border-bottom: 0px;
   border-radius: 5px;
+  padding-left: 0px !important;
 }
 .glassOverlay .list .listItem {
   display: inline-flex;
@@ -238,6 +252,7 @@ html, body, #root {
 .glassOverlay .list .listItem .text {
   margin-left: 2vmin;
   width: 40%;
+  min-width: fit-content;
 }
 .glassOverlay .list .listItem .catLogo {
   width: 10vmin;
@@ -251,6 +266,9 @@ html, body, #root {
 .glassOverlay .list .listItem button {
   color: rgba(255, 127, 7, 0.592);
   margin-left: 6%;
+}
+.glassOverlay .list #mainUser {
+  background-color: rgba(79, 255, 229, 0.451);
 }
 .glassOverlay .submitUsernameButton {
   position: absolute;

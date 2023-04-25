@@ -45,6 +45,8 @@ type Mutation {
   changeFen(id: ID!, fen: String!): Game!
   changeTurn(id: ID!, turn: String!): Game!
   updateLastSeen(id: ID!): User!
+  #this notif builds the ID with the received data
+  sendNotification(gameId: String!, requesterID: String!, requesterColor: String!, receiverID: String!): Notification!
 }
 
 type Subscription {

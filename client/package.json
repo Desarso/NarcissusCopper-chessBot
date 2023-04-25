@@ -20,8 +20,9 @@
     "vite-plugin-solid": "^2.3.0"
   },
   "dependencies": {
-    "solid-js": "^1.4.7",
     "@apollo/client": "^3.7.1",
-    "graphql": "^16.6.0"
+    "bootstrap": "^5.2.3",
+    "graphql": "^16.6.0",
+    "solid-js": "^1.4.7"
   }
 }

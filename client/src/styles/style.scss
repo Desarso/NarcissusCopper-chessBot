@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
 html, body, #root {
     margin: 0px;
     width: 100%;
@@ -165,6 +167,20 @@ z-index: 10;
     }
 }
 
+.modal-content{
+    width: 60vmin !important;
+    height: 20vmin !important;
+    min-width: 100%;
+    min-height: 100%;
+
+    .modal-header{
+        background-color: #76a2a3;
+    }
+
+    .modal-body, .modal-footer{
+        background-color: #91c2c3;
+    }
+}
 .ml-\[1\]{
     margin-left: 10vmin;
 }
@@ -211,6 +227,7 @@ z-index: 10;
         border: 2px solid black;
         border-bottom: 0px ;
         border-radius: 5px;
+        padding-left: 0px !important; 
         .listItem{
             display: inline-flex;
             padding: 1vmin;
@@ -230,6 +247,7 @@ z-index: 10;
             .text{
                 margin-left: 2vmin;
                 width: 40%;
+                min-width: fit-content
             }
 
             .catLogo{
@@ -246,6 +264,23 @@ z-index: 10;
                 color: rgba(255, 127, 7, 0.592);
                 margin-left: 6%;
             }
+        }
+
+        #mainUser{
+            background-color: rgba(79, 255, 229, 0.451);
+            // border-radius: 5px;
+            // border: 2px solid black;
+            // border-bottom: 0px ;
+            // font-weight: 600;
+            // justify-content: start;
+            // align-items: center;
+            // font-size: 5vmin;
+            // padding: 1vmin;
+            // padding-left: 3vmin;
+            // &:hover{
+            //     cursor: pointer;
+            //     background-color: rgba(255, 127, 7, 0.592);
+            // }
         }
     }
     
@@ -375,3 +410,4 @@ z-index: 10;
 
 
 }
+

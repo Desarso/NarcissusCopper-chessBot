@@ -20,6 +20,7 @@ const users: User[] = [];
 const pubSub = createPubSub<{
     game: [payload: game],
     users: [payload: User[]]
+    notification: [payload: Notification]
 }>()
 
 
@@ -130,7 +131,22 @@ const resolvers = {
             return user;
         }
         return false;
-      }
+    },
+    sendNotification: (_: unknown, { gameId, requesterID, requesterColor, receiverID }: { gameId: string, requesterID: string, requesterColor: string, receiverID: string}, {pubSub}: any) => {
+        let receiver = users.find((user) => user.id === receiverID);
+        if (receiver) {
+            let notification: Notification = {
+                gameId: gameId,
+                requesterID: requesterID,
+                requesterColor: requesterColor,
+                receiverID: receiverID
+            }
+            receiver.notification.push(notification)
+            pubSub.publish("notification", notification)
+            return receiver;
+        }
+        return false;
+    },
   },
   Subscription: {
     game: {
@@ -147,7 +163,14 @@ const resolvers = {
             return iterator
         },
         resolve: (payload: any) => payload
-      }
+    },
+    notification: {
+        subscribe:(_: unknown,{}, {pubSub}: any) => {
+            const iterator = pubSub.subscribe("notification");
+            return iterator
+        },
+        resolve: (payload: any) => payload
+    }
   }
 };
 

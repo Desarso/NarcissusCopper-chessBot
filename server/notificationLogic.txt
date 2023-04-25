@@ -27,3 +27,9 @@ Game object Workflow
 -Eventually I would like to be able to have a back track button, that is able to display the previous moves.
 -similarly to chess.com.
 -Upon game completion, a screen pops up, showing the winner, and the game object is deleted, and well as the subscripton which is ended. 
+
+
+Cute cat:
+
+I found a really cute wild cat picture, please make this the default
+for the player desarso: https://cdn2.thecatapi.com/images/8la.jpg
