@@ -1,0 +1,52 @@
+{
+  "name": "solid-refresh",
+  "description": "Universal HMR for SolidJS",
+  "author": "Ryan Carniato",
+  "license": "MIT",
+  "version": "0.4.2",
+  "homepage": "https://github.com/solidjs/solid-refresh#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solidjs/solid-refresh"
+  },
+  "main": "dist/solid-refresh.js",
+  "module": "dist/solid-refresh.mjs",
+  "files": [
+    "dist",
+    "babel.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    "Alexis Munsayac"
+  ],
+  "sideEffects": false,
+  "devDependencies": {
+    "@babel/core": "^7.18.5",
+    "@rollup/plugin-node-resolve": "13.3.0",
+    "@rollup/plugin-typescript": "^8.5.0",
+    "@types/babel__core": "^7.1.19",
+    "@types/babel__generator": "^7.6.4",
+    "@types/node": "^18.11.18",
+    "prettier": "^2.8.2",
+    "rollup": "^2.75.7",
+    "solid-js": "^1.6.8",
+    "tslib": "^2.4.1",
+    "typescript": "^4.9.4",
+    "vitest": "^0.16.0"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.3"
+  },
+  "dependencies": {
+    "@babel/generator": "^7.18.7",
+    "@babel/helper-module-imports": "^7.16.7",
+    "@babel/types": "^7.18.4"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "vitest",
+    "format": "prettier -w \"{tests,src}/**/*.{js,ts}\""
+  }
+}
