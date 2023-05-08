@@ -50,17 +50,22 @@ const resolvers = {
   Mutation: {
     createGame: (
       _: unknown,
-      { fen }: { fen: string},
+      { fen, gameId, receiverID, requesterID, requesterColor }: { fen: string, gameId: string, receiverID: string, requesterID: string, requesterColor: string},
       {pubSub}: any
     ) => {
       const game = {
-        id: `${games.length + 1}`,
+        id: gameId,
+        receiverID: receiverID,
+        requesterID: requesterID,
+        requesterColor: requesterColor,
         fen,
         turn: "white",
         moves: [],
         users: [],
       
       };
+      //here I want to make sure both users exist and are online
+
       pubSub.publish('game', game.id, game)
       games.push(game);
       return game;
@@ -164,8 +169,10 @@ const resolvers = {
         },
         resolve: (payload: any) => payload
     },
-    notification: {
+    //must modify to make user specific
+    notifications: {
         subscribe:(_: unknown,{}, {pubSub}: any) => {
+            //onyl send notifications to the user if Id matches
             const iterator = pubSub.subscribe("notification");
             return iterator
         },

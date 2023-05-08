@@ -12,6 +12,10 @@ html, body, #root {
     background-color: rgb(8, 18, 51);
 }
 
+#notificationButton{
+    width: 0px;
+}
+
 #root{
     display: flex;
     align-items: center;

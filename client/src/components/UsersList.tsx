@@ -1,4 +1,4 @@
-import { For, createSignal, onMount } from "solid-js";
+import { For, Show, createSignal, onMount } from "solid-js";
 import CatLogo from "./CatLogo";
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
 
 function UsersList({ users, userId, playChess }: Props) {
   const [selectedUser, setSelectedUser] = createSignal(null);
+  const [notificationSent, setNotificationSent] = createSignal(false);
 
   function clickUser(user: any) {
     console.log("selected user: ", user);
@@ -72,6 +73,12 @@ function UsersList({ users, userId, playChess }: Props) {
               Play online with this player right now!
             </div>
             <div class="modal-footer">
+              <Show when={notificationSent()}>
+                <div class="absolute left-3 text-red-500">
+                  Notification sent!,
+                </div>
+              </Show>
+
               <button
                 type="button"
                 class="btn btn-secondary"
@@ -82,7 +89,20 @@ function UsersList({ users, userId, playChess }: Props) {
               <button
                 type="button"
                 class="btn btn-primary"
-                onClick={() => playChess(selectedUser())}
+                onClick={() => {
+                  if(notificationSent() == false){
+                    setNotificationSent(true);
+                    playChess(selectedUser())
+                    setTimeout(() => {
+                      setNotificationSent(false);
+                    }, 5000);
+                  }
+                  
+                  }
+
+                  
+                  }
+             
               >
                 Play Chess
               </button>
