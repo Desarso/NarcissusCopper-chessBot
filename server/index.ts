@@ -50,17 +50,23 @@ const resolvers = {
   Mutation: {
     createGame: (
       _: unknown,
-      { fen }: { fen: string},
+      { fen, gameId, receiverID, requesterID, requesterColor }: { fen: string, gameId: string, receiverID: string, requesterID: string, requesterColor: string},
       {pubSub}: any
     ) => {
       const game = {
-        id: `${games.length + 1}`,
+        id: gameId,
+        receiverID: receiverID,
+        requesterID: requesterID,
+        requesterColor: requesterColor,
         fen,
         turn: "white",
         moves: [],
         users: [],
+        started: false
       
       };
+      //here I want to make sure both users exist and are online
+
       pubSub.publish('game', game.id, game)
       games.push(game);
       return game;
@@ -147,6 +153,25 @@ const resolvers = {
         }
         return false;
     },
+    startGame: (_: unknown, { gameId}: { gameId: string}, {pubSub}: any) => {
+        let game = games.find((game) => game.id === gameId);
+        if (game) {
+            game.started = true;
+            pubSub.publish("game", game.id, game)
+            return game;
+        }
+        return false;
+    },
+    move: (_: unknown, { from, to, endFen, gameId }: { from: string, to: string, endFen: string, gameId: string}, {pubSub}: any) => {
+        let game = games.find((game) => game.id === gameId);
+        if (game) {
+            game.fen = endFen;
+            game.moves.push({from: from, to: to, endFen: endFen});
+            pubSub.publish("game", game.id, game)
+            return game;
+        }
+        return false;
+    }
   },
   Subscription: {
     game: {
@@ -164,8 +189,10 @@ const resolvers = {
         },
         resolve: (payload: any) => payload
     },
-    notification: {
+    //must modify to make user specific
+    notifications: {
         subscribe:(_: unknown,{}, {pubSub}: any) => {
+            //onyl send notifications to the user if Id matches
             const iterator = pubSub.subscribe("notification");
             return iterator
         },

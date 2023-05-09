@@ -17,7 +17,13 @@ type Props = {
   inlaySelection: any;
   style: any;
   color: string;
+  client: any;
+  gql: any;
+  gameId: string;
 };
+
+
+
 
 function ChessSquare({
   pieceClassName,
@@ -33,7 +39,23 @@ function ChessSquare({
   displayInlay,
   style,
   color,
+  client,
+  gql,
+  gameId,
 }: Props) {
+  const updateGame = gql`
+  mutation move($from: String!, $to: String!, $endFen: String!, gameId: String!) {
+    move(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
+      fen, 
+      id,
+      moves,
+    }
+
+  }
+`
+
+
+
   onMount(() => {
     window.movePiece = function(start, end){
       board.movePiece(start, end);
@@ -155,7 +177,13 @@ function ChessSquare({
         if (endingIndex === startingIndex) return;
         // console.log("legal move");
         let previousBoard = board.board;
+
         board.movePiece(startingIndex, endingIndex);
+        //this is where I move the piece
+        let move = { start: startingIndex, end: endingIndex };
+        updateGameQL(move, board.fen);
+
+
         setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
         if (previousChild.classList.contains("piece")) {
           eatenPieces.push(previousChild);
@@ -195,6 +223,23 @@ function ChessSquare({
       </section>
     );
   };
+
+
+  function updateGameQL(move: any, fen: string) {
+    client.
+    mutate({
+      mutation: updateGame,
+      variables: {
+        from: move.start,
+        to: move.end,
+        endFen: fen,
+        gameId: gameId
+      }
+    })
+    .then((result: any) => {
+      console.log(result);
+    })
+  }
 
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 

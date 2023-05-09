@@ -25,8 +25,12 @@ export interface Move{
 
 export interface game{
     id: string;
+    requesterID: string;
+    requesterColor: string;
+    receiverID: string;
     users: User[];
     moves: Move[];
     turn: string;
     fen: string;
+    started: boolean;
 }

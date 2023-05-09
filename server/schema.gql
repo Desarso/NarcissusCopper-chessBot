@@ -25,10 +25,14 @@ type Move {
 
 type Game {
   id: ID!
+  receiverID: String!
+  requesterID: String!
+  requesterColor: String!
   users: [User!]!
   moves: [Move!]!
   fen: String!
   turn: String!
+  started: Boolean!
 }
 
 #need to add a subscription for game
@@ -39,18 +43,20 @@ type Query {
 }
 
 type Mutation {
-  createGame(fen: String!): Game!
+  createGame(fen: String!, gameId: String!, receiverID: String!, requesterID: String!, requesterColor: String! ): Game!
   addUser(id: ID!, username: String!, cat_url: String!): User!
   deleteUser(id: ID!): User!
   changeFen(id: ID!, fen: String!): Game!
   changeTurn(id: ID!, turn: String!): Game!
   updateLastSeen(id: ID!): User!
   #this notif builds the ID with the received data
-  sendNotification(gameId: String!, requesterID: String!, requesterColor: String!, receiverID: String!): Notification!
+  sendNotification(gameId: String!, requesterID: String!, requesterColor: String!, receiverID: String!): User!
+  startGame(gameId: String!): Game!
+  move(from: String!, to: String!, endFen: String!, gameId: String!): Game!
 }
 
 type Subscription {
   game(id: ID!): Game!
   users: [User!]!
-  notification: [Notification!]!
+  notifications: Notification!
 }

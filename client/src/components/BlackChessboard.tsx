@@ -2,19 +2,31 @@
 import { Move, TEST, Board } from "../Classes/chessClasses";
 import { createSignal, For, Show } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
-import { board } from "./WhiteChessboard";
+import board  from "./WhiteChessboard";
 import ChessSquare from "./ChessSquare";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
 
-
+type Props = {
+  client: any;
+  board: any;
+  updateBlackBoard: any;
+  gql: any;
+  gameId: string;
+};
 
 // board.movePiece("e2", "e2");
-board.displayBoard();
-// let legalMoves = board.findLegalMoves(board);
-// console.log(legalMoves);
-// console.log(board.boardToFen())
+
+
+
+
+let id = 0;
+
+function BlackChessboard({client, board, updateBlackBoard, gql, gameId}: Props) {
+
+  board.displayBoard();
+
 
 
 let boardIds = getBoardIds();
@@ -32,20 +44,8 @@ function getBoardIds(){
     return boardIds;
 }
 
-function reverseArray(array : any){
-  let reversedArray = [];
-  for(let i = array.length-1; i>=0; i--){
-    reversedArray.push(array[i]);
-  }
-  return reversedArray;
-}
 
 
-
-
-let id = 0;
-
-function BlackChessboard({}) {
   //need to keep track of board more dynamically so that it updates better
   let eatenPieces : any = [];
 
@@ -55,65 +55,7 @@ function BlackChessboard({}) {
   const [displayInlayX, setDisplayInlayX] = createSignal(0);
   const [inlaySelection, setInlaySelection] = createSignal("");
 
-  function updateBoard(){
-
-    let UIboard =  document.querySelectorAll('.chessSquare');
-    let UIArray = [];
-
-    //I get the UI classes and create an array to make comparison easier
-    //for black pieces all I need to do to make updateBoard work is to reverse the array
-    //and then I can use the same code
-
-    //I reverse the array to make sure the algorithm works for black pieces
-    UIboard = reverseArray(UIboard);
-
-    for(let i = 0; i < UIboard.length; i++){
-      if(UIboard[i].children[0] != undefined){
-        UIArray.push(UIboard[i].children[0].classList[0]);
-    }else{
-      UIArray.push(" ");
-    }
-  }
-
-    //I loop thur the board and check mismatches, I use a space and piecebuffer
-    //since I am only checking for one piece at a time
-
-    let pieceBuffer;
-    let squareBuffer;
-
-    for(let i =0; i<64;i++){
-
-      //here I check if there is a piece missing on the UI
-      //if so I check if pieceBuffer exists
-      //if so append, else  I mark the squareBuffer
-      if(UIArray[i] != board.board[i]){
-        if(UIArray[i] == " " && board.board[i] != " "){
-          squareBuffer = UIboard[i];
-          if(pieceBuffer != undefined){
-            UIboard[i].appendChild(pieceBuffer);
-            pieceBuffer = undefined;
-          }
-        //here I check if there is a piece on the UI that is not on the board
-        //if so I insert the piece into the piece buffer
-        //if there is a square buffer I append the piece to the square buffer
-        }else if(UIArray[i] != " " && board.board[i] == " "){
-          pieceBuffer = UIboard[i].children[0];
-          if(squareBuffer != undefined){
-            squareBuffer.appendChild(pieceBuffer);
-            pieceBuffer = undefined;
-            squareBuffer = undefined;
-          }
-        }
-      }
-    }
-    //if there is a piece buffer left over I remove it
-    if(pieceBuffer != undefined){
-      pieceBuffer?.parentElement?.removeChild(pieceBuffer);
-    }
-
-
-
-  }
+ 
 
   //here I need to mount an event listener or alternatively I can just have
 
@@ -139,7 +81,7 @@ function handleSelection(selection: string){
   UIPiece.classList.remove(previousType);
   UIPiece.classList.add(selection);
   
-  updateBoard();
+  updateBlackBoard();
 }
 
 
@@ -181,7 +123,7 @@ function handleSelection(selection: string){
                   className={`chessSquare ${((board.board.length-1) - index()) % 16 <8 ? ((board.board.length-1) - index()) % 2 == 0 ? "lighterBackground" : "" : ((board.board.length-1) - index()) % 2 == 0 ? "" : "lighterBackground"}`}
                   id={boardIds[((board.board.length-1) - index())]}
                   board = {board}
-                  updateBoard = {updateBoard}
+                  updateBoard = {updateBlackBoard}
                   draggableId={generateRandomID()}
                   eatenPieces = {eatenPieces}
                   setDisplayInlay = {setDisplayInlay}
@@ -189,6 +131,9 @@ function handleSelection(selection: string){
                   inlaySelection = {inlaySelection}
                   displayInlay = {displayInlay}
                   color="black"
+                  client={client}
+                  gql={gql}
+                  gameId={gameId}
                   />
               )}
             </For>
