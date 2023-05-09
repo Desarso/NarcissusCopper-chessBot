@@ -32,6 +32,7 @@ type Game {
   moves: [Move!]!
   fen: String!
   turn: String!
+  started: Boolean!
 }
 
 #need to add a subscription for game
@@ -50,6 +51,8 @@ type Mutation {
   updateLastSeen(id: ID!): User!
   #this notif builds the ID with the received data
   sendNotification(gameId: String!, requesterID: String!, requesterColor: String!, receiverID: String!): User!
+  startGame(gameId: String!): Game!
+  move(from: String!, to: String!, endFen: String!, gameId: String!): Game!
 }
 
 type Subscription {

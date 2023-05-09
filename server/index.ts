@@ -62,6 +62,7 @@ const resolvers = {
         turn: "white",
         moves: [],
         users: [],
+        started: false
       
       };
       //here I want to make sure both users exist and are online
@@ -152,6 +153,25 @@ const resolvers = {
         }
         return false;
     },
+    startGame: (_: unknown, { gameId}: { gameId: string}, {pubSub}: any) => {
+        let game = games.find((game) => game.id === gameId);
+        if (game) {
+            game.started = true;
+            pubSub.publish("game", game.id, game)
+            return game;
+        }
+        return false;
+    },
+    move: (_: unknown, { from, to, endFen, gameId }: { from: string, to: string, endFen: string, gameId: string}, {pubSub}: any) => {
+        let game = games.find((game) => game.id === gameId);
+        if (game) {
+            game.fen = endFen;
+            game.moves.push({from: from, to: to, endFen: endFen});
+            pubSub.publish("game", game.id, game)
+            return game;
+        }
+        return false;
+    }
   },
   Subscription: {
     game: {

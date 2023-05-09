@@ -1,44 +1,102 @@
 // type Props = {};
-import { Move, TEST, Board } from "../Classes/chessClasses";
+import { Move, TEST } from "../Classes/chessClasses";
 import { createSignal, For, Show } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
 import ChessSquare from "./ChessSquare";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
+type Props = {
+  client:any;
+  board: any;
+  updateBoard: any;
+  gql: any;
+  gameId: string;
+};
+
+// function updateBoard(){
+
+//   let UIboard =  document.querySelectorAll('.chessSquare');
+//   let UIArray = [];
+
+//   //I get the UI classes and create an array to make comparison easier
+//   //for black pieces all I need to do to make updateBoard work is to reverse the array
+//   //and then I can use the same code
+
+//   //I reverse the array to make sure the algorithm works for black pieces
+//   //UIBoard = reverseArray(UIBoard);
+
+//   for(let i = 0; i < UIboard.length; i++){
+//     if(UIboard[i].children[0] != undefined){
+//       UIArray.push(UIboard[i].children[0].classList[0]);
+//   }else{
+//     UIArray.push(" ");
+//   }
+// }
+
+//   //I loop thur the board and check mismatches, I use a space and piecebuffer
+//   //since I am only checking for one piece at a time
+
+//   let pieceBuffer;
+//   let squareBuffer;
+
+//   for(let i =0; i<64;i++){
+
+//     //here I check if there is a piece missing on the UI
+//     //if so I check if pieceBuffer exists
+//     //if so append, else  I mark the squareBuffer
+//     if(UIArray[i] != board.board[i]){
+//       if(UIArray[i] == " " && board.board[i] != " "){
+//         squareBuffer = UIboard[i];
+//         if(pieceBuffer != undefined){
+//           UIboard[i].appendChild(pieceBuffer);
+//           pieceBuffer = undefined;
+//         }
+//       //here I check if there is a piece on the UI that is not on the board
+//       //if so I insert the piece into the piece buffer
+//       //if there is a square buffer I append the piece to the square buffer
+//       }else if(UIArray[i] != " " && board.board[i] == " "){
+//         pieceBuffer = UIboard[i].children[0];
+//         if(squareBuffer != undefined){
+//           squareBuffer.appendChild(pieceBuffer);
+//           pieceBuffer = undefined;
+//           squareBuffer = undefined;
+//         }
+//       }
+//     }
+//   }
+//   //if there is a piece buffer left over I remove it
+//   if(pieceBuffer != undefined){
+//     pieceBuffer?.parentElement?.removeChild(pieceBuffer);
+//   }
 
 
-export let board = new Board();
 
-
-// board.movePiece("e2", "e2");
-board.displayBoard();
-// let legalMoves = board.findLegalMoves(board);
-// console.log(legalMoves);
-// console.log(board.boardToFen())
-
-
-let boardIds = getBoardIds();
-
-
-//this gets the white board IDs
-//black board ID's are the same array but reversed
-function getBoardIds(){
-    let boardIds = [];
-    for(let i = 0; i < 8; i++){
-        for(let j = 0; j < 8; j++){
-            boardIds.push(`${String.fromCharCode(97+j)}${8-i}`);
-        }
-    }
-    return boardIds;
-}
+// }
 
 
 
 
-let id = 0;
+function WhiteChessboard({board, client, updateBoard, gql, gameId}: Props) {
 
-function WhiteChessboard({}) {
+    board.displayBoard();
+
+
+
+    let boardIds = getBoardIds();
+
+
+  //this gets the white board IDs
+  //black board ID's are the same array but reversed
+  function getBoardIds(){
+      let boardIds = [];
+      for(let i = 0; i < 8; i++){
+          for(let j = 0; j < 8; j++){
+              boardIds.push(`${String.fromCharCode(97+j)}${8-i}`);
+          }
+      }
+      return boardIds;
+  }
   //need to keep track of board more dynamically so that it updates better
   let eatenPieces : any = [];
 
@@ -48,65 +106,7 @@ function WhiteChessboard({}) {
   const [displayInlayX, setDisplayInlayX] = createSignal("00");
   const [inlaySelection, setInlaySelection] = createSignal("");
 
-  function updateBoard(){
 
-    let UIboard =  document.querySelectorAll('.chessSquare');
-    let UIArray = [];
-
-    //I get the UI classes and create an array to make comparison easier
-    //for black pieces all I need to do to make updateBoard work is to reverse the array
-    //and then I can use the same code
-
-    //I reverse the array to make sure the algorithm works for black pieces
-    //UIBoard = reverseArray(UIBoard);
-
-    for(let i = 0; i < UIboard.length; i++){
-      if(UIboard[i].children[0] != undefined){
-        UIArray.push(UIboard[i].children[0].classList[0]);
-    }else{
-      UIArray.push(" ");
-    }
-  }
-
-    //I loop thur the board and check mismatches, I use a space and piecebuffer
-    //since I am only checking for one piece at a time
-
-    let pieceBuffer;
-    let squareBuffer;
-
-    for(let i =0; i<64;i++){
-
-      //here I check if there is a piece missing on the UI
-      //if so I check if pieceBuffer exists
-      //if so append, else  I mark the squareBuffer
-      if(UIArray[i] != board.board[i]){
-        if(UIArray[i] == " " && board.board[i] != " "){
-          squareBuffer = UIboard[i];
-          if(pieceBuffer != undefined){
-            UIboard[i].appendChild(pieceBuffer);
-            pieceBuffer = undefined;
-          }
-        //here I check if there is a piece on the UI that is not on the board
-        //if so I insert the piece into the piece buffer
-        //if there is a square buffer I append the piece to the square buffer
-        }else if(UIArray[i] != " " && board.board[i] == " "){
-          pieceBuffer = UIboard[i].children[0];
-          if(squareBuffer != undefined){
-            squareBuffer.appendChild(pieceBuffer);
-            pieceBuffer = undefined;
-            squareBuffer = undefined;
-          }
-        }
-      }
-    }
-    //if there is a piece buffer left over I remove it
-    if(pieceBuffer != undefined){
-      pieceBuffer?.parentElement?.removeChild(pieceBuffer);
-    }
-
-
-
-  }
 
   //here I need to mount an event listener or alternatively I can just have
 
@@ -181,6 +181,9 @@ function handleSelection(selection: string){
                   inlaySelection = {inlaySelection}
                   displayInlay = {displayInlay}
                   color = "white"
+                  client = {client}
+                  gql = {gql}
+                  gameId = {gameId}
                   />
               )}
             </For>
