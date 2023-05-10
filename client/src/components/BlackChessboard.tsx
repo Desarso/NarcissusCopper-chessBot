@@ -25,7 +25,7 @@ let id = 0;
 
 function BlackChessboard({client, board, updateBlackBoard, gql, gameId}: Props) {
 
-  board.displayBoard();
+  board().displayBoard();
 
 
 
@@ -68,13 +68,13 @@ function handleSelection(selection: string){
   //need to get the piece at the position
   //it is basically 63 - displayInlayX
   
-  let piece = board.getPieceAtBoardIndex(63-(7-displayInlayX()));
+  let piece = board().getPieceAtBoardIndex(63-(7-displayInlayX()));
   let previousType = piece.type;
   console.log(piece);
   piece.type = selection;
 
-  board.board[63-(7-displayInlayX())] = selection;
-  board.displayBoard();
+  board().board[63-(7-displayInlayX())] = selection;
+  board().displayBoard();
   console.log(piece);
   let UIPiece = document.getElementById(piece.position.position).children[0];
   console.log("previous type:" +previousType);
@@ -115,13 +115,13 @@ function handleSelection(selection: string){
 
             </Show>
            
-            <For each={board.board}>
+            <For each={board().board}>
               {(square, index) => (
                 <ChessSquare 
                   style={index() == 0 ?`border-top-left-radius: 40%;` : index() == 7 ? `border-top-right-radius: 40%;` : index() == 56 ? `border-bottom-left-radius: 40%;` : index() == 63 ? `border-bottom-right-radius: 40%;` : `border-radius: 0%;`}
-                  pieceClassName={board.board[((board.board.length-1) - index())]}
-                  className={`chessSquare ${((board.board.length-1) - index()) % 16 <8 ? ((board.board.length-1) - index()) % 2 == 0 ? "lighterBackground" : "" : ((board.board.length-1) - index()) % 2 == 0 ? "" : "lighterBackground"}`}
-                  id={boardIds[((board.board.length-1) - index())]}
+                  pieceClassName={board().board[((board().board.length-1) - index())]}
+                  className={`chessSquare ${((board().board.length-1) - index()) % 16 <8 ? ((board().board.length-1) - index()) % 2 == 0 ? "lighterBackground" : "" : ((board().board.length-1) - index()) % 2 == 0 ? "" : "lighterBackground"}`}
+                  id={boardIds[((board().board.length-1) - index())]}
                   board = {board}
                   updateBoard = {updateBlackBoard}
                   draggableId={generateRandomID()}

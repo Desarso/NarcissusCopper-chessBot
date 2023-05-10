@@ -1,7 +1,7 @@
 import { Show, createSignal, onMount } from "solid-js";
 import { className } from "solid-js/web";
 import { useDragDropContext } from "./DragDropContext";
-import board from "./WhiteChessboard";
+
 
 type Props = {
   pieceClassName: string;
@@ -44,11 +44,9 @@ function ChessSquare({
   gameId,
 }: Props) {
   const updateGame = gql`
-  mutation move($from: String!, $to: String!, $endFen: String!, gameId: String!) {
+  mutation move($from: String!, $to: String!, $endFen: String!, $gameId: String!) {
     move(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
-      fen, 
-      id,
-      moves,
+      fen
     }
 
   }
@@ -58,7 +56,7 @@ function ChessSquare({
 
   onMount(() => {
     window.movePiece = function(start, end){
-      board.movePiece(start, end);
+      board().movePiece(start, end);
       updateBoard();
     };
   });
@@ -147,9 +145,11 @@ function ChessSquare({
     let endingIndex: string;
 
     onDragStart(() => {
+      console.log("dragging piece", board().currentTurnColor);
+      board().displayBoard();
       if(displayInlay()) return;
       startingIndex = draggable.ref.parentElement.id;
-      let legalMoves = board.findLegalMoves(board);
+      let legalMoves = board().findLegalMoves(board());
       let legalPieceMoves = [];
       // console.log("start")
 
@@ -176,12 +176,12 @@ function ChessSquare({
         endingIndex = draggable.ref.parentElement.id;
         if (endingIndex === startingIndex) return;
         // console.log("legal move");
-        let previousBoard = board.board;
+        let previousBoard = board().board;
 
-        board.movePiece(startingIndex, endingIndex);
+        board().movePiece(startingIndex, endingIndex);
         //this is where I move the piece
         let move = { start: startingIndex, end: endingIndex };
-        updateGameQL(move, board.fen);
+        updateGameQL(move, board().fen);
 
 
         setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
@@ -190,10 +190,10 @@ function ChessSquare({
           console.log(eatenPieces);
         }
 
-        let newBoard = board.board;
+        let newBoard = board().board;
         let numberOfChanges = 0;
-        console.log(board.inCheck);
-        let piece = board.getPieceAtPosition(endingIndex);
+        console.log(board().inCheck);
+        let piece = board().getPieceAtPosition(endingIndex);
         if (piece.type === "p" && piece.color === color) {
             if (endingIndex[1] === "8" || endingIndex[1] === "1") {
               setDisplayInlay(true);
@@ -208,7 +208,7 @@ function ChessSquare({
         //it extends for four spaces downwards, but has not border, and the backgroud is white
 
         updateBoard();
-        board.displayBoard();
+        board().displayBoard();
         // console.log(board.fen);
         //here I need to help the UI update
         //so for example I should be able to find the differences
@@ -226,6 +226,7 @@ function ChessSquare({
 
 
   function updateGameQL(move: any, fen: string) {
+    console.log("update game", gameId());
     client.
     mutate({
       mutation: updateGame,
@@ -233,7 +234,7 @@ function ChessSquare({
         from: move.start,
         to: move.end,
         endFen: fen,
-        gameId: gameId
+        gameId: gameId()
       }
     })
     .then((result: any) => {

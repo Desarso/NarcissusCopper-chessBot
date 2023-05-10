@@ -79,7 +79,7 @@ type Props = {
 
 function WhiteChessboard({board, client, updateBoard, gql, gameId}: Props) {
 
-    board.displayBoard();
+    board().displayBoard();
 
 
 
@@ -119,12 +119,12 @@ function handleSelection(selection: string){
   //it is white so the bottom is 0
   //and the x-cord is 7
   //then we need to transfomr the pawn into another piece
-  let piece = board.getPieceAtBoardIndex(parseInt(displayInlayX()));
+  let piece = board().getPieceAtBoardIndex(parseInt(displayInlayX()));
   let previousType = piece.type;
   piece.type = selection;
 
-  board.board[parseInt(displayInlayX())] = selection;
-  board.displayBoard();
+  board().board[parseInt(displayInlayX())] = selection;
+  board().displayBoard();
   console.log(piece);
   let UIPiece = document.getElementById(piece.position.position)?.children[0];
   console.log("previous type:" +previousType);
@@ -165,11 +165,11 @@ function handleSelection(selection: string){
 
             </Show>
            
-            <For each={board.board}>
+            <For each={board().board}>
               {(square, index) => (
                 <ChessSquare 
                   style={index() == 0 ?`border-top-left-radius: 40%;` : index() == 7 ? `border-top-right-radius: 40%;` : index() == 56 ? `border-bottom-left-radius: 40%;` : index() == 63 ? `border-bottom-right-radius: 40%;` : `border-radius: 0%;`}
-                  pieceClassName={board.board[index()]}
+                  pieceClassName={board().board[index()]}
                   className={`chessSquare ${index() % 16 <8 ? index() % 2 == 0 ? "lighterBackground" : "" : index() % 2 == 0 ? "" : "lighterBackground"}`}
                   id={boardIds[index()]}
                   board = {board}

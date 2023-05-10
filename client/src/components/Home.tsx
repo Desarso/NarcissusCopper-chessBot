@@ -124,6 +124,11 @@ const gameSub = gql`
       receiverID
       requesterID
       started
+      moves{
+        from
+        to
+        endFen
+      }
     }
   }
 `;
@@ -142,7 +147,7 @@ type Props = {};
 //and if there are any active games, and if so, it will load the game. Otherwise, it will create the user, in the graphl, or update it.
 
 function Home({}: Props) {
-  let board = new Board();
+  const [board, setBoard]: any = createSignal(new Board());
   const [oldUserName, setUserName]: any = createSignal("");
   const [oldUserId, setUserId]: any = createSignal("");
   const [sessionStorageUser, setSessionStorageUser]: any = createSignal(false);
@@ -152,6 +157,7 @@ function Home({}: Props) {
   const [users, setUsers]: any = createSignal([]);
   const [notificationUser, setNotificationUser]: any = createSignal(null);
   const [notificationData, setNotificationData]: any = createSignal(null);
+  const [allPieces, setAllPieces]: any = createSignal([]);
 
   function putUserFirst(result: any) {
     //put user first in the list
@@ -167,6 +173,8 @@ function Home({}: Props) {
   //they will see a pop up upon getting a game request, and they can accept or decline
   onMount(async () => {
     //check for user in local storage and session storage
+    let pieces = document.querySelectorAll(".piece");
+    setAllPieces(pieces);
     await checkforUser();
     await client
       .query({
@@ -179,6 +187,9 @@ function Home({}: Props) {
         putUserFirst(result.data.getUsers);
         return result.data.getUsers;
       });
+
+      //get all pieces into array
+      
   });
 
   //subscribe to users in graphql
@@ -423,12 +434,6 @@ function Home({}: Props) {
     let UIboard =  document.querySelectorAll('.chessSquare');
     let UIArray = [];
 
-    //I get the UI classes and create an array to make comparison easier
-    //for black pieces all I need to do to make updateBoard work is to reverse the array
-    //and then I can use the same code
-
-    //I reverse the array to make sure the algorithm works for black pieces
-    //UIBoard = reverseArray(UIBoard);
 
     for(let i = 0; i < UIboard.length; i++){
       if(UIboard[i].children[0] != undefined){
@@ -449,8 +454,8 @@ function Home({}: Props) {
       //here I check if there is a piece missing on the UI
       //if so I check if pieceBuffer exists
       //if so append, else  I mark the squareBuffer
-      if(UIArray[i] != board.board[i]){
-        if(UIArray[i] == " " && board.board[i] != " "){
+      if(UIArray[i] != board().board[i]){
+        if(UIArray[i] == " " && board().board[i] != " "){
           squareBuffer = UIboard[i];
           if(pieceBuffer != undefined){
             UIboard[i].appendChild(pieceBuffer);
@@ -459,7 +464,7 @@ function Home({}: Props) {
         //here I check if there is a piece on the UI that is not on the board
         //if so I insert the piece into the piece buffer
         //if there is a square buffer I append the piece to the square buffer
-        }else if(UIArray[i] != " " && board.board[i] == " "){
+        }else if(UIArray[i] != " " && board().board[i] == " "){
           pieceBuffer = UIboard[i].children[0];
           if(squareBuffer != undefined){
             squareBuffer.appendChild(pieceBuffer);
@@ -509,8 +514,8 @@ function Home({}: Props) {
       //here I check if there is a piece missing on the UI
       //if so I check if pieceBuffer exists
       //if so append, else  I mark the squareBuffer
-      if(UIArray[i] != board.board[i]){
-        if(UIArray[i] == " " && board.board[i] != " "){
+      if(UIArray[i] != board().board[i]){
+        if(UIArray[i] == " " && board().board[i] != " "){
           squareBuffer = UIboard[i];
           if(pieceBuffer != undefined){
             UIboard[i].appendChild(pieceBuffer);
@@ -519,7 +524,7 @@ function Home({}: Props) {
         //here I check if there is a piece on the UI that is not on the board
         //if so I insert the piece into the piece buffer
         //if there is a square buffer I append the piece to the square buffer
-        }else if(UIArray[i] != " " && board.board[i] == " "){
+        }else if(UIArray[i] != " " && board().board[i] == " "){
           pieceBuffer = UIboard[i].children[0];
           if(squareBuffer != undefined){
             squareBuffer.appendChild(pieceBuffer);
@@ -538,6 +543,24 @@ function Home({}: Props) {
 
   }
 
+  async function updateAllBoards(result: any){
+    let move = result.data.game.moves[result.data.game.moves.length-1];
+    console.log("new move", move);
+    let newFen = result.data.game.fen;
+    if(newFen != board().fen){
+      await board().displayBoard();
+      board().movePiece(move.from, move.to);
+      console.log("color", inGameColor());
+      if(inGameColor() == "white"){
+        updateBoard();
+      }else{
+        updateBlackBoard();
+      }
+    }
+  
+
+  }
+
   function subscribeToGame(data: any) {
     console.log(data);
     client
@@ -549,8 +572,12 @@ function Home({}: Props) {
       })
       .subscribe({
         next: (result) => {
-          if (result.data.game.started == true) {
-            setGameId(data.game.id);
+          console.log("game sub", result.data);
+          if(inGame() == true){
+            updateAllBoards(result);
+          }
+          if (result.data.game.started == true && inGame() == false) {
+            setGameId(result.data.game.id);
             setInGame(true);
             removeSelfFromUsersList();
             if(inGameColor() == ""){
@@ -565,9 +592,7 @@ function Home({}: Props) {
             }
             let modalBackDrop = document.querySelector(".modal-backdrop");
             modalBackDrop?.remove();
-            console.log("game started", result.data.game.started);
           }
-          console.log("result", result.data.game.started);
         },
       });
 
