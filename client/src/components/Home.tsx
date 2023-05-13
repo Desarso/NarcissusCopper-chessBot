@@ -10,7 +10,8 @@ import BlackChessboard from "./BlackChessboard";
 import GlassOverlay from "./GlassOverlay";
 import UsersList from "./UsersList";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
-import { Board } from "../Classes/chessClasses";
+import { Board, Piece } from "../Classes/chessClasses";
+
 
 const client = new ApolloClient({
   uri: "https://gabrielmalek.com/graphql",
@@ -158,14 +159,20 @@ function Home({}: Props) {
   const [notificationUser, setNotificationUser]: any = createSignal(null);
   const [notificationData, setNotificationData]: any = createSignal(null);
   const [allPieces, setAllPieces]: any = createSignal([]);
+  const [lastMove, setLastMove]: any = createSignal();
 
   function putUserFirst(result: any) {
     //put user first in the list
     let usersCopy = result;
     let userIndex = usersCopy.findIndex((user: any) => user.id == oldUserId());
     let user = usersCopy[userIndex];
-    usersCopy.splice(userIndex, 1);
-    usersCopy.unshift(user);
+    if(userIndex != 0 && usersCopy.length > 1){
+      console.log("user index", usersCopy)
+      usersCopy?.splice(userIndex, 1);
+      usersCopy.unshift(user);
+      setUsers(usersCopy);
+      return;
+    }
     setUsers(usersCopy);
   }
 
@@ -243,7 +250,7 @@ function Home({}: Props) {
       },
     });
 
-  function refetchUsers(){
+  async function refetchUsers(){
     client
       .query({
         query: getUsers,
@@ -444,6 +451,7 @@ function Home({}: Props) {
     let UIboard = document.querySelectorAll(".chessSquare");
     let UIArray = [];
 
+
     for (let i = 0; i < UIboard.length; i++) {
       if (UIboard[i].children[0] != undefined) {
         UIArray.push(UIboard[i].children[0].classList[0]);
@@ -485,6 +493,37 @@ function Home({}: Props) {
     //if there is a piece buffer left over I remove it
     if (pieceBuffer != undefined) {
       pieceBuffer?.parentElement?.removeChild(pieceBuffer);
+    }
+
+    //I want to make sure all pieces match the board underneath
+    reCheckPieces(UIboard);
+  }
+
+  function reCheckPieces(UIBoard: any){
+    //need to get everr piece and override the styles
+    //and add piece + type
+    for(let i = 0; i < 64; i++){
+      let piece = UIBoard[i]?.children[0]?.classList.contains("piece") ? UIBoard[i]?.children[0] : undefined;
+      if(piece != undefined){
+        // console.log(piece?.classList, board().board[i]);
+        // console.log(piece.classList.length)
+        let classLength = piece.classList.length;
+        for(let i = 0; i < classLength; i++){
+          piece.classList.remove(piece.classList[0]);
+        }
+        // console.log(piece.classList.length)
+        if(inGameColor() == "white" && 
+          (board().board[i].toLowerCase() == board().board[i])){
+            piece.classList.add("notDraggable");
+        }
+        if(inGameColor() == "black" &&
+          (board().board[i].toUpperCase() == board().board[i])){
+            piece.classList.add("notDraggable");
+        }
+
+        piece.classList.add("piece");
+        piece.classList.add(board().board[i]);
+      }
     }
   }
 
@@ -541,6 +580,8 @@ function Home({}: Props) {
     if (pieceBuffer != undefined) {
       pieceBuffer?.parentElement?.removeChild(pieceBuffer);
     }
+
+    reCheckPieces(UIboard);
   }
 
   async function updateAllBoards(result: any) {
@@ -555,6 +596,18 @@ function Home({}: Props) {
         updateBoard();
       } else {
         updateBlackBoard();
+      }
+    }
+    setLastMove({
+      from: move.from,
+      to: move.to,
+    });
+    let allDroppables = document.querySelectorAll(".chessSquare");
+    for (let i = 0; i < allDroppables.length; i++) {
+      if (allDroppables[i].id === lastMove().from || allDroppables[i].id === lastMove().to) {
+        allDroppables[i]?.classList?.add("lastMove");
+      } else {
+        allDroppables[i]?.classList?.remove("lastMove");
       }
     }
   }
@@ -611,6 +664,9 @@ function Home({}: Props) {
       });
   }
 
+  //need to highlight the squares that are the last move
+
+
   return (
     <>
       <Show when={!sessionStorageUser() && inGame() == false}>
@@ -633,13 +689,17 @@ function Home({}: Props) {
           />
       </Show>
 
-      <Show when={inGameColor() == "white" && inGame() == true}>
+      <Show when={inGameColor() == "white" && inGame() == true 
+      // || true
+      }>
         <WhiteChessboard
           client={client}
           board={board}
           updateBoard={updateBoard}
           gql={gql}
           gameId={gameId}
+          setLastMove={setLastMove}
+          lastMove={lastMove}
         />
       </Show>
       <Show
@@ -653,6 +713,8 @@ function Home({}: Props) {
           updateBlackBoard={updateBlackBoard}
           gql={gql}
           gameId={gameId}
+          setLastMove={setLastMove}
+          lastMove={lastMove}
         />
       </Show>
 

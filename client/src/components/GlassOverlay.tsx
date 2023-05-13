@@ -31,9 +31,12 @@ const GlassOverlay = ({
       alert("Please enter a username");
       return;
     }
+
+    
     if (usernameInputed == oldUserName()) {
-      console.log("userid: ", userid());
+      console.log("userid: ", oldUserId());
       console.log("username: ", usernameInputed);
+      setUserid(oldUserId());
       let currentID = userid();
       let currentName = usernameInputed;
       console.log("kept from local storage");

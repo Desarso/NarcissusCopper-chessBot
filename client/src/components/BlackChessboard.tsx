@@ -14,6 +14,8 @@ type Props = {
   updateBlackBoard: any;
   gql: any;
   gameId: string;
+  setLastMove: any;
+  lastMove: any;
 };
 
 // board.movePiece("e2", "e2");
@@ -23,7 +25,7 @@ type Props = {
 
 let id = 0;
 
-function BlackChessboard({client, board, updateBlackBoard, gql, gameId}: Props) {
+function BlackChessboard({client, board, updateBlackBoard, gql, gameId, setLastMove, lastMove}: Props) {
 
   board().displayBoard();
 
@@ -134,6 +136,8 @@ function handleSelection(selection: string){
                   client={client}
                   gql={gql}
                   gameId={gameId}
+                  setLastMove={setLastMove}
+                  lastMove={lastMove}
                   />
               )}
             </For>

@@ -439,7 +439,7 @@ export class Board {
         line +=
           this.Piece(new V2D(j, i)) === " "
             ? " - "
-            : " " + this.Piece(new V2D(j, i)).type + " ";
+            : " " + ((this.Piece(new V2D(j, i)).color === "black") ? (this.Piece(new V2D(j, i)).type) : (this.Piece(new V2D(j, i)).type.toUpperCase())) + " ";
       }
 
       if (line != undefined) console.log(`${8 - i}| ` + line);
@@ -1110,6 +1110,7 @@ export class Board {
       }
     }
     // console.log(legalMoves)
+    0
     return legalMoves;
   }
 
@@ -1165,7 +1166,11 @@ export class Board {
 
 
     //I think find the oppoinsing moves for black
-    let opponentMoves = board.findPseudoLegalMoves(boardToSeeIfInCheck);
+    let opponentMoves = boardToSeeIfInCheck.findPseudoLegalMoves(boardToSeeIfInCheck);
+    // console.log("possible moves for oponent");
+    // boardToSeeIfInCheck.displayBoard();
+    // console.log("oponentMoves",opponentMoves);
+    // console.log("boardFen", boardToSeeIfInCheck.fen);
 
     //then I get the index for a king
     //now my oponent moves is the opposite of the current turn color

@@ -20,6 +20,8 @@ type Props = {
   client: any;
   gql: any;
   gameId: string;
+  setLastMove: any;
+  lastMove: any;
 };
 
 
@@ -42,7 +44,11 @@ function ChessSquare({
   client,
   gql,
   gameId,
+  setLastMove,
+  lastMove,
 }: Props) {
+
+
   const updateGame = gql`
   mutation move($from: String!, $to: String!, $endFen: String!, $gameId: String!) {
     move(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
@@ -52,13 +58,12 @@ function ChessSquare({
   }
 `
 
-
-
   onMount(() => {
     window.movePiece = function(start, end){
       board().movePiece(start, end);
       updateBoard();
     };
+    window.board = board;
   });
 
   const [moves, setMoves] = createSignal([]);
@@ -123,6 +128,8 @@ function ChessSquare({
       for (let i = 0; i < pieceCircles.length; i++) {
         pieceCircles[i].classList.remove("circle");
       }
+
+      //loop over all droppables and if their id matches lastMove, add class lastMove
     });
 
     if (draggable.getAttribute("class").length === 0) {
@@ -145,8 +152,8 @@ function ChessSquare({
     let endingIndex: string;
 
     onDragStart(() => {
-      console.log("dragging piece", board().currentTurnColor);
-      board().displayBoard();
+      // console.log("dragging piece", board().currentTurnColor);
+      // board().displayBoard();
       if(displayInlay()) return;
       startingIndex = draggable.ref.parentElement.id;
       let legalMoves = board().findLegalMoves(board());
@@ -209,6 +216,16 @@ function ChessSquare({
 
         updateBoard();
         board().displayBoard();
+
+        setLastMove({ from: startingIndex, to: endingIndex });
+        let allDroppables = document.querySelectorAll(".chessSquare");
+        for (let i = 0; i < allDroppables.length; i++) {
+          if (allDroppables[i].id === lastMove().from || allDroppables[i].id === lastMove().to) {
+            allDroppables[i]?.classList?.add("lastMove");
+          } else {
+            allDroppables[i]?.classList?.remove("lastMove");
+          }
+        }
         // console.log(board.fen);
         //here I need to help the UI update
         //so for example I should be able to find the differences
@@ -216,9 +233,11 @@ function ChessSquare({
         //and apply it to the UI.
       }
     }, draggable);
-    2;
+
+    const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
+    const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} id={id}>
+      <section ref={draggable.ref} class={className} style={canDrag ? "" : "pointer-events: none;"} id={id}>
         <div class=""> </div>
       </section>
     );
