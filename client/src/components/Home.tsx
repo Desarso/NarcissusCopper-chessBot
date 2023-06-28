@@ -167,10 +167,11 @@ function Home({}: Props) {
   //they will see a pop up upon getting a game request, and they can accept or decline
   onMount(async () => {
     //check for user in local storage and session storage
+    console.log("ass")
     await checkforUser();
     await client
       .query({
-        query: getUsers,
+        query: getUsers
       })
       .then((result: any) => {
         console.log("users from query", result.data.getUsers);
@@ -587,6 +588,11 @@ function Home({}: Props) {
         setInGame(true);
       });
   }
+
+  onMount(() => {
+    console.log("session storage user", sessionStorageUser());
+    console.log("in game", inGame());
+  })
 
   return (
     <>

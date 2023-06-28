@@ -44,7 +44,7 @@ function ChessSquare({
   gameId,
 }: Props) {
   const updateGame = gql`
-  mutation move($from: String!, $to: String!, $endFen: String!, gameId: String!) {
+  mutation move($from: String!, $to: String!, $endFen: String!, $gameId: String!) {
     move(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
       fen, 
       id,
