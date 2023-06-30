@@ -5,9 +5,10 @@ type Props = {
   users: any;
   userId: any;
   playChess: any;
+  refetchUsers: any;
 };
 
-function UsersList({ users, userId, playChess }: Props) {
+function UsersList({ users, userId, playChess, refetchUsers }: Props) {
   const [selectedUser, setSelectedUser] = createSignal(null);
   const [notificationSent, setNotificationSent] = createSignal(false);
 
@@ -18,6 +19,12 @@ function UsersList({ users, userId, playChess }: Props) {
     //add clas flex important
     modal?.style.setProperty("display", "flex");
   }
+
+  onMount(() => {
+    if(users().length === 0){
+      refetchUsers();
+    }
+  });
 
   return (
     <>

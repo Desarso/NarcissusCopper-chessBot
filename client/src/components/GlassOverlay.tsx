@@ -22,7 +22,7 @@ const GlassOverlay = ({
   const [username, setUsername] = createSignal("");
   const [userid, setUserid] = createSignal("");
 
-  const onButtonCLick = () => {
+  const onButtonCLick = async () => {
     //here I add the username to the session and local storage
     //but first I need to generate a user ID
     let newUserID = generateUserid();
@@ -31,27 +31,40 @@ const GlassOverlay = ({
       alert("Please enter a username");
       return;
     }
+
+    
     if (usernameInputed == oldUserName()) {
-      console.log("userid: ", userid());
+      console.log("userid: ", oldUserId());
       console.log("username: ", usernameInputed);
+      setUserid(oldUserId());
       let currentID = userid();
       let currentName = usernameInputed;
       console.log("kept from local storage");
+      await setSessionStorageUser(true);
+      console.log("hi there")
+      updateLastSeen();
+      setInterval(updateLastSeen, 6000);
+      console.log("made it here");
+      await addUserToGraphql();
       sessionStorage.setItem(
         "gabrielmalek/chess.data",
         JSON.stringify({ userId: currentID, userName: currentName })
       );
-      setSessionStorageUser(true);
-      updateLastSeen();
-      setInterval(updateLastSeen, 6000);
-      console.log("made it here");
-      addUserToGraphql();
       return;
     }
     console.log("userid: ", userid());
     console.log("username: ", usernameInputed);
     setOldUserId(newUserID);
     setOldUserName(usernameInputed);
+    let inputElement = document.getElementById(
+      "userNameInput"
+    ) as HTMLInputElement;
+    inputElement.value = "";
+    setUsername("");
+    await setSessionStorageUser(true);
+    updateLastSeen();
+    setInterval(updateLastSeen, 6000);
+    addUserToGraphql();
     sessionStorage.setItem(
       "gabrielmalek/chess.data",
       JSON.stringify({ userId: newUserID, userName: usernameInputed })
@@ -60,15 +73,6 @@ const GlassOverlay = ({
       "gabrielmalek/chess.data",
       JSON.stringify({ userId: newUserID, userName: usernameInputed })
     );
-    let inputElement = document.getElementById(
-      "userNameInput"
-    ) as HTMLInputElement;
-    inputElement.value = "";
-    setUsername("");
-    setSessionStorageUser(true);
-    updateLastSeen();
-    setInterval(updateLastSeen, 6000);
-    addUserToGraphql();
   };
 
   onMount(() => {
@@ -89,13 +93,6 @@ const GlassOverlay = ({
       ) as HTMLInputElement;
       inputElement.value = username();
     }
-    // let inputElement = document.getElementById("userNameInput") as HTMLInputElement;
-    // let userid = generateUserid();
-    // let usernameInputed = username();
-    // console.log("userid: ", userid);
-    // console.log("username: ", usernameInputed);
-    // inputElement.value = "";
-    // setUsername("");
   });
 
   return (
@@ -139,6 +136,4 @@ function generateUserid() {
     userid += Math.floor(Math.random() * 10);
   }
   return userid;
-}
-
-70179348562267666923;
+};

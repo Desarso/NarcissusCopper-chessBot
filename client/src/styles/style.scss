@@ -72,6 +72,8 @@ html, body, #root {
     border: 1px solid black;
 }
 
+
+
 .piece{
     position: relative;
     cursor: pointer;
@@ -205,6 +207,32 @@ z-index: 10;
 }
 .ml-\[7\]{
     margin-left: 70vmin;
+}
+
+.notDraggable{
+    pointer-events: none;
+}
+
+.lastMove{
+
+    background-color: #98cd4e !important;
+
+    &.lighterBackground{
+        background-color: #96da5b !important;
+    }
+
+
+
+
+//     .number{
+//         position: absolute;
+//         top: 0;
+//         left: 0;
+//         font-size: 1.5vmin;
+//         font-weight: 900;
+//         color: white;
+//         margin: 0.5vmin;
+//     }
 }
 
 
@@ -413,5 +441,9 @@ z-index: 10;
     }
 
 
+}
+
+section{
+    touch-action: none;
 }
 
