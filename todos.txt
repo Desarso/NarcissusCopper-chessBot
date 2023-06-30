@@ -2,3 +2,17 @@ Need to remove games if they don't receive any update for a few hours
 or if neither of the players are online
 
 
+-fix crowning
+-add game over screen
+-add game over screen for draw
+-add letters and numbers to board
+-make board square again
+-add a way to see previous moves like in chess.com
+-remove built up games from the server in the background.
+-make it such that a player goes back into it's assigned game if they refresh
+-such that a player is not logged out of a game for a significant amount of time
+-also when the player logs in, it's ID should be checked against the current games.
+-make players logged in status a web socket, such that responsiveness is immediate and I am not querying.
+
+
+
