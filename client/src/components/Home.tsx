@@ -14,7 +14,8 @@ import { Board, Piece } from "../Classes/chessClasses";
 
 
 const client = new ApolloClient({
-  uri: "https://gabrielmalek.com/graphql",
+  // uri: "https://gabrielmalek.com/graphql",
+  uri: "http://localhost:8080/query",
   cache: new InMemoryCache(),
 });
 
@@ -25,7 +26,7 @@ const sendNotification = gql`
     $requesterColor: String!
     $receiverID: String!
   ) {
-    sendNotification(
+    sendChessRequest(
       gameId: $gameId
       requesterID: $requesterID
       requesterColor: $requesterColor
@@ -48,7 +49,7 @@ const getUsers = gql`
 
 const deleteUser = gql`
   mutation ($id: ID!) {
-    deleteUser(id: $id) {
+    deleteChessUser(id: $id) {
       id
     }
   }
@@ -56,7 +57,7 @@ const deleteUser = gql`
 
 const userSub = gql`
   subscription {
-    users {
+    chessUsersSub{
       id
       username
       cat_url
@@ -66,7 +67,7 @@ const userSub = gql`
 
 const addUser = gql`
   mutation ($id: ID!, $username: String!, $cat_url: String!) {
-    addUser(id: $id, username: $username, cat_url: $cat_url) {
+    addChessUser(id: $id, username: $username, cat_url: $cat_url) {
       id
     }
   }
@@ -74,7 +75,7 @@ const addUser = gql`
 
 const updateTime = gql`
   mutation ($id: ID!) {
-    updateLastSeen(id: $id) {
+    updateLastSeenChess(id: $id) {
       id
     }
   }
@@ -82,7 +83,7 @@ const updateTime = gql`
 
 const notificationSub = gql`
   subscription {
-    notifications {
+    chessRequestsSub {
       receiverID
       requesterID
       requesterColor
@@ -99,7 +100,7 @@ const createGame = gql`
     $requesterID: String!
     $requesterColor: String!
   ) {
-    createGame(
+    addChessGame(
       fen: $fen
       gameId: $gameId
       receiverID: $receiverID
@@ -118,7 +119,7 @@ const createGame = gql`
 
 const gameSub = gql`
   subscription ($gameId: ID!) {
-    game(id: $gameId) {
+    chessGamesSub(id: $gameId) {
       id
       fen
       requesterColor
@@ -135,7 +136,7 @@ const gameSub = gql`
 `;
 const startGameMutation = gql`
   mutation ($gameId: String!) {
-    startGame(gameId: $gameId) {
+    startChessGame(gameId: $gameId) {
       id
     }
   }
