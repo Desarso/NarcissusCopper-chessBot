@@ -37,8 +37,8 @@ console.log(typeDefs);
 
 const resolvers = {
   Query: {
-    getGames: () => games,
-    getGame: (_: unknown, { id }: { id: string }) => {
+    getChessGames: () => games,
+    getChessGame: (_: unknown, { id }: { id: string }) => {
       const game = games.find((game) => game.id === id);
       if (game) {
         return game;
@@ -48,7 +48,7 @@ const resolvers = {
     getUsers: () => users,
   },
   Mutation: {
-    createGame: (
+    addChessGame: (
       _: unknown,
       { fen, gameId, receiverID, requesterID, requesterColor }: { fen: string, gameId: string, receiverID: string, requesterID: string, requesterColor: string},
       {pubSub}: any
@@ -84,7 +84,7 @@ const resolvers = {
             }
             return null;
         },
-    changeTurn: (
+    changeChessTurn: (
         _: unknown,
         { id, turn }: { id: string, turn: string },
         {pubSub}: any
@@ -97,7 +97,7 @@ const resolvers = {
             }
             return null;
         },
-    addUser: (
+    addChessUser: (
       _: unknown,
       { id, username, cat_url }: { id: string; username: string, cat_url: string},
       {pubSub}: any
@@ -118,7 +118,7 @@ const resolvers = {
       removeOldUsers();
       return user;
     },
-    deleteUser: (_: unknown, { id }: { id: string }, {pubSub}: any) => {
+    deleteChessUser: (_: unknown, { id }: { id: string }, {pubSub}: any) => {
       const userIndex = users.findIndex((user) => user.id === id);
       if (userIndex !== -1) {
         let user = users[userIndex]
@@ -128,7 +128,7 @@ const resolvers = {
       }
       return false;
     },
-    updateLastSeen: (_: unknown, { id }: { id: string}, {pubSub}: any) => {
+    updateLastSeenChess: (_: unknown, { id }: { id: string}, {pubSub}: any) => {
         let user = users.find((user) => user.id === id);
         if (user) {
             // console.log("updating last seen")
@@ -138,7 +138,7 @@ const resolvers = {
         }
         return false;
     },
-    sendNotification: (_: unknown, { gameId, requesterID, requesterColor, receiverID }: { gameId: string, requesterID: string, requesterColor: string, receiverID: string}, {pubSub}: any) => {
+    sendChessRequest: (_: unknown, { gameId, requesterID, requesterColor, receiverID }: { gameId: string, requesterID: string, requesterColor: string, receiverID: string}, {pubSub}: any) => {
         let receiver = users.find((user) => user.id === receiverID);
         if (receiver) {
             let notification: Notification = {
@@ -153,7 +153,7 @@ const resolvers = {
         }
         return false;
     },
-    startGame: (_: unknown, { gameId}: { gameId: string}, {pubSub}: any) => {
+    startChessGame: (_: unknown, { gameId}: { gameId: string}, {pubSub}: any) => {
         let game = games.find((game) => game.id === gameId);
         if (game) {
             game.started = true;
@@ -162,7 +162,7 @@ const resolvers = {
         }
         return false;
     },
-    move: (_: unknown, { from, to, endFen, gameId }: { from: string, to: string, endFen: string, gameId: string}, {pubSub}: any) => {
+    moveChessPiece: (_: unknown, { from, to, endFen, gameId }: { from: string, to: string, endFen: string, gameId: string}, {pubSub}: any) => {
         let game = games.find((game) => game.id === gameId);
         if (game) {
             game.fen = endFen;
@@ -174,7 +174,7 @@ const resolvers = {
     }
   },
   Subscription: {
-    game: {
+    chessGamesSub: {
         subscribe: (_: unknown, {id}: {id: string}, {pubSub} : any ) => {
             const game = games.find((game) => game.id === id);
             const iterator = pubSub.subscribe("game", id);
@@ -182,7 +182,7 @@ const resolvers = {
         },
         resolve: (payload: any) => payload
     },
-    users: {
+    chessUsersSub: {
         subscribe:(_: unknown,{}, {pubSub}: any) => {
             const iterator = pubSub.subscribe("users");
             return iterator
@@ -190,7 +190,7 @@ const resolvers = {
         resolve: (payload: any) => payload
     },
     //must modify to make user specific
-    notifications: {
+    chessRequestsSub: {
         subscribe:(_: unknown,{}, {pubSub}: any) => {
             //onyl send notifications to the user if Id matches
             const iterator = pubSub.subscribe("notification");

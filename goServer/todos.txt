@@ -1,0 +1,16 @@
+-add a delete game query to the schema
+-scratch that add a create, mutate, and delete function to every single class type in the query schema
+-then make the server automatically keep track of the games age, and delete it's self, after a certain amount of time
+-of the users being gone.
+
+-switch all live data to websockets, and make them have real time updates, including age, and player online status.
+
+
+limitations:
+    even tho ws are both ways subscription are really only one way and I can not send update to the server via subs.
+    so what I can do is send continuous updates to the client, and use heartbeat updates for the server.
+    
+
+Idea
+    Create entire scheam from scratch and make better names for the mutations and queries
+

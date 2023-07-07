@@ -9,13 +9,62 @@ import WhiteChessboard from "./WhiteChessboard";
 import BlackChessboard from "./BlackChessboard";
 import GlassOverlay from "./GlassOverlay";
 import UsersList from "./UsersList";
-import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
+import {
+  ApolloClient,
+  InMemoryCache,
+  gql,
+  HttpLink,
+  split,
+} from "@apollo/client/core";
+import { getMainDefinition } from '@apollo/client/utilities';
 import { Board, Piece } from "../Classes/chessClasses";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
+
+
+// const wsLink = new GraphQLWsLink(
+//   createClient({
+//     url: "ws://localhost:8080/query",
+//     connectionParams: {
+//       headers: {
+//         "Accept-Encoding": "gzip, deflate, br",
+//         "Accept-Language": "en-US,en;q=0.9",
+//         "Cache-Control": "no-cache",
+//         Connection: "Upgrade",
+//         Host: "localhost:3000",
+//         Origin: "http://localhost:3000",
+//         Pragma: "no-cache",
+//         // "Sec-WebSocket-Extensions": "permessage-deflate; client_max_window_bits",
+//         // "Sec-WebSocket-Key": "5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q==",
+//         // "Sec-WebSocket-Version": "13",
+//         // Upgrade: "websocket",
+//         // "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+
+//       } 
+//     }
+//   })
+// );
+
+// const httpLink = new HttpLink({ uri: "http://localhost:8080/query" });
+
+// const splitLink = split(
+//   ({ query }) => {
+//     const definition = getMainDefinition(query);
+//     return (
+//       definition.kind === 'OperationDefinition' &&
+//       definition.operation === 'subscription'
+//     );
+//   },
+//   wsLink,
+//   httpLink,
+// );
 
 const client = new ApolloClient({
   // uri: "https://gabrielmalek.com/graphql",
-  uri: "http://localhost:8080/query",
+  // uri: "http://localhost:8080/query",
+  uri: "http://localhost:4000/graphql",
+  // link: splitLink,
   cache: new InMemoryCache(),
 });
 
@@ -57,7 +106,7 @@ const deleteUser = gql`
 
 const userSub = gql`
   subscription {
-    chessUsersSub{
+    chessUsersSub {
       id
       username
       cat_url
@@ -164,12 +213,14 @@ function Home({}: Props) {
 
   function putUserFirst(result: any) {
     //put user first in the list
+    if(result == undefined) return;
     let usersCopy = result;
+    // console.log("result", result)
     let userIndex = usersCopy.findIndex((user: any) => user.id == oldUserId());
     let user = usersCopy[userIndex];
-    if(userIndex != 0 && usersCopy.length > 1){
-      console.log("user index", usersCopy)
-      usersCopy?.splice(userIndex, 1);
+    if (userIndex != 0 && usersCopy.length > 1) {
+      console.log("user index", usersCopy);
+      usersCopy.splice(userIndex, 1);
       usersCopy.unshift(user);
       setUsers(usersCopy);
       return;
@@ -208,16 +259,20 @@ function Home({}: Props) {
       next: (result: any) => {
         //  console.log("users from sub", result.data.users);
         //  console.log(users())
-        // console.log("sub triggered");
+        console.log("sub triggered");
 
         if (
-          !UserInList(oldUserId(), result.data.users) ||
+          !UserInList(oldUserId(), result.data.chessUsersSub) ||
           !UserInList(oldUserId(), users()) ||
-          users().length != result.data.users.length
+          users().length != result.data.chessUsersSub.length
         ) {
           // setUsers(result.data.users);
-          putUserFirst(result.data.users);
-          console.log("mutated");
+          if(result.data.chessUsersSub?.length == 0 || !result.data.chessUsersSub?.length == undefined){
+            return;
+          }
+          putUserFirst(result.data.chessUsersSub);
+          // console.log("mutated");
+          // console.log("users from sub", result.data.chessUsersSub);
         }
         //  console.log(result.data.users)
         //  console.log(users().length, result.data.users.length)
@@ -251,7 +306,7 @@ function Home({}: Props) {
       },
     });
 
-  async function refetchUsers(){
+  async function refetchUsers() {
     client
       .query({
         query: getUsers,
@@ -314,7 +369,7 @@ function Home({}: Props) {
   }
 
   function UserInList(id: string, list: any) {
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < list?.length; i++) {
       if (list[i].id == id) {
         return true;
       }
@@ -452,7 +507,6 @@ function Home({}: Props) {
     let UIboard = document.querySelectorAll(".chessSquare");
     let UIArray = [];
 
-
     for (let i = 0; i < UIboard.length; i++) {
       if (UIboard[i].children[0] != undefined) {
         UIArray.push(UIboard[i].children[0].classList[0]);
@@ -500,26 +554,32 @@ function Home({}: Props) {
     reCheckPieces(UIboard);
   }
 
-  function reCheckPieces(UIBoard: any){
+  function reCheckPieces(UIBoard: any) {
     //need to get everr piece and override the styles
     //and add piece + type
-    for(let i = 0; i < 64; i++){
-      let piece = UIBoard[i]?.children[0]?.classList.contains("piece") ? UIBoard[i]?.children[0] : undefined;
-      if(piece != undefined){
+    for (let i = 0; i < 64; i++) {
+      let piece = UIBoard[i]?.children[0]?.classList.contains("piece")
+        ? UIBoard[i]?.children[0]
+        : undefined;
+      if (piece != undefined) {
         // console.log(piece?.classList, board().board[i]);
         // console.log(piece.classList.length)
         let classLength = piece.classList.length;
-        for(let i = 0; i < classLength; i++){
+        for (let i = 0; i < classLength; i++) {
           piece.classList.remove(piece.classList[0]);
         }
         // console.log(piece.classList.length)
-        if(inGameColor() == "white" && 
-          (board().board[i].toLowerCase() == board().board[i])){
-            piece.classList.add("notDraggable");
+        if (
+          inGameColor() == "white" &&
+          board().board[i].toLowerCase() == board().board[i]
+        ) {
+          piece.classList.add("notDraggable");
         }
-        if(inGameColor() == "black" &&
-          (board().board[i].toUpperCase() == board().board[i])){
-            piece.classList.add("notDraggable");
+        if (
+          inGameColor() == "black" &&
+          board().board[i].toUpperCase() == board().board[i]
+        ) {
+          piece.classList.add("notDraggable");
         }
 
         piece.classList.add("piece");
@@ -605,7 +665,10 @@ function Home({}: Props) {
     });
     let allDroppables = document.querySelectorAll(".chessSquare");
     for (let i = 0; i < allDroppables.length; i++) {
-      if (allDroppables[i].id === lastMove().from || allDroppables[i].id === lastMove().to) {
+      if (
+        allDroppables[i].id === lastMove().from ||
+        allDroppables[i].id === lastMove().to
+      ) {
         allDroppables[i]?.classList?.add("lastMove");
       } else {
         allDroppables[i]?.classList?.remove("lastMove");
@@ -667,7 +730,6 @@ function Home({}: Props) {
 
   //need to highlight the squares that are the last move
 
-
   return (
     <>
       <Show when={!sessionStorageUser() && inGame() == false}>
@@ -682,17 +744,20 @@ function Home({}: Props) {
         />
       </Show>
       <Show when={sessionStorageUser() && inGame() == false}>
-        <UsersList 
-          users={users} 
+        <UsersList
+          users={users}
           userId={oldUserId}
-          playChess={playChess} 
+          playChess={playChess}
           refetchUsers={refetchUsers}
-          />
+        />
       </Show>
 
-      <Show when={inGameColor() == "white" && inGame() == true 
-      // || true
-      }>
+      <Show
+        when={
+          inGameColor() == "white" && inGame() == true
+          // || true
+        }
+      >
         <WhiteChessboard
           client={client}
           board={board}

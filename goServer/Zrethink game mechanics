@@ -1,0 +1,29 @@
+I have a lot of specializes requests.
+
+Lets genralize a bit and rethink the way the game is played in multiplayers. 
+There is also a bit of delay on the front end when logging in. 
+
+all data structures that are stored in cash as array need to be deleted after a certain amount of time offline. 
+Games are only deleted if one of the players is gone for a long time. 
+Players are not deleted if they are in game, even when going offline.
+
+So a player logs in. The name should be injected immediatly into the name list rather than waiting for the fetch for added responsiveness.
+
+Just got an error, the server froze.
+Likely due to too much server compute, 
+or an error with the Go graphql that made the 
+server freeze.
+
+For some reason the game is no longer working
+
+There are errors when beginning a game.
+for some reason, in chrome the screen goes dark more often than not. We need to make this fully reliable.
+
+So the begin game function must be changed to be fully reliable. It must have error checking to self correct.
+
+I am unable to eat pieces in firefox.
+After dragging, if dropped in the same spot the piece will become undragable
+sad face.
+
+
+
