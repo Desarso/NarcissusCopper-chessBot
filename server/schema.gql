@@ -24,7 +24,7 @@ type chessMove {
 type chessGame {
     id: ID!
     receiverId: String!
-    receiverColor: String!
+    requesterColor: String!
     requesterId: String!
     users: [chessUser!]!
     moves: [chessMove!]!
@@ -48,9 +48,9 @@ type Mutation{
 
 
 #chessGame mutations
-  addChessGame(fen: String!, gameId: String!, receiverID: String!, requesterID: String!, requesterColor: String! ): chessGame!
+  addChessGame(fen: String!, gameId: String!, receiverId: String!, requesterId: String!, requesterColor: String! ): chessGame!
   deleteChessGame(id: ID!): chessGame!
-  mutateChessGame(id: ID!, receiverId: String!, receiverColor: String!, requesterId: String!): chessGame!
+  mutateChessGame(id: ID!, receiverId: String!, requesterColor: String!, requesterId: String!): chessGame!
   moveChessPiece(from: String!, to: String!, endFen: String!, gameId: String!, promotion: String): chessGame!
   changeFen(id: ID!, fen: String!): chessGame!
   changeChessTurn(id: ID!, turn: String!): chessGame!
@@ -62,7 +62,7 @@ type Mutation{
   addChessUser(id: ID!, username: String!, cat_url: String!): chessUser!
   deleteChessUser(id: ID!): chessUser!
   mutateChessUser(id: ID!, username: String!, cat_url: String!): chessUser!
-  updateLastSeenChess(id: ID!): chessUser!
+  updateLastSeenChess(id: ID!): chessUser
 
 
  
@@ -71,7 +71,7 @@ type Mutation{
 
   #this notif builds the ID with the received data
   #this 
-  sendChessRequest(gameId: String!, requesterID: String!, requesterColor: String!, receiverID: String!): chessUser!
+  sendChessRequest(gameId: String!, requesterId: String!, requesterColor: String!, receiverId: String!): chessUser!
 
 
 

@@ -23,42 +23,6 @@ import { createClient } from "graphql-ws";
 
 
 
-// const wsLink = new GraphQLWsLink(
-//   createClient({
-//     url: "ws://localhost:8080/query",
-//     connectionParams: {
-//       headers: {
-//         "Accept-Encoding": "gzip, deflate, br",
-//         "Accept-Language": "en-US,en;q=0.9",
-//         "Cache-Control": "no-cache",
-//         Connection: "Upgrade",
-//         Host: "localhost:3000",
-//         Origin: "http://localhost:3000",
-//         Pragma: "no-cache",
-//         // "Sec-WebSocket-Extensions": "permessage-deflate; client_max_window_bits",
-//         // "Sec-WebSocket-Key": "5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q==",
-//         // "Sec-WebSocket-Version": "13",
-//         // Upgrade: "websocket",
-//         // "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-
-//       } 
-//     }
-//   })
-// );
-
-// const httpLink = new HttpLink({ uri: "http://localhost:8080/query" });
-
-// const splitLink = split(
-//   ({ query }) => {
-//     const definition = getMainDefinition(query);
-//     return (
-//       definition.kind === 'OperationDefinition' &&
-//       definition.operation === 'subscription'
-//     );
-//   },
-//   wsLink,
-//   httpLink,
-// );
 
 const client = new ApolloClient({
   // uri: "https://gabrielmalek.com/graphql",
@@ -71,15 +35,15 @@ const client = new ApolloClient({
 const sendNotification = gql`
   mutation (
     $gameId: String!
-    $requesterID: String!
+    $requesterId: String!
     $requesterColor: String!
-    $receiverID: String!
+    $receiverId: String!
   ) {
     sendChessRequest(
       gameId: $gameId
-      requesterID: $requesterID
+      requesterId: $requesterId
       requesterColor: $requesterColor
-      receiverID: $receiverID
+      receiverId: $receiverId
     ) {
       id
     }
@@ -133,8 +97,8 @@ const updateTime = gql`
 const notificationSub = gql`
   subscription {
     chessRequestsSub {
-      receiverID
-      requesterID
+      receiverId
+      requesterId
       requesterColor
       gameId
     }
@@ -145,21 +109,21 @@ const createGame = gql`
   mutation (
     $fen: String!
     $gameId: String!
-    $receiverID: String!
-    $requesterID: String!
+    $receiverId: String!
+    $requesterId: String!
     $requesterColor: String!
   ) {
     addChessGame(
       fen: $fen
       gameId: $gameId
-      receiverID: $receiverID
-      requesterID: $requesterID
+      receiverId: $receiverId
+      requesterId: $requesterId
       requesterColor: $requesterColor
     ) {
       id
       fen
-      receiverID
-      requesterID
+      receiverId
+      requesterId
       requesterColor
       started
     }
@@ -172,8 +136,8 @@ const gameSub = gql`
       id
       fen
       requesterColor
-      receiverID
-      requesterID
+      receiverId
+      requesterId
       started
       moves {
         from
@@ -288,13 +252,13 @@ function Home({}: Props) {
     })
     .subscribe({
       next: (result: any) => {
-        console.log(result.data.notifications);
-        if (result.data.notifications.receiverID == oldUserId()) {
+        console.log(result.data.chessRequestsSub);
+        if (result.data.chessRequestsSub.receiverId == oldUserId()) {
           console.log("notification received from another user");
-          setNotificationData(result.data.notifications);
+          setNotificationData(result.data.chessRequestsSub);
           for (let i = 0; i < users().length; i++) {
             //find the user that sent the notification
-            if (users()[i].id == result.data.notifications.requesterID) {
+            if (users()[i].id == result.data.chessRequestsSub.requesterId) {
               setNotificationUser(users()[i]);
             }
           }
@@ -450,17 +414,17 @@ function Home({}: Props) {
     //I also want to create a game in the graphql, with a pending status.
     //one it starts I can change it's status.
     let gameId = generateRandomId();
-    let requesterID = oldUserId();
+    let requesterId = oldUserId();
     let requesterColor = chooseColor();
-    let receiverID = user.id;
+    let receiverId = user.id;
 
     client.mutate({
       mutation: createGame,
       variables: {
         fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         gameId: gameId,
-        receiverID: receiverID,
-        requesterID: requesterID,
+        receiverId: receiverId,
+        requesterId: requesterId,
         requesterColor: requesterColor,
       },
     });
@@ -469,16 +433,16 @@ function Home({}: Props) {
       mutation: sendNotification,
       variables: {
         gameId: gameId,
-        receiverID: receiverID,
-        requesterID: requesterID,
+        receiverId: receiverId,
+        requesterId: requesterId,
         requesterColor: requesterColor,
       },
     });
 
     let data = {
       gameId: gameId,
-      receiverID: receiverID,
-      requesterID: requesterID,
+      receiverId: receiverId,
+      requesterId: requesterId,
       requesterColor: requesterColor,
     };
 
@@ -646,9 +610,10 @@ function Home({}: Props) {
   }
 
   async function updateAllBoards(result: any) {
-    let move = result.data.game.moves[result.data.game.moves.length - 1];
+    console.log(result)
+    let move = result.data.chessGamesSub.moves[result.data.chessGamesSub.moves.length - 1];
     console.log("new move", move);
-    let newFen = result.data.game.fen;
+    let newFen = result.data.chessGamesSub.fen;
     if (newFen != board().fen) {
       await board().displayBoard();
       board().movePiece(move.from, move.to);
@@ -691,14 +656,14 @@ function Home({}: Props) {
           if (inGame() == true) {
             updateAllBoards(result);
           }
-          if (result.data.game.started == true && inGame() == false) {
-            setGameId(result.data.game.id);
+          if (result.data.chessGamesSub.started == true && inGame() == false) {
+            setGameId(result.data.chessGamesSub.id);
             setInGame(true);
             removeSelfFromUsersList();
             if (inGameColor() == "") {
-              let requesterColor = result.data.game.requesterColor;
-              // console.log("requesterID", result.data.game);
-              if (result.data.game.requesterID == oldUserId()) {
+              let requesterColor = result.data.chessGamesSub.requesterColor;
+              // console.log("requesterId", result.data.game);
+              if (result.data.chessGamesSub.requesterId == oldUserId()) {
                 setInGameColor(requesterColor);
               } else {
                 setInGameColor(requesterColor == "white" ? "black" : "white");

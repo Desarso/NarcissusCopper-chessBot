@@ -50,13 +50,13 @@ const resolvers = {
   Mutation: {
     addChessGame: (
       _: unknown,
-      { fen, gameId, receiverID, requesterID, requesterColor }: { fen: string, gameId: string, receiverID: string, requesterID: string, requesterColor: string},
+      { fen, gameId, receiverId, requesterId, requesterColor }: { fen: string, gameId: string, receiverId: string, requesterId: string, requesterColor: string},
       {pubSub}: any
     ) => {
       const game = {
         id: gameId,
-        receiverID: receiverID,
-        requesterID: requesterID,
+        receiverId: receiverId,
+        requesterId: requesterId,
         requesterColor: requesterColor,
         fen,
         turn: "white",
@@ -135,17 +135,19 @@ const resolvers = {
             user.last_seen = Date.now().toString();
             pubSub.publish("users",users)
             return user;
-        }
-        return false;
+      }
+      //add user if not found
+
+        return null;
     },
-    sendChessRequest: (_: unknown, { gameId, requesterID, requesterColor, receiverID }: { gameId: string, requesterID: string, requesterColor: string, receiverID: string}, {pubSub}: any) => {
-        let receiver = users.find((user) => user.id === receiverID);
+    sendChessRequest: (_: unknown, { gameId, requesterId, requesterColor, receiverId }: { gameId: string, requesterId: string, requesterColor: string, receiverId: string}, {pubSub}: any) => {
+        let receiver = users.find((user) => user.id === receiverId);
         if (receiver) {
             let notification: Notification = {
                 gameId: gameId,
-                requesterID: requesterID,
+                requesterId: requesterId,
                 requesterColor: requesterColor,
-                receiverID: receiverID
+                receiverId: receiverId
             }
             receiver.notification.push(notification)
             pubSub.publish("notification", notification)

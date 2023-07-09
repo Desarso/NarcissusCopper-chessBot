@@ -1,8 +1,8 @@
 export interface Notification{
     gameId: string;
-    requesterID: string;
+    requesterId: string;
     requesterColor: string;
-    receiverID: string;
+    receiverId: string;
 }
 
 
@@ -25,9 +25,9 @@ export interface Move{
 
 export interface game{
     id: string;
-    requesterID: string;
+    requesterId: string;
     requesterColor: string;
-    receiverID: string;
+    receiverId: string;
     users: User[];
     moves: Move[];
     turn: string;
