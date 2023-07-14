@@ -107,15 +107,7 @@ function WhiteChessboard({ board, client, updateBoard, gql, gameId, setLastMove,
           {(square, index) => (
             <ChessSquare
               style={
-                index() == 0
-                  ? `border-top-left-radius: 40%;`
-                  : index() == 7
-                  ? `border-top-right-radius: 40%;`
-                  : index() == 56
-                  ? `border-bottom-left-radius: 40%;`
-                  : index() == 63
-                  ? `border-bottom-right-radius: 40%;`
-                  : `border-radius: 0%;`
+                index()
               }
               pieceClassName={board().board[index()]}
               className={`chessSquare ${

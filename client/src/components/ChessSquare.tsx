@@ -101,16 +101,17 @@ function ChessSquare({
         if(displayInlay()){return;}
         if (e.data.legalPieceMoves.includes(droppable.id)) {
           // console.log(e.data.legalPieceMoves);
+          // console.log(droppable.id);
           // console.log(droppable.id)
-          if (droppable.ref.children.length === 0) {
+          if (droppable.ref.children.length === 0 || (droppable.ref.children.length === 1 && !droppable.ref.children[0].classList.contains("piece"))) {
             droppable.droppable = true;
             let newElement = document.createElement("section");
             newElement.classList.add("circle");
             droppable.ref.appendChild(newElement);
-          } else if (droppable.ref.children.length === 1) {
+          } else if (droppable.ref.children.length === 1 && droppable.ref.children[0].classList.contains("piece")) {
             droppable.droppable = true;
             // droppable.ref.children[0].children[0].classList.add('circle');
-            droppable.ref.children[0].children[0].classList.add("circle");
+            droppable.ref.children[0]?.children[0]?.classList.add("circle");
           }
         } else {
           droppable.droppable = false;
@@ -139,7 +140,12 @@ function ChessSquare({
     return (
       <div id={id} class={className} ref={droppable.ref} style={style}>
         <Show when={draggable != undefined}>{draggable}</Show>
-        {/* <div class="number">1</div> */}
+        <Show when={(id[1] === '8' && color === "black") || (id[1] === '1' && color === "white")}>
+          <div class={"number-right"} style={"pointer-events: none;"}>{id[0]}</div>
+        </Show>
+        <Show when={(id[0] === 'h' && color === "black") || (id[0] === 'a' && color ==="white")}>
+          <div class="number-left" style={"pointer-events: none;"}>{id[1]}</div>
+        </Show>
       </div>
     );
   };
@@ -157,6 +163,7 @@ function ChessSquare({
       if(displayInlay()) return;
       startingIndex = draggable.ref.parentElement.id;
       let legalMoves = board().findLegalMoves(board());
+      // console.log(legalMoves);
       let legalPieceMoves = [];
       // console.log("start")
 
@@ -173,8 +180,15 @@ function ChessSquare({
       // console.log("end")
       if (e === null) return;
       e.occupied = false;
+      // console.log(e);
       let previousChild = e.ref.children[0];
-      // console.log(previousChild);
+      // for(let i = 0; i < e.ref.children.length; i++){
+      //   if(!e.ref.children[i].classList.contains("number-right") || !e.ref.children[i].classList.contains("number-left")){
+      //     previousChild = e.ref.children[i];
+      //   }
+      // }
+      console.log("prev",previousChild);
+      console.log("id",e.ref.id)
 
       await delay(1);
       let oppositeColor;
@@ -182,11 +196,11 @@ function ChessSquare({
       if (e.ref.children[0].id === draggable.id) {
         endingIndex = draggable.ref.parentElement.id;
         if (endingIndex === startingIndex) return;
-        // console.log("legal move");
+        // // // console.log("legal move");
         let previousBoard = board().board;
 
         board().movePiece(startingIndex, endingIndex);
-        //this is where I move the piece
+        // //this is where I move the piece
         let move = { start: startingIndex, end: endingIndex };
         updateGameQL(move, board().fen);
 
@@ -214,9 +228,15 @@ function ChessSquare({
         //what I need is an absolute position inlay that appears on the board
         //it extends for four spaces downwards, but has not border, and the backgroud is white
 
+
         updateBoard();
         board().displayBoard();
 
+        if(previousChild.classList.contains("number-right") || previousChild.classList.contains("number-left")){
+          e.ref.appendChild(previousChild);
+        }
+
+        //highlight last move in green
         setLastMove({ from: startingIndex, to: endingIndex });
         let allDroppables = document.querySelectorAll(".chessSquare");
         for (let i = 0; i < allDroppables.length; i++) {
@@ -226,18 +246,15 @@ function ChessSquare({
             allDroppables[i]?.classList?.remove("lastMove");
           }
         }
-        // console.log(board.fen);
-        //here I need to help the UI update
-        //so for example I should be able to find the differences
-        //from the previous board
-        //and apply it to the UI.
+
       }
     }, draggable);
 
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} style={canDrag ? "" : "pointer-events: none;"} id={id}>
+      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : ""}`} id={id}>
+        {/* //pointer-events: none; */}
         <div class=""> </div>
       </section>
     );
