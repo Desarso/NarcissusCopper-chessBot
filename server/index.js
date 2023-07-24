@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var graphql_yoga_1 = require("graphql-yoga");
 var node_http_1 = require("node:http");
 var graphql_import_1 = require("graphql-import");
@@ -17,8 +17,8 @@ var pubSub = (0, graphql_yoga_1.createPubSub)();
 console.log(typeDefs);
 var resolvers = {
     Query: {
-        getGames: function () { return games; },
-        getGame: function (_, _a) {
+        getChessGames: function () { return games; },
+        getChessGame: function (_, _a) {
             var id = _a.id;
             var game = games.find(function (game) { return game.id === id; });
             if (game) {
@@ -26,16 +26,16 @@ var resolvers = {
             }
             return null;
         },
-        getUsers: function () { return users; }
+        getUsers: function () { return users; },
     },
     Mutation: {
-        createGame: function (_, _a, _b) {
-            var fen = _a.fen, gameId = _a.gameId, receiverID = _a.receiverID, requesterID = _a.requesterID, requesterColor = _a.requesterColor;
+        addChessGame: function (_, _a, _b) {
+            var fen = _a.fen, gameId = _a.gameId, receiverId = _a.receiverId, requesterId = _a.requesterId, requesterColor = _a.requesterColor;
             var pubSub = _b.pubSub;
             var game = {
                 id: gameId,
-                receiverID: receiverID,
-                requesterID: requesterID,
+                receiverId: receiverId,
+                requesterId: requesterId,
                 requesterColor: requesterColor,
                 fen: fen,
                 turn: "white",
@@ -59,7 +59,7 @@ var resolvers = {
             }
             return null;
         },
-        changeTurn: function (_, _a, _b) {
+        changeChessTurn: function (_, _a, _b) {
             var id = _a.id, turn = _a.turn;
             var pubSub = _b.pubSub;
             var game = games.find(function (game) { return game.id === id; });
@@ -70,7 +70,7 @@ var resolvers = {
             }
             return null;
         },
-        addUser: function (_, _a, _b) {
+        addChessUser: function (_, _a, _b) {
             var id = _a.id, username = _a.username, cat_url = _a.cat_url;
             var pubSub = _b.pubSub;
             var notification = [];
@@ -89,7 +89,7 @@ var resolvers = {
             removeOldUsers();
             return user;
         },
-        deleteUser: function (_, _a, _b) {
+        deleteChessUser: function (_, _a, _b) {
             var id = _a.id;
             var pubSub = _b.pubSub;
             var userIndex = users.findIndex(function (user) { return user.id === id; });
@@ -101,7 +101,7 @@ var resolvers = {
             }
             return false;
         },
-        updateLastSeen: function (_, _a, _b) {
+        updateLastSeenChess: function (_, _a, _b) {
             var id = _a.id;
             var pubSub = _b.pubSub;
             var user = users.find(function (user) { return user.id === id; });
@@ -111,18 +111,19 @@ var resolvers = {
                 pubSub.publish("users", users);
                 return user;
             }
-            return false;
+            //add user if not found
+            return null;
         },
-        sendNotification: function (_, _a, _b) {
-            var gameId = _a.gameId, requesterID = _a.requesterID, requesterColor = _a.requesterColor, receiverID = _a.receiverID;
+        sendChessRequest: function (_, _a, _b) {
+            var gameId = _a.gameId, requesterId = _a.requesterId, requesterColor = _a.requesterColor, receiverId = _a.receiverId;
             var pubSub = _b.pubSub;
-            var receiver = users.find(function (user) { return user.id === receiverID; });
+            var receiver = users.find(function (user) { return user.id === receiverId; });
             if (receiver) {
                 var notification = {
                     gameId: gameId,
-                    requesterID: requesterID,
+                    requesterId: requesterId,
                     requesterColor: requesterColor,
-                    receiverID: receiverID
+                    receiverId: receiverId
                 };
                 receiver.notification.push(notification);
                 pubSub.publish("notification", notification);
@@ -130,7 +131,7 @@ var resolvers = {
             }
             return false;
         },
-        startGame: function (_, _a, _b) {
+        startChessGame: function (_, _a, _b) {
             var gameId = _a.gameId;
             var pubSub = _b.pubSub;
             var game = games.find(function (game) { return game.id === gameId; });
@@ -141,7 +142,7 @@ var resolvers = {
             }
             return false;
         },
-        move: function (_, _a, _b) {
+        moveChessPiece: function (_, _a, _b) {
             var from = _a.from, to = _a.to, endFen = _a.endFen, gameId = _a.gameId;
             var pubSub = _b.pubSub;
             var game = games.find(function (game) { return game.id === gameId; });
@@ -155,7 +156,7 @@ var resolvers = {
         }
     },
     Subscription: {
-        game: {
+        chessGamesSub: {
             subscribe: function (_, _a, _b) {
                 var id = _a.id;
                 var pubSub = _b.pubSub;
@@ -165,7 +166,7 @@ var resolvers = {
             },
             resolve: function (payload) { return payload; }
         },
-        users: {
+        chessUsersSub: {
             subscribe: function (_, _a, _b) {
                 var pubSub = _b.pubSub;
                 var iterator = pubSub.subscribe("users");
@@ -174,7 +175,7 @@ var resolvers = {
             resolve: function (payload) { return payload; }
         },
         //must modify to make user specific
-        notifications: {
+        chessRequestsSub: {
             subscribe: function (_, _a, _b) {
                 var pubSub = _b.pubSub;
                 //onyl send notifications to the user if Id matches
@@ -208,7 +209,7 @@ function removeOldUsers() {
 }
 var schema = (0, schema_1.makeExecutableSchema)({
     typeDefs: [typeDefs],
-    resolvers: [resolvers]
+    resolvers: [resolvers],
 });
 var yoga = (0, graphql_yoga_1.createYoga)({
     schema: schema,

@@ -76,6 +76,7 @@ export function DragDropContextProvider(props: any) {
         }px, ${
           mousePosition().y - startingMousePosition().y + previousPosition().y
         }px)`;
+        console.log(mousePosition().y, startingMousePosition().y, previousPosition())
         target().ref.style.zIndex = 100;
         target().rectangle = target().ref.getBoundingClientRect();
         if(overlapped()?.length > 0){
@@ -92,7 +93,7 @@ export function DragDropContextProvider(props: any) {
     //   console.log("mouse up");
     //   console.log("target", target());
       if (target()?.ref) {
-        target().ref.style.transform = `translate(${0}px, ${0}px)`;
+        target().ref.style.transform = `translate(${0}px, ${.1}px)`;
         target().ref.style.zIndex = 0;
         // console.log(target().ref.style)
       }
