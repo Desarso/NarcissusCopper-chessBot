@@ -663,14 +663,6 @@ function Home({}: Props) {
 
   async function updateAllBoards(result: any) {
 
-    if(board().findLegalMoves(board()).length == 0){
-      setCheckmate(true);
-      console.log("checkmate", checkmate());
-      if(checkmate() == true){
-        alert("Checkmate");
-        checkMateFunction();
-      }
-    }
    
 
 
@@ -718,6 +710,17 @@ function Home({}: Props) {
         allDroppables[i]?.classList?.add("lastMove");
       } else {
         allDroppables[i]?.classList?.remove("lastMove");
+      }
+    }
+
+
+    
+    if(board().findLegalMoves(board()).length == 0){
+      setCheckmate(true);
+      console.log("checkmate", checkmate());
+      if(checkmate() == true){
+        alert("Checkmate");
+        checkMateFunction();
       }
     }
   }
