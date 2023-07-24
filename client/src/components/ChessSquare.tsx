@@ -100,18 +100,21 @@ function ChessSquare({
     onGlobalDragStart((e: any) => {
         if(displayInlay()){return;}
         if (e.data.legalPieceMoves.includes(droppable.id)) {
-          // console.log(e.data.legalPieceMoves);
-          // console.log(droppable.id);
-          // console.log(droppable.id)
-          if (droppable.ref.children.length === 0 || (droppable.ref.children.length === 1 && !droppable.ref.children[0].classList.contains("piece"))) {
+          if (droppable.ref.children.length === 0 || (droppable.ref.querySelector(".piece") == undefined)) {
             droppable.droppable = true;
             let newElement = document.createElement("section");
             newElement.classList.add("circle");
             droppable.ref.appendChild(newElement);
-          } else if (droppable.ref.children.length === 1 && droppable.ref.children[0].classList.contains("piece")) {
+          } else if (droppable.ref.children.length > 0 && (droppable.ref.querySelector(".piece") != undefined) ) {
             droppable.droppable = true;
-            // droppable.ref.children[0].children[0].classList.add('circle');
-            droppable.ref.children[0]?.children[0]?.classList.add("circle");
+            let piece;
+            for(let i = 0; i < droppable.ref.children.length; i++){
+              if(droppable.ref.children[i].classList.contains("piece")){
+                piece = droppable.ref.children[i];
+              }
+            }
+            piece.children[0]?.classList.add("circle");
+            // droppable.ref.children[0]?.children[0]?.classList.add("circle");
           }
         } else {
           droppable.droppable = false;
@@ -164,6 +167,10 @@ function ChessSquare({
       startingIndex = draggable.ref.parentElement.id;
       let legalMoves = board().findLegalMoves(board());
       // console.log(legalMoves);
+      // console.log(board().Pieces)
+      if(legalMoves.length === 0){
+        board().checkMate = true;
+      }
       let legalPieceMoves = [];
       // console.log("start")
 
@@ -187,8 +194,8 @@ function ChessSquare({
       //     previousChild = e.ref.children[i];
       //   }
       // }
-      console.log("prev",previousChild);
-      console.log("id",e.ref.id)
+      // console.log("prev",previousChild);
+      // console.log("id",e.ref.id)
 
       await delay(1);
       let oppositeColor;
@@ -199,10 +206,11 @@ function ChessSquare({
         // // // console.log("legal move");
         let previousBoard = board().board;
 
+
+        // here I need to delay this move if I am crowning a pawn
         board().movePiece(startingIndex, endingIndex);
         // //this is where I move the piece
-        let move = { start: startingIndex, end: endingIndex };
-        updateGameQL(move, board().fen);
+
 
 
         setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
@@ -219,7 +227,13 @@ function ChessSquare({
             if (endingIndex[1] === "8" || endingIndex[1] === "1") {
               setDisplayInlay(true);
               setDisplayInlayX(piece.position.pos.x);
+            }else{
+              let move = { start: startingIndex, end: endingIndex };
+              updateGameQL(move, board().fen);
             }
+          }else{
+            let move = { start: startingIndex, end: endingIndex };
+            updateGameQL(move, board().fen);
           }
         //I'm gonna implement the crowning logic here,
         //there is a problem, the board is going to have a pawn of opposite color
@@ -230,7 +244,7 @@ function ChessSquare({
 
 
         updateBoard();
-        board().displayBoard();
+        // board().displayBoard();
 
         if(previousChild.classList.contains("number-right") || previousChild.classList.contains("number-left")){
           e.ref.appendChild(previousChild);

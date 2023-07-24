@@ -16,8 +16,29 @@ type Props = {
   lastMove: any;
 };
 
-function WhiteChessboard({ board, client, updateBoard, gql, gameId, setLastMove, lastMove }: Props) {
+function WhiteChessboard({
+  board,
+  client,
+  updateBoard,
+  gql,
+  gameId,
+  setLastMove,
+  lastMove,
+}: Props) {
   board().displayBoard();
+
+  const updateGame = gql`
+    mutation (
+      $from: String!
+      $to: String!
+      $endFen: String!
+      $gameId: String!
+    ) {
+      moveChessPiece(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
+        fen
+      }
+    }
+  `;
 
   let boardIds = getBoardIds();
 
@@ -44,7 +65,7 @@ function WhiteChessboard({ board, client, updateBoard, gql, gameId, setLastMove,
 
   let string = displayInlayX() + "0";
 
-  function handleSelection(selection: string) {
+  async function handleSelection(selection: string) {
     setInlaySelection(selection);
     setDisplayInlay(false);
     //the index will be the bottom of the board depeiing on the color in this case
@@ -53,17 +74,44 @@ function WhiteChessboard({ board, client, updateBoard, gql, gameId, setLastMove,
     //then we need to transfomr the pawn into another piece
     let piece = board().getPieceAtBoardIndex(parseInt(displayInlayX()));
     let previousType = piece.type;
-    piece.type = selection;
+    piece.type = selection.toLowerCase();
 
     board().board[parseInt(displayInlayX())] = selection;
-    board().displayBoard();
+    board().fen = board().boardToFen();
+    // board().displayBoard();
     console.log(piece);
     let UIPiece = document.getElementById(piece.position.position)?.children[0];
     console.log("previous type:" + previousType);
     UIPiece?.classList.remove(previousType.toUpperCase());
     UIPiece?.classList.add(selection.toUpperCase());
 
+    await delay(10);
+
     updateBoard();
+    let move = {start: lastMove().from, end: lastMove().to};
+    console.log(move);
+    updateGameQL(move, board().fen);
+  }
+
+  function updateGameQL(move: any, fen: string) {
+    console.log("update game", gameId());
+    client
+      .mutate({
+        mutation: updateGame,
+        variables: {
+          from: move.start,
+          to: move.end,
+          endFen: fen,
+          gameId: gameId(),
+        },
+      })
+      .then((result: any) => {
+        console.log(result);
+      });
+  }
+
+  function delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   //later I will make a black board, and white board component and just change all the settings accordingly
@@ -75,30 +123,30 @@ function WhiteChessboard({ board, client, updateBoard, gql, gameId, setLastMove,
             <div
               class="chessInlaySquare"
               id="queenSelection"
-              onClick={() => handleSelection("q")}
+              onClick={() => handleSelection("Q")}
             >
-              <section class="piece Q"></section>
+              <div class="piece Q"></div>
             </div>
             <div
               class="chessInlaySquare"
               id="knightSelection"
-              onClick={() => handleSelection("n")}
+              onClick={() => handleSelection("N")}
             >
-              <section class="piece N"></section>
+              <div class="piece N"></div>
             </div>
             <div
               class="chessInlaySquare"
               id="rookSelection"
-              onClick={() => handleSelection("r")}
+              onClick={() => handleSelection("R")}
             >
-              <section class="piece R"></section>
+              <div class="piece R"></div>
             </div>
             <div
               class="chessInlaySquare"
               id="bishopSelection"
-              onClick={() => handleSelection("b")}
+              onClick={() => handleSelection("B")}
             >
-              <section class="piece B"></section>
+              <div class="piece B"></div>
             </div>
           </div>
         </Show>
@@ -106,9 +154,7 @@ function WhiteChessboard({ board, client, updateBoard, gql, gameId, setLastMove,
         <For each={board().board}>
           {(square, index) => (
             <ChessSquare
-              style={
-                index()
-              }
+              style={index()}
               pieceClassName={board().board[index()]}
               className={`chessSquare ${
                 index() % 16 < 8
