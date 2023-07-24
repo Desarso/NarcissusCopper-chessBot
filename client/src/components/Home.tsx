@@ -22,9 +22,9 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 
 const client = new ApolloClient({
-  // uri: "https://gabrielmalek.com/graphql",
+  uri: "https://gabrielmalek.com/graphql",
   // uri: "http://localhost:8080/query",
-  uri: "http://localhost:4000/graphql",
+  // uri: "http://localhost:4000/graphql",
   // link: splitLink,
   cache: new InMemoryCache(),
 });

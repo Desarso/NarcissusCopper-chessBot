@@ -267,7 +267,7 @@ function ChessSquare({
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : ""}`} id={id}>
+      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : "pointer-events: none;"}`} id={id}>
         {/* //pointer-events: none; */}
         <div class=""> </div>
       </section>
