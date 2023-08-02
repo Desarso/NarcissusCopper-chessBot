@@ -701,6 +701,21 @@ export class Board {
       //logs whenever piece capture is possible
       let capturedPieceIndex = this.getPieceIndex(end);
       let capturedPiece = this.Pieces[capturedPieceIndex];
+      if(capturedPiece.type === "r"){
+        if(capturedPiece.color === "white"){
+          if(capturedPiece.getIndex() === 56){
+            this.castlingRights = this.castlingRights.replace("Q", "");
+          }else if(capturedPiece.getIndex() === 63){
+            this.castlingRights = this.castlingRights.replace("K", "");
+          }
+      }else{
+        if(capturedPiece.getIndex() === 0){
+          this.castlingRights = this.castlingRights.replace("q", "");
+        }else if(capturedPiece.getIndex() === 7){
+          this.castlingRights = this.castlingRights.replace("k", "");
+        }
+      }
+    }
       this.capturedPieces.push(capturedPiece);
       this.Pieces.splice(capturedPieceIndex, 1);
       this.halfMoveClock = 0;
