@@ -39,7 +39,7 @@ const GlassOverlay = ({
       setUserid(oldUserId());
       let currentID = userid();
       let currentName = usernameInputed;
-      console.log("kept from local storage");
+      // console.log("kept from local storage");
       await setSessionStorageUser(true);
       console.log("hi there")
       updateLastSeen();
@@ -52,8 +52,8 @@ const GlassOverlay = ({
       );
       return;
     }
-    console.log("userid: ", userid());
-    console.log("username: ", usernameInputed);
+    // console.log("userid: ", userid());
+    // console.log("username: ", usernameInputed);
     setOldUserId(newUserID);
     setOldUserName(usernameInputed);
     let inputElement = document.getElementById(
@@ -82,9 +82,9 @@ const GlassOverlay = ({
         onButtonCLick();
       }
     });
-    console.log("username: " + username());
-    console.log("oldUserName " + oldUserName());
-    console.log("oldUserId " + oldUserId());
+    // console.log("username: " + username());
+    // console.log("oldUserName " + oldUserName());
+    // console.log("oldUserId " + oldUserId());
     if (oldUserName() != "") {
       setUsername(oldUserName());
       setUserid(oldUserId());

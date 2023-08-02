@@ -22,9 +22,9 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 
 const client = new ApolloClient({
-  // uri: "https://gabrielmalek.com/graphql",
+  uri: "https://gabrielmalek.com/graphql",
   // uri: "http://localhost:8080/query",
-  uri: "http://localhost:4000/graphql",
+  // uri: "http://localhost:4000/graphql",
   // link: splitLink,
   cache: new InMemoryCache(),
 });
@@ -202,7 +202,7 @@ function Home({}: Props) {
         query: getUsers,
       })
       .then((result: any) => {
-        console.log("users from query", result.data.getUsers);
+        // console.log("users from query", result.data.getUsers);
         //we need to sort to make sure to put user in index 0;
         // setUsers(result.data.getUsers);
         putUserFirst(result.data.getUsers);
@@ -277,7 +277,7 @@ function Home({}: Props) {
         query: getUsers,
       })
       .then((result: any) => {
-        console.log("users from query", result.data.getUsers);
+        // console.log("users from query", result.data.getUsers);
         //we need to sort to make sure to put user in index 0;
         // setUsers(result.data.getUsers);
         putUserFirst(result.data.getUsers);
@@ -309,10 +309,10 @@ function Home({}: Props) {
     let chessData = sessionStorage.getItem("gabrielmalek/chess.data");
     let chessDataJson = JSON.parse(chessData!);
     if (chessData == null) {
-      console.log("session storage null");
+      // console.log("session storage null");
     } else {
-      console.log("session storage not null");
-      console.log(chessDataJson);
+      // console.log("session storage not null");
+      // console.log(chessDataJson);
       await setUserId(chessDataJson.userId);
       await setUserName(chessDataJson.userName);
       await setSessionStorageUser(true);
@@ -324,9 +324,9 @@ function Home({}: Props) {
     chessData = localStorage.getItem("gabrielmalek/chess.data");
     chessDataJson = JSON.parse(chessData!);
     if (chessData == null) {
-      console.log("local storage null");
+      // console.log("local storage null");
     } else {
-      console.log("local storage not null");
+      // console.log("local storage not null");
       // console.log(chessDataJson)
       setUserId(chessDataJson.userId);
       setUserName(chessDataJson.userName);
@@ -351,12 +351,12 @@ function Home({}: Props) {
 
   async function addUserToGraphql() {
     //add user to graphql onyl if the user is not in the graphql already
-    console.log("id", oldUserId());
-    console.log("username", oldUserName());
-    console.log("adding user to graphql");
-    console.log("users", users());
+    // console.log("id", oldUserId());
+    // console.log("username", oldUserName());
+    // console.log("adding user to graphql");
+    // console.log("users", users());
     let cat_url = await getRandomCatLink();
-    console.log("cat_url", cat_url);
+    // console.log("cat_url", cat_url);
 
     if (users() == undefined) {
       client
@@ -369,14 +369,14 @@ function Home({}: Props) {
           },
         })
         .then((result): any => {
-          console.log("added user to graphql");
-          console.log(result);
-          console.log("users from here", users());
+          // console.log("added user to graphql");
+          // console.log(result);
+          // console.log("users from here", users());
         });
       return;
     }
     if (UserInList(oldUserId(), users()) == false) {
-      console.log("user not in list");
+      // console.log("user not in list");
       await client
         .mutate({
           mutation: addUser,
@@ -387,9 +387,9 @@ function Home({}: Props) {
           },
         })
         .then((result): any => {
-          console.log("added user to graphql");
-          console.log(result);
-          console.log("users from here", users());
+          // console.log("added user to graphql");
+          // console.log(result);
+          // console.log("users from here", users());
         });
     }
   }
@@ -650,9 +650,10 @@ function Home({}: Props) {
         updateBlackBoard();
       }
     }
+    console.log(move);
     setLastMove({
-      from: move.from,
-      to: move.to,
+      from: move?.from,
+      to: move?.to,
     });
     let allDroppables = document.querySelectorAll(".chessSquare");
     for (let i = 0; i < allDroppables.length; i++) {
@@ -713,24 +714,26 @@ function Home({}: Props) {
             setGameId(result.data.chessGamesSub.id);
             setInGame(true);
             removeSelfFromUsersList();
-            if (inGameColor() == "") {
-              let requesterColor = result.data.chessGamesSub.requesterColor;
-              console.log("requesterId", result.data.chessGamesSub);
-              console.log("oldUserId", oldUserId());
-              if (result.data.chessGamesSub.requesterId == oldUserId()) {
-                setInGameColor(requesterColor);
-              } else {
-                setInGameColor(requesterColor == "white" ? "black" : "white");
-              }
-              console.log("in game color", inGameColor());
-            }
+      
             let modalBackDrop = document.querySelector(".modal-backdrop");
             modalBackDrop?.remove();
+          }
+          if (inGameColor() == "") {
+            let requesterColor = result.data.chessGamesSub.requesterColor;
+            console.log("requesterId", result.data.chessGamesSub);
+            console.log("oldUserId", oldUserId());
+            if (result.data.chessGamesSub.requesterId == oldUserId()) {
+              setInGameColor(requesterColor);
+            } else {
+              setInGameColor(requesterColor == "white" ? "black" : "white");
+            }
+            console.log("in game color", inGameColor());
           }
         },
       });
 
     console.log("game created and subscribed to");
+    console.log("inGameColor", inGameColor());
   }
 
   function startGame() {
