@@ -1,6 +1,4 @@
 import {
-  Accessor,
-  Setter,
   createContext,
   useContext,
   createSignal,
@@ -76,7 +74,6 @@ export function DragDropContextProvider(props: any) {
         }px, ${
           mousePosition().y - startingMousePosition().y + previousPosition().y
         }px)`;
-        console.log(mousePosition().y, startingMousePosition().y, previousPosition())
         target().ref.style.zIndex = 100;
         target().rectangle = target().ref.getBoundingClientRect();
         if(overlapped()?.length > 0){
@@ -91,7 +88,7 @@ export function DragDropContextProvider(props: any) {
         callback();
       });
     //   console.log("mouse up");
-    //   console.log("target", target());
+      // console.log("target", target());
       if (target()?.ref) {
         target().ref.style.transform = `translate(${0}px, ${.1}px)`;
         target().ref.style.zIndex = 0;
@@ -150,13 +147,6 @@ export function DragDropContextProvider(props: any) {
       data: {}
     };
     onMount(() => {
-    //   draggable.ref.addEventListener("mouseup", () => {
-    //     draggable.dragEnd();
-    //     setTarget(null);
-    //     setCursorDown(false);
-    //     draggable.ref.style.transform = `translate(${0}px, ${0}px)`;
-    //     console.log("dragEnd");
-    //   });
       draggable.ref.addEventListener("pointerdown", (e : any) => {
         for(let i = 0; i < draggable.dragStart.length; i++){
             draggable.dragStart[i](draggable);
@@ -211,9 +201,17 @@ export function DragDropContextProvider(props: any) {
 
     onMount(() => {
       droppable.rectangle = droppable.ref.getBoundingClientRect();
-      if(droppable.ref.children.length > 0){
+      //injecting special code for chess board
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      if(droppable.ref.querySelector(".piece") !== null){
         droppable.occupied = true;
       }
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      //old base code
+      // if(droppable.ref.children.length > 0){
+      //   droppable.occupied = true;
+      // }
       document.addEventListener("pointermove", () => {
         if(target() == null) return;
         if (target().rectangle == null) return;
@@ -257,11 +255,20 @@ export function DragDropContextProvider(props: any) {
         if(previousTarget() == null) return;
         // if(droppable.occupied) return;
         if(droppable.droppable === false) return;
-        if(droppable.ref.children.length > 0){
+
+        //also modified for chess
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if(droppable.ref.querySelector(".piece") !== null){
           //right here I am removing the children, if the droppable is occupied
           //what I need to do it take this child and send it back to the event
-          droppable.ref.children[0].remove();
+          droppable.ref.querySelector(".piece").remove();
+        }else if(droppable.ref.querySelector(".circle") !== null){
+          droppable.ref.querySelector(".circle").remove();
         }
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        //in a regular program I would just remove the only child, but the board square has
+        //numbers and letters that mess this up, so I must specify the child types to remove
+
         
         droppable.ref.appendChild(previousTarget().ref);
           

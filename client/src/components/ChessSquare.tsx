@@ -188,7 +188,10 @@ function ChessSquare({
       if (e === null) return;
       e.occupied = false;
       // console.log(e);
-      let previousChild = e.ref.children[0];
+      let previousChild = e.ref.querySelector(".piece");
+      // previousChild = e.ref.querySelector
+      console.log("previous",previousChild);
+      console.log(e.ref.querySelector(".piece") == null);
       // for(let i = 0; i < e.ref.children.length; i++){
       //   if(!e.ref.children[i].classList.contains("number-right") || !e.ref.children[i].classList.contains("number-left")){
       //     previousChild = e.ref.children[i];
@@ -196,15 +199,22 @@ function ChessSquare({
       // }
       // console.log("prev",previousChild);
       // console.log("id",e.ref.id)
+      console.log("ending",endingIndex);
+      console.log("starting",startingIndex);
 
+
+      console.log(draggable.id)
       await delay(1);
       let oppositeColor;
-      if (!e.ref.children[0]) return;
-      if (e.ref.children[0].id === draggable.id) {
+      if (e.ref.querySelector(".piece") == null) return;
+      if (e.ref.querySelector(".piece").id === draggable.id) {
         endingIndex = draggable.ref.parentElement.id;
+      }
         if (endingIndex === startingIndex) return;
         // // // console.log("legal move");
         let previousBoard = board().board;
+
+        console.log("hello");
 
 
         // here I need to delay this move if I am crowning a pawn
@@ -214,14 +224,14 @@ function ChessSquare({
 
 
         setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
-        if (previousChild.classList.contains("piece")) {
+        if (previousChild?.classList?.contains("piece")) {
           eatenPieces.push(previousChild);
           console.log(eatenPieces);
         }
 
         let newBoard = board().board;
         let numberOfChanges = 0;
-        console.log(board().inCheck);
+        // console.log(board().inCheck);
         let piece = board().getPieceAtPosition(endingIndex);
         if (piece.type === "p" && piece.color === color) {
             if (endingIndex[1] === "8" || endingIndex[1] === "1") {
@@ -244,9 +254,9 @@ function ChessSquare({
 
 
         updateBoard();
-        // board().displayBoard();
+        board().displayBoard();
 
-        if(previousChild.classList.contains("number-right") || previousChild.classList.contains("number-left")){
+        if(previousChild?.classList?.contains("number-right") || previousChild?.classList?.contains("number-left")){
           e.ref.appendChild(previousChild);
         }
 
@@ -261,8 +271,8 @@ function ChessSquare({
           }
         }
 
-      }
-    }, draggable);
+
+      }, draggable);
 
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
