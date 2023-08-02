@@ -13,7 +13,7 @@ function UsersList({ users, userId, playChess, refetchUsers }: Props) {
   const [notificationSent, setNotificationSent] = createSignal(false);
 
   function clickUser(user: any) {
-    console.log("selected user: ", user);
+    // console.log("selected user: ", user);
     setSelectedUser(user);
     let modal = document.getElementById("exampleModal");
     //add clas flex important

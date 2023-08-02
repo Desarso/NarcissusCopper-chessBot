@@ -164,7 +164,7 @@ function Home({}: Props) {
   const [oldUserId, setUserId]: any = createSignal("");
   const [sessionStorageUser, setSessionStorageUser]: any = createSignal(false);
   const [inGame, setInGame]: any = createSignal(false);
-  const [inGameColor, setInGameColor]: any = createSignal("white");
+  const [inGameColor, setInGameColor]: any = createSignal("");
   const [gameId, setGameId]: any = createSignal("");
   const [users, setUsers]: any = createSignal([]);
   const [notificationUser, setNotificationUser]: any = createSignal(null);
@@ -715,7 +715,8 @@ function Home({}: Props) {
             removeSelfFromUsersList();
             if (inGameColor() == "") {
               let requesterColor = result.data.chessGamesSub.requesterColor;
-              // console.log("requesterId", result.data.game);
+              console.log("requesterId", result.data.chessGamesSub);
+              console.log("oldUserId", oldUserId());
               if (result.data.chessGamesSub.requesterId == oldUserId()) {
                 setInGameColor(requesterColor);
               } else {
@@ -750,7 +751,7 @@ function Home({}: Props) {
 
   return (
     <>
-      {/* <Show when={!sessionStorageUser() && inGame() == false}>
+      <Show when={!sessionStorageUser() && inGame() == false}>
         <GlassOverlay
           oldUserName={oldUserName}
           oldUserId={oldUserId}
@@ -775,7 +776,7 @@ function Home({}: Props) {
           inGameColor() == "white" && inGame() == true
           // || true
         }
-      > */}
+      >
         <WhiteChessboard
           client={client}
           board={board}
@@ -785,7 +786,7 @@ function Home({}: Props) {
           setLastMove={setLastMove}
           lastMove={lastMove}
         />
-      {/* </Show>
+      </Show>
       <Show
         when={
           inGame() == false || (inGameColor() == "black" && inGame() == true)
@@ -857,7 +858,7 @@ function Home({}: Props) {
             </div>
           </div>
         </div>
-      </Show> */}
+      </Show>
     </>
   );
 }

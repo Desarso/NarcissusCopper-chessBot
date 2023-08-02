@@ -190,8 +190,8 @@ function ChessSquare({
       // console.log(e);
       let previousChild = e.ref.querySelector(".piece");
       // previousChild = e.ref.querySelector
-      console.log("previous",previousChild);
-      console.log(e.ref.querySelector(".piece") == null);
+      // console.log("previous",previousChild);
+      // console.log(e.ref.querySelector(".piece") == null);
       // for(let i = 0; i < e.ref.children.length; i++){
       //   if(!e.ref.children[i].classList.contains("number-right") || !e.ref.children[i].classList.contains("number-left")){
       //     previousChild = e.ref.children[i];
@@ -199,11 +199,11 @@ function ChessSquare({
       // }
       // console.log("prev",previousChild);
       // console.log("id",e.ref.id)
-      console.log("ending",endingIndex);
-      console.log("starting",startingIndex);
+      // console.log("ending",endingIndex);
+      // console.log("starting",startingIndex);
 
 
-      console.log(draggable.id)
+      // console.log(draggable.id)
       await delay(1);
       let oppositeColor;
       if (e.ref.querySelector(".piece") == null) return;
@@ -214,7 +214,6 @@ function ChessSquare({
         // // // console.log("legal move");
         let previousBoard = board().board;
 
-        console.log("hello");
 
 
         // here I need to delay this move if I am crowning a pawn
@@ -226,7 +225,7 @@ function ChessSquare({
         setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
         if (previousChild?.classList?.contains("piece")) {
           eatenPieces.push(previousChild);
-          console.log(eatenPieces);
+          // console.log(eatenPieces);
         }
 
         let newBoard = board().board;
@@ -254,7 +253,6 @@ function ChessSquare({
 
 
         updateBoard();
-        board().displayBoard();
 
         if(previousChild?.classList?.contains("number-right") || previousChild?.classList?.contains("number-left")){
           e.ref.appendChild(previousChild);
@@ -277,7 +275,7 @@ function ChessSquare({
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : ""}`} id={id}>
+      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : "pointer-events: none;"}`} id={id}>
         {/* //pointer-events: none; */}
         <div class=""> </div>
       </section>
