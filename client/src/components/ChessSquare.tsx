@@ -189,6 +189,7 @@ function ChessSquare({
       e.occupied = false;
       // console.log(e);
       let previousChild = e.ref.querySelector(".piece");
+      console.log(e.ref);
       // previousChild = e.ref.querySelector
       // console.log("previous",previousChild);
       // console.log(e.ref.querySelector(".piece") == null);
@@ -204,18 +205,24 @@ function ChessSquare({
 
 
       // console.log(draggable.id)
+      console.log("previous", previousChild);
       await delay(1);
       let oppositeColor;
-      if (e.ref.querySelector(".piece") == null) return;
-      if (e.ref.querySelector(".piece").id === draggable.id) {
+      if (previousChild?.id === draggable?.id) {
         endingIndex = draggable.ref.parentElement.id;
+      }else{
+        endingIndex = e.ref.id;
       }
+      console.log("draggable", startingIndex);
+      console.log("ending", endingIndex);
+      console.log(e.ref.id)
         if (endingIndex === startingIndex) return;
         // // // console.log("legal move");
         let previousBoard = board().board;
 
 
-
+        console.log("moving piece", startingIndex, endingIndex);
+        // console.log(previousChild.id, draggable.id)
         // here I need to delay this move if I am crowning a pawn
         board().movePiece(startingIndex, endingIndex);
         // //this is where I move the piece

@@ -158,7 +158,10 @@ export function DragDropContextProvider(props: any) {
           setStartingMousePosition({x: e.clientX, y: e.clientY});
           setCursorDown(true);
           setTarget(draggable);
+          // setHovered(draggable.ref.parentElement);
           draggable.rectangle = draggable.ref.getBoundingClientRect();
+
+      
           });
     });
 
@@ -242,6 +245,41 @@ export function DragDropContextProvider(props: any) {
           
 
       });
+      document.addEventListener("pointerdown", () =>{
+          if(target() == null) return;
+          if (target().rectangle == null) return;
+            let rect1 = target().ref.getBoundingClientRect();
+            let rect2 = droppable.ref.getBoundingClientRect();
+            if (rect1.top > rect2.bottom ||
+                rect1.right < rect2.left ||
+                rect1.bottom < rect2.top ||
+                rect1.left > rect2.right
+                  ) {
+                    removeHovered(droppable);
+                    if(!droppable.hovering) return;
+                    droppable.hovering = false;
+                    droppable.hoverOut(target());
+                  } else {
+                    if(droppable.ref === hovered()?.ref){
+                      if(droppable.hovering) return;
+                      droppable.hovering = true;
+                      droppable.hoverOver(target());
+                    }else{
+                      droppable.hovering = false;
+                      droppable.hoverOut(target());
+                    }
+                    addHovered(droppable);
+                    
+                  }
+
+              if(overlapped()?.length > 0){
+                setHovered(findHovered(overlapped()));
+                // console.log("hovered", hovered() )
+              }
+
+
+      
+      });
       document.addEventListener("pointerup", () => {
         // if(droppable.ref.children.length === 0){
         //   droppable.occupied = false;
@@ -252,16 +290,19 @@ export function DragDropContextProvider(props: any) {
         if(!droppable.hovering) return;
         droppable.hovering = false;
         droppable.hoverOut(previousTarget());
+        console.log("hi")
         if(previousTarget() == null) return;
         // if(droppable.occupied) return;
         if(droppable.droppable === false) return;
 
+        // console.log("removed something");
         //also modified for chess
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if(droppable.ref.querySelector(".piece") !== null){
           //right here I am removing the children, if the droppable is occupied
           //what I need to do it take this child and send it back to the event
           droppable.ref.querySelector(".piece").remove();
+          console.log("PIECE REMOVED")
         }else if(droppable.ref.querySelector(".circle") !== null){
           droppable.ref.querySelector(".circle").remove();
         }
@@ -269,7 +310,7 @@ export function DragDropContextProvider(props: any) {
         //in a regular program I would just remove the only child, but the board square has
         //numbers and letters that mess this up, so I must specify the child types to remove
 
-        
+     
         droppable.ref.appendChild(previousTarget().ref);
           
 

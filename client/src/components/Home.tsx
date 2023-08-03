@@ -717,6 +717,9 @@ function Home({}: Props) {
       
             let modalBackDrop = document.querySelector(".modal-backdrop");
             modalBackDrop?.remove();
+          }else if (inGame() === true || document.querySelector(".modal-backdrop") != null){
+            let modalBackDrop = document.querySelector(".modal-backdrop");
+            modalBackDrop?.remove();
           }
           if (inGameColor() == "") {
             let requesterColor = result.data.chessGamesSub.requesterColor;
@@ -731,6 +734,13 @@ function Home({}: Props) {
           }
         },
       });
+    if(inGameColor() == ""){
+      if (data.requesterId == oldUserId()) {
+        setInGameColor(data.requesterColor);
+      } else {
+        setInGameColor(data.requesterColor == "white" ? "black" : "white");
+      }
+    }
 
     console.log("game created and subscribed to");
     console.log("inGameColor", inGameColor());
