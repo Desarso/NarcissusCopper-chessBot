@@ -187,9 +187,12 @@ function ChessSquare({
       // console.log("end")
       if (e === null) return;
       e.occupied = false;
-      // console.log(e);
+      console.log(e.ref.children);
+      if(e.ref.querySelector(".circle") === null){
+        return;
+      }
+      
       let previousChild = e.ref.querySelector(".piece");
-      console.log(e.ref);
       // previousChild = e.ref.querySelector
       // console.log("previous",previousChild);
       // console.log(e.ref.querySelector(".piece") == null);
