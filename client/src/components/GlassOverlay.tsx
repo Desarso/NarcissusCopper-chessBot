@@ -4,15 +4,17 @@ type Props = {
   user : Accessor<User | undefined>,
   setUser : Setter<User | undefined>,
   setInSession : Setter<boolean>,
+  pingWebSocket : (user: User) => void,
 };
 
 const GlassOverlay = ({
   user,
   setUser,
   setInSession,
+  pingWebSocket,
 }: Props) => {
 
-  const [username, setUsername] = createSignal("");
+  const [username, setUsername] = createSignal(user()?.username);
 
   const onButtonCLick = async () => {
     //here I add the username to the session and local storage
@@ -32,6 +34,7 @@ const GlassOverlay = ({
       await getRandomCatLink(),
     )
     setUser(newUser);
+    pingWebSocket(newUser);
 
     sessionStorage.setItem(
       "gabrielmalek/chess.data",
@@ -54,6 +57,12 @@ const GlassOverlay = ({
         onButtonCLick();
       }
     });
+    let input: any = document.getElementById("userNameInput");
+    input?.focus();
+    console.log(user()?.username)
+    if(user()?.username !== undefined){
+      input.value = user()?.username;
+    }
   });
 
   return (

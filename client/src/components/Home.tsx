@@ -16,7 +16,6 @@ import { createWS, createWSState } from "@solid-primitives/websocket";
 import { createEventSignal } from "@solid-primitives/event-listener";
 type Props = {};
 
-
 export class User {
   id: string;
   username: string;
@@ -42,7 +41,6 @@ function Home({}: Props) {
   const [lastMove, setLastMove] = createSignal<Move>();
   const [checkmate, setCheckmate] = createSignal<boolean>(false);
 
-
   const [user, setUser] = createSignal<User>();
   const [users, setUsers] = createSignal<User[]>([]);
   const [inSession, setInSession] = createSignal<boolean>(false);
@@ -53,17 +51,15 @@ function Home({}: Props) {
   const createWS = (url: string) => {
     const socket = new WebSocket(url);
     return socket;
-  }
-
-  const pingWebSocket = () => {
-    if (inSession() && user()) {
-      user().last_seen = Date.now();
-      ws().send(JSON.stringify(user()));
-    }
   };
 
-
-
+  function pingWebSocket(user : User) {
+    if (inSession() && !inGame()) {
+      ws().send(JSON.stringify(user));
+    }else if(inSession() && inGame() && ws()?.close()){
+      ws().close();
+    }
+  };
 
   onCleanup(() => {
     if (ws()) {
@@ -71,41 +67,54 @@ function Home({}: Props) {
     }
   });
 
-
   // const ws : WebSocket = createWS("ws://localhost:8080/chessGame")
-
 
   // // ws.send("hello world");
   // // const messageEvent = createEventSignal(ws, "message");
 
   onMount(async () => {
     checkforUser();
-    connectWebSocket();
-
-
+    connectUsersWebSocket();
+    document.ws = ws;
+    document.setInGame = setInGame;
   });
 
-
-  function connectWebSocket() {
-    const socket = createWS("ws://localhost:8080/chessGame");
+  function connectUsersWebSocket() {
+    const socket = createWS("ws://localhost:8080/chessUsers");
 
     socket.addEventListener("open", function (event) {
       console.log("connected");
       setWs(socket);
       //and now we set ping interval
-      setInterval(pingWebSocket, 10000);
+      pingWebSocket(user());
+      setInterval(() => pingWebSocket(user()), 3000);
     });
 
     socket.addEventListener("message", function (e) {
-      console.log("message", JSON.parse(e.data))
-    })
+      // console.log("message", JSON.parse(e.data));
+      let data = JSON.parse(e.data);
+      //remove current user from data.users
+      let users = data.users;
+      let index = users.findIndex((singleUser: User) => singleUser.id == user().id);
+      let currentUser = users.splice(index, 1);
+      let newTimeStamp = currentUser[0].last_seen;
+      let newUser = user();
+      newUser.last_seen = newTimeStamp;
+      if(newUser.username == ""){
+        return
+      }
+      setUser(newUser);
+      setUsers(users);
+    });
 
     socket.addEventListener("close", function (e) {
-      console.log("closed", e)
+      console.log("closed", e);
       setWs(undefined);
-      setTimeout(connectWebSocket, 1000);
+      if(inSession() && !inGame()){
+        setTimeout(connectUsersWebSocket, 3000);
+      }
+     
     });
-    
   }
 
   async function checkforUser() {
@@ -117,7 +126,7 @@ function Home({}: Props) {
     if (chessData == null) {
       console.log("session storage null");
     } else {
-      console.log("session storage not null")
+      console.log("session storage not null");
       let user = new User(
         chessDataJson.id,
         chessDataJson.username,
@@ -132,16 +141,18 @@ function Home({}: Props) {
     if (chessData == null) {
       console.log("local storage null");
     } else {
-      let user = new User(
+      let newUser = new User(
         chessDataJson.id,
-        chessDataJson.userName,
+        chessDataJson.username,
         chessDataJson.cat_url
       );
-      setUser(user);
+      if(newUser.username == "" || newUser.username == undefined){
+        return
+      }
+      setUser(newUser);
       setInSession(false);
     }
   }
-
 
   function generateRandomId() {
     let randomId =
@@ -155,52 +166,6 @@ function Home({}: Props) {
     let color = Math.random() > 0.5 ? "white" : "black";
     console.log("color", color);
     return color;
-  }
-
-  function playChess(user: any) {
-    console.log("sending notification to", user.username);
-    //when this function runs I need to create a notification for the user
-    //so I send a mutation using the id to the graphql
-    //I also want to create a game in the graphql, with a pending status.
-    //one it starts I can change it's status.
-    let gameId = generateRandomId();
-    let requesterId = oldUserId();
-    let requesterColor = chooseColor();
-    let receiverId = user.id;
-
-    client.mutate({
-      mutation: createGame,
-      variables: {
-        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-        gameId: gameId,
-        receiverId: receiverId,
-        requesterId: requesterId,
-        requesterColor: requesterColor,
-      },
-    });
-
-    client.mutate({
-      mutation: sendNotification,
-      variables: {
-        gameId: gameId,
-        receiverId: receiverId,
-        requesterId: requesterId,
-        requesterColor: requesterColor,
-      },
-    });
-
-    let data = {
-      gameId: gameId,
-      receiverId: receiverId,
-      requesterId: requesterId,
-      requesterColor: requesterColor,
-    };
-
-    //I subsribe to the game from requester side
-    //I need to set the board correctly
-    subscribeToGame(data);
-
-    //I also need to subscribe to the game
   }
 
   function updateBoard() {
@@ -394,7 +359,6 @@ function Home({}: Props) {
     return;
   }
 
-
   //need to highlight the squares that are the last move
 
   return (
@@ -404,13 +368,14 @@ function Home({}: Props) {
           user={user}
           setUser={setUser}
           setInSession={setInSession}
+          pingWebSocket={pingWebSocket}
         />
       </Show>
       <Show when={inSession() && inGame() == false}>
-        <UsersList
-          users={users}
+        <UsersList 
+          users={users} 
           user={user}
-        />
+          />
       </Show>
 
       <Show
@@ -484,7 +449,7 @@ function Home({}: Props) {
                   class="btn btn-primary"
                   onClick={() => {
                     //
-                    console.log("need to do something")
+                    console.log("need to do something");
                   }}
                 >
                   Play Chess

@@ -1,11 +1,24 @@
 import { For, Show, createSignal, onMount, Accessor } from "solid-js";
 import CatLogo from "./CatLogo";
 import { User } from "./Home";
+import axios from "axios";
 
 type Props = {
   users: Accessor<User[]>;
   user: Accessor<User | undefined>
 };
+
+
+class Notification {
+  from: User;
+  to: User;
+  type: string;
+  constructor(from: User, to: User, type: string) {
+    this.from = from;
+    this.to = to;
+    this.type = type;
+  }
+}
 
 function UsersList({ users, user }: Props) {
   const [selectedUser, setSelectedUser] = createSignal<User>();
@@ -17,6 +30,16 @@ function UsersList({ users, user }: Props) {
     let modal = document.getElementById("exampleModal");
     //add clas flex important
     modal?.style.setProperty("display", "flex");
+  }
+
+  async function sendNotification(notification: Notification) {
+    try{
+      const url= "http://localhost:5000/chessNotifications";
+      const response = await axios.post(url, notification);
+      console.log("response: ", response.status);
+    }catch (error){
+      console.log("error: ", error);
+    }
   }
 
 
@@ -79,7 +102,7 @@ function UsersList({ users, user }: Props) {
             <div class="modal-footer">
               <Show when={notificationSent()}>
                 <div class="absolute left-3 text-red-500">
-                  Notification sent!,
+                  Notification sent!
                 </div>
               </Show>
 
@@ -94,6 +117,14 @@ function UsersList({ users, user }: Props) {
                 type="button"
                 class="btn btn-primary"
                 onClick={() => {
+                  console.log("clicked play chess with: ", selectedUser());
+                  let newNotification = new Notification(
+                    user(),
+                    selectedUser(),
+                    "playChess"
+                  )
+                  console.log("Notif", JSON.stringify(newNotification))
+                  sendNotification(newNotification);
                   if(notificationSent() == false){
                     setNotificationSent(true);
                   }
