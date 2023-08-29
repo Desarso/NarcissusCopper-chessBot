@@ -2,7 +2,7 @@ import { createResource, createSignal, onMount } from "solid-js"
 
 
 type Props = {
-  catLink: String;
+  catLink: string | undefined;
 }
 
 function CatLogo({catLink}: Props) {

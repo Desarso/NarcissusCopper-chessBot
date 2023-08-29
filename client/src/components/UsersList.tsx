@@ -1,15 +1,14 @@
-import { For, Show, createSignal, onMount } from "solid-js";
+import { For, Show, createSignal, onMount, Accessor } from "solid-js";
 import CatLogo from "./CatLogo";
+import { User } from "./Home";
 
 type Props = {
-  users: any;
-  userId: any;
-  playChess: any;
-  refetchUsers: any;
+  users: Accessor<User[]>;
+  user: Accessor<User | undefined>
 };
 
-function UsersList({ users, userId, playChess, refetchUsers }: Props) {
-  const [selectedUser, setSelectedUser] = createSignal(null);
+function UsersList({ users, user }: Props) {
+  const [selectedUser, setSelectedUser] = createSignal<User>();
   const [notificationSent, setNotificationSent] = createSignal(false);
 
   function clickUser(user: any) {
@@ -20,32 +19,30 @@ function UsersList({ users, userId, playChess, refetchUsers }: Props) {
     modal?.style.setProperty("display", "flex");
   }
 
-  onMount(() => {
-    if(users().length === 0){
-      refetchUsers();
-    }
-  });
 
   return (
     <>
       <div class="glassOverlay">
         <ul class="list">
+          <li class="listItem" id="mainUser">
+            <div class="text">{user()?.username}</div>
+            <CatLogo catLink={user()?.cat_url} />
+            <button onClick={() => console.log(users())}>🠮</button>
+            </li>
           <For each={users()}>
-            {(user) => (
+            {(singleUser) => (
               //here I list users
               <li
                 class="listItem"
-                id={`${user.id == userId() ? "mainUser" : ""}`}
-                data-bs-toggle={`${user.id == userId() ? "" : "modal"}`}
-                data-bs-target={`${user.id == userId() ? "" : "#exampleModal"}`}
+                id={singleUser.id}
+                data-bs-toggle={"modal"}
+                data-bs-target={"#exampleModal"}
                 onClick={
-                  user.id == userId()
-                    ? () => console.log("clicked main user -- do nothing")
-                    : () => clickUser(user)
+                    () => clickUser(singleUser)
                 }
               >
-                <div class="text">{user.username}</div>
-                <CatLogo catLink={user.cat_url} />
+                <div class="text">{singleUser.username}</div>
+                <CatLogo catLink={singleUser.cat_url} />
                 <button onClick={() => console.log(users())}>🠮</button>
               </li>
             )}
@@ -99,10 +96,6 @@ function UsersList({ users, userId, playChess, refetchUsers }: Props) {
                 onClick={() => {
                   if(notificationSent() == false){
                     setNotificationSent(true);
-                    playChess(selectedUser())
-                    setTimeout(() => {
-                      setNotificationSent(false);
-                    }, 5000);
                   }
                   
                   }

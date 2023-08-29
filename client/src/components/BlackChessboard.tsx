@@ -8,11 +8,8 @@ let mainTest = new TEST();
 mainTest.runAllTests();
 
 type Props = {
-  client: any;
   board: any;
   updateBlackBoard: any;
-  gql: any;
-  gameId: string;
   setLastMove: any;
   lastMove: any;
 };
@@ -22,11 +19,8 @@ type Props = {
 let id = 0;
 
 function BlackChessboard({
-  client,
   board,
   updateBlackBoard,
-  gql,
-  gameId,
   setLastMove,
   lastMove,
 }: Props) {
@@ -34,35 +28,7 @@ function BlackChessboard({
 
   let boardIds = getBoardIds();
 
-  const updateGame = gql`
-    mutation (
-      $from: String!
-      $to: String!
-      $endFen: String!
-      $gameId: String!
-    ) {
-      moveChessPiece(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
-        fen
-      }
-    }
-  `;
 
-  function updateGameQL(move: any, fen: string) {
-    console.log("update game", gameId());
-    client
-      .mutate({
-        mutation: updateGame,
-        variables: {
-          from: move.start,
-          to: move.end,
-          endFen: fen,
-          gameId: gameId(),
-        },
-      })
-      .then((result: any) => {
-        console.log(result);
-      });
-  }
 
   //this gets the white board IDs
   //black board ID's are the same array but reversed
@@ -112,7 +78,6 @@ function BlackChessboard({
 
     updateBlackBoard();
     let move = {start: lastMove().from, end: lastMove().to};
-    updateGameQL(move, board().fen);
   }
 
   function delay(ms: number) {
@@ -180,9 +145,6 @@ function BlackChessboard({
               inlaySelection={inlaySelection}
               displayInlay={displayInlay}
               color="black"
-              client={client}
-              gql={gql}
-              gameId={gameId}
               setLastMove={setLastMove}
               lastMove={lastMove}
             />

@@ -7,38 +7,19 @@ let mainTest = new TEST();
 mainTest.runAllTests();
 
 type Props = {
-  client: any;
   board: any;
   updateBoard: any;
-  gql: any;
-  gameId: string;
   setLastMove: any;
   lastMove: any;
 };
 
 function WhiteChessboard({
   board,
-  client,
   updateBoard,
-  gql,
-  gameId,
   setLastMove,
   lastMove,
 }: Props) {
   board().displayBoard();
-
-  const updateGame = gql`
-    mutation (
-      $from: String!
-      $to: String!
-      $endFen: String!
-      $gameId: String!
-    ) {
-      moveChessPiece(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
-        fen
-      }
-    }
-  `;
 
   let boardIds = getBoardIds();
 
@@ -90,24 +71,6 @@ function WhiteChessboard({
     updateBoard();
     let move = {start: lastMove().from, end: lastMove().to};
     console.log(move);
-    updateGameQL(move, board().fen);
-  }
-
-  function updateGameQL(move: any, fen: string) {
-    console.log("update game", gameId());
-    client
-      .mutate({
-        mutation: updateGame,
-        variables: {
-          from: move.start,
-          to: move.end,
-          endFen: fen,
-          gameId: gameId(),
-        },
-      })
-      .then((result: any) => {
-        console.log(result);
-      });
   }
 
   function delay(ms: number) {
@@ -175,9 +138,6 @@ function WhiteChessboard({
               inlaySelection={inlaySelection}
               displayInlay={displayInlay}
               color="white"
-              client={client}
-              gql={gql}
-              gameId={gameId}
               setLastMove={setLastMove}
               lastMove={lastMove}
             />

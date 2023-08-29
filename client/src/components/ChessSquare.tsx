@@ -17,9 +17,6 @@ type Props = {
   inlaySelection: any;
   style: any;
   color: string;
-  client: any;
-  gql: any;
-  gameId: string;
   setLastMove: any;
   lastMove: any;
 };
@@ -41,22 +38,11 @@ function ChessSquare({
   displayInlay,
   style,
   color,
-  client,
-  gql,
-  gameId,
   setLastMove,
   lastMove,
 }: Props) {
 
 
-  const updateGame = gql`
-  mutation($from: String!, $to: String!, $endFen: String!, $gameId: String!) {
-    moveChessPiece(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
-      fen
-    }
-
-  }
-`
 
   onMount(() => {
     window.movePiece = function(start, end){
@@ -232,7 +218,6 @@ function ChessSquare({
 
 
 
-        setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
         if (previousChild?.classList?.contains("piece")) {
           eatenPieces.push(previousChild);
           // console.log(eatenPieces);
@@ -248,11 +233,11 @@ function ChessSquare({
               setDisplayInlayX(piece.position.pos.x);
             }else{
               let move = { start: startingIndex, end: endingIndex };
-              updateGameQL(move, board().fen);
+              // updateGameQL(move, board().fen);
             }
           }else{
             let move = { start: startingIndex, end: endingIndex };
-            updateGameQL(move, board().fen);
+            // updateGameQL(move, board().fen);
           }
         //I'm gonna implement the crowning logic here,
         //there is a problem, the board is going to have a pawn of opposite color
@@ -285,30 +270,13 @@ function ChessSquare({
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : "pointer-events: none;"}`} id={id}>
+      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : ""}`} id={id}>
         {/* //pointer-events: none; */}
         <div class=""> </div>
       </section>
     );
   };
 
-
-  function updateGameQL(move: any, fen: string) {
-    console.log("update game", gameId());
-    client.
-    mutate({
-      mutation: updateGame,
-      variables: {
-        from: move.start,
-        to: move.end,
-        endFen: fen,
-        gameId: gameId()
-      }
-    })
-    .then((result: any) => {
-      console.log(result);
-    })
-  }
 
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
