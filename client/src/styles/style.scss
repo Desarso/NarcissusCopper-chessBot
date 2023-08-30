@@ -255,6 +255,7 @@ z-index: 10;
         flex-direction: column;
         justify-content: center;
         width: 60%;
+        z-index: 500;
         // margin: 1px;
         border: 2px solid black;
         border-bottom: 0px ;
@@ -446,4 +447,111 @@ z-index: 10;
 section{
     touch-action: none;
 }
+
+.bellContainer {
+    position: absolute;
+    width: 90vmin;
+    height: 90vmin;
+
+    .bellIcon{
+      margin: 10px;
+      padding: 1vmin;
+      border-radius: 50%;
+      top: 10vmin;
+      left: 10vmin;
+      z-index: 1000;
+    }
+
+    .dropdown{
+        padding: 5vmin;
+        display: flex;
+        //put in column;
+        flex-direction: column;
+        position: absolute;
+        z-index: 1000; 
+        display: flex;
+        width: 30vmin;
+        height: 100%;
+        justify-content: start;
+        align-items: center;
+        
+        .dropdown-menu{
+            // display: flex;
+            position: relative;
+            width: fit-content;
+            margin-left: 10%;
+            //make it not be outside the screen
+
+        }
+
+        //query for when screen is small
+        // @media only screen and (max-width: 600px) {
+        //     .dropdown-menu{
+        //         margin-left: 60%;
+
+        //     }
+        //     .bellIcon{
+        //         margin-bottom: 10px;
+        //     }
+        // }
+        // @media only screen and (max-width: 350px) {
+        //     .dropdown-menu{
+        //         margin-left: 140%;
+
+        //     }
+        //     .bellIcon{
+        //         margin-bottom: 10px;
+        //     }
+        // }
+
+        .dropdown-item:active{
+            background-color: #d3e8ff !important;
+            color: white;
+        }
+
+        .notificationText{
+            display: inline-flex !important;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+            background-color: #f8f8f8; /* Light background color */
+            padding: 5px; 
+            display: block;
+            .username{
+                font-weight: bold;
+                color: #007bff;
+            }
+        }
+
+        .notification-text::before {
+            content: "🔔"; /* Add an icon or indicator */
+            margin-right: 5px;
+          }
+
+        .notification-text:hover {
+            color: #007bff; /* Change color on hover */
+            cursor: pointer;
+          }
+
+          //on click
+            .notification-text:active {
+                background-color: #007bff;
+                color: white;
+            }
+
+    }
+ 
+      
+      
+
+    .bellIcon:hover{
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0.205);
+      transition: all 0.2s ease-in-out;
+    }
+
+}
+
+
+  
 

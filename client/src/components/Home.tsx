@@ -46,12 +46,14 @@ function Home({}: Props) {
   const [inSession, setInSession] = createSignal<boolean>(false);
   const [notificationUser, setNotificationUser]: any = createSignal(null);
   const [notificationData, setNotificationData]: any = createSignal(null);
+  
   const [ws, setWs] = createSignal<WebSocket>();
 
   const createWS = (url: string) => {
     const socket = new WebSocket(url);
     return socket;
   };
+
 
   function pingWebSocket(user : User) {
     if (inSession() && !inGame()) {
@@ -77,7 +79,17 @@ function Home({}: Props) {
     connectUsersWebSocket();
     document.ws = ws;
     document.setInGame = setInGame;
+    document.addEventListener("mousedown", onMouseDown);
+
   });
+
+
+  function onMouseDown(mouseEvent) {
+    // Check if the event is a double click
+    if (mouseEvent.detail > 1) {
+      mouseEvent.preventDefault(); // Prevent text selection for double clicks
+    } 
+  }
 
   function connectUsersWebSocket() {
     const socket = createWS("ws://localhost:8080/chessUsers");
@@ -94,9 +106,9 @@ function Home({}: Props) {
       // console.log("message", JSON.parse(e.data));
       let data = JSON.parse(e.data);
       //remove current user from data.users
-      let users = data.users;
-      let index = users.findIndex((singleUser: User) => singleUser.id == user().id);
-      let currentUser = users.splice(index, 1);
+      let newUsers = data.users;
+      let index = newUsers.findIndex((singleUser: User) => singleUser.id == user().id);
+      let currentUser = newUsers.splice(index, 1);
       let newTimeStamp = currentUser[0].last_seen;
       let newUser = user();
       newUser.last_seen = newTimeStamp;
@@ -104,7 +116,10 @@ function Home({}: Props) {
         return
       }
       setUser(newUser);
-      setUsers(users);
+      if(JSON.stringify(newUsers) == JSON.stringify(users())){
+        return
+      }
+      setUsers(newUsers);
     });
 
     socket.addEventListener("close", function (e) {

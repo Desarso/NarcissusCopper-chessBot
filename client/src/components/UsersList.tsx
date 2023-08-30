@@ -2,14 +2,15 @@ import { For, Show, createSignal, onMount, Accessor } from "solid-js";
 import CatLogo from "./CatLogo";
 import { User } from "./Home";
 import axios from "axios";
+import BellIcon from "./BellIcon";
+import { domainToUnicode } from "url";
 
 type Props = {
   users: Accessor<User[]>;
-  user: Accessor<User | undefined>
+  user: Accessor<User | undefined>;
 };
 
-
-class Notification {
+export class Notification {
   from: User;
   to: User;
   type: string;
@@ -23,6 +24,45 @@ class Notification {
 function UsersList({ users, user }: Props) {
   const [selectedUser, setSelectedUser] = createSignal<User>();
   const [notificationSent, setNotificationSent] = createSignal(false);
+  const [notificationsReceived, setNotificationsReceived] = createSignal<
+    Notification[]
+  >([]);
+  const [notificationsSent, setNotificationsSent] = createSignal<
+    Notification[]
+  >([]);
+  const [showNotification, setShowNotification] = createSignal(false);
+
+  onMount(() => {
+    document.notifications = notificationsReceived;
+    const url = "http://localhost:8080/chessNotificationsSub";
+    const urlWithQuery = `${url}?userID=${user()?.id}`;
+    const eventSource = new EventSource(urlWithQuery);
+
+    eventSource.onopen = (event) => {
+      console.log("Connection opened");
+    };
+
+    eventSource.onmessage = (event) => {
+      const notification = JSON.parse(event.data);
+      console.log("notification received");
+
+      for (let i = 0; i < notificationsReceived().length; i++) {
+        if (notificationsReceived()[i].from.id == notification.from.id) {
+          return;
+        }
+      }
+      let newNotificationsReceived = notificationsReceived();
+      newNotificationsReceived.push(notification);
+      setNotificationsReceived(newNotificationsReceived);
+      setShowNotification(true);
+
+      // Handle the SSE event data here
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("Error occurred:", error);
+    };
+  });
 
   function clickUser(user: any) {
     // console.log("selected user: ", user);
@@ -33,25 +73,37 @@ function UsersList({ users, user }: Props) {
   }
 
   async function sendNotification(notification: Notification) {
-    try{
-      const url= "http://localhost:5000/chessNotifications";
+    for (let i = 0; i < notificationsSent().length; i++) {
+      if (notificationsSent()[i].to.id == notification.to.id) {
+        return;
+      }
+    }
+    let newNotificationsSent = notificationsSent();
+    newNotificationsSent.push(notification);
+    setNotificationsSent(newNotificationsSent);
+
+    try {
+      const url = "http://localhost:8080/chessNotifications";
       const response = await axios.post(url, notification);
       console.log("response: ", response.status);
-    }catch (error){
+    } catch (error) {
       console.log("error: ", error);
     }
   }
 
-
   return (
     <>
+      <Show when={showNotification()}>
+        <BellIcon notifications={notificationsReceived} onClick={() => {}} />
+      </Show>
+
       <div class="glassOverlay">
         <ul class="list">
           <li class="listItem" id="mainUser">
             <div class="text">{user()?.username}</div>
             <CatLogo catLink={user()?.cat_url} />
             <button onClick={() => console.log(users())}>🠮</button>
-            </li>
+          </li>
           <For each={users()}>
             {(singleUser) => (
               //here I list users
@@ -60,9 +112,7 @@ function UsersList({ users, user }: Props) {
                 id={singleUser.id}
                 data-bs-toggle={"modal"}
                 data-bs-target={"#exampleModal"}
-                onClick={
-                    () => clickUser(singleUser)
-                }
+                onClick={() => clickUser(singleUser)}
               >
                 <div class="text">{singleUser.username}</div>
                 <CatLogo catLink={singleUser.cat_url} />
@@ -117,23 +167,16 @@ function UsersList({ users, user }: Props) {
                 type="button"
                 class="btn btn-primary"
                 onClick={() => {
-                  console.log("clicked play chess with: ", selectedUser());
                   let newNotification = new Notification(
                     user(),
                     selectedUser(),
                     "playChess"
-                  )
-                  console.log("Notif", JSON.stringify(newNotification))
+                  );
                   sendNotification(newNotification);
-                  if(notificationSent() == false){
+                  if (notificationSent() == false) {
                     setNotificationSent(true);
                   }
-                  
-                  }
-
-                  
-                  }
-             
+                }}
               >
                 Play Chess
               </button>
