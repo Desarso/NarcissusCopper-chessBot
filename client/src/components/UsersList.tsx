@@ -1,4 +1,4 @@
-import { For, Show, createSignal, onMount, Accessor } from "solid-js";
+import { For, Show, createSignal, onMount, Accessor, Setter } from "solid-js";
 import CatLogo from "./CatLogo";
 import { User } from "./Home";
 import axios from "axios";
@@ -8,6 +8,8 @@ import { domainToUnicode } from "url";
 type Props = {
   users: Accessor<User[]>;
   user: Accessor<User | undefined>;
+  setNotificationUser: Setter<User | undefined>;
+  onNotificationReceived: () => void;
 };
 
 export class Notification {
@@ -21,7 +23,7 @@ export class Notification {
   }
 }
 
-function UsersList({ users, user }: Props) {
+function UsersList({ users, user, setNotificationUser, onNotificationReceived }: Props) {
   const [selectedUser, setSelectedUser] = createSignal<User>();
   const [notificationSent, setNotificationSent] = createSignal(false);
   const [notificationsReceived, setNotificationsReceived] = createSignal<
@@ -44,6 +46,8 @@ function UsersList({ users, user }: Props) {
 
     eventSource.onmessage = (event) => {
       const notification = JSON.parse(event.data);
+      setNotificationUser(notification.from);
+      onNotificationReceived();
       console.log("notification received");
 
       for (let i = 0; i < notificationsReceived().length; i++) {
@@ -170,7 +174,7 @@ function UsersList({ users, user }: Props) {
                   let newNotification = new Notification(
                     user(),
                     selectedUser(),
-                    "playChess"
+                    "promptForGame"
                   );
                   sendNotification(newNotification);
                   if (notificationSent() == false) {

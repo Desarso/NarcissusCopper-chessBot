@@ -410,6 +410,7 @@ section {
   align-items: center;
 }
 .bellContainer .dropdown .dropdown-menu {
+  cursor: pointer;
   position: relative;
   width: fit-content;
   margin-left: 10%;
@@ -447,4 +448,4 @@ section {
   cursor: pointer;
   background-color: rgba(255, 255, 255, 0.205);
   transition: all 0.2s ease-in-out;
-}/*# sourceMappingURL=style.css.map */
+}

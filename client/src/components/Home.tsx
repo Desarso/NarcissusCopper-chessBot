@@ -44,8 +44,8 @@ function Home({}: Props) {
   const [user, setUser] = createSignal<User>();
   const [users, setUsers] = createSignal<User[]>([]);
   const [inSession, setInSession] = createSignal<boolean>(false);
-  const [notificationUser, setNotificationUser]: any = createSignal(null);
-  const [notificationData, setNotificationData]: any = createSignal(null);
+  const [notificationUser, setNotificationUser] = createSignal<User | undefined>();
+  const [notificationData, setNotificationData] = createSignal(null);
   
   const [ws, setWs] = createSignal<WebSocket>();
 
@@ -374,6 +374,12 @@ function Home({}: Props) {
     return;
   }
 
+  function onNotificationReceived(){
+    let button = document.querySelector("#notificationButton");
+    button.click();
+
+  }
+
   //need to highlight the squares that are the last move
 
   return (
@@ -390,6 +396,8 @@ function Home({}: Props) {
         <UsersList 
           users={users} 
           user={user}
+          setNotificationUser={setNotificationUser}
+          onNotificationReceived={onNotificationReceived}
           />
       </Show>
 

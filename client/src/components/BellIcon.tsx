@@ -1,4 +1,4 @@
-import { Accessor, For } from "solid-js";
+import { Accessor, For, onMount } from "solid-js";
 import { Notification } from "./UsersList";
 import { text } from "stream/consumers";
 
@@ -41,6 +41,24 @@ function BellIcon({ onClick, notifications}: Props) {
 
 
   }
+
+  onMount(() => {
+    //add listener for clicks outside of dropdown
+    document.addEventListener("click", function(event){
+      let dropdown = document.querySelector(".dropdown-menu");
+      let dropdownButton = document.querySelector(".bellIcon");
+      let targetElement = event.target; // clicked element
+      do {
+        if (targetElement == dropdownButton) {
+          return;
+        }
+        // Go up the DOM
+        targetElement = targetElement.parentNode;
+      } while (targetElement);
+      // This is a click outside.
+      dropdown.style.display = "none";
+    })
+  });
 
 
 
