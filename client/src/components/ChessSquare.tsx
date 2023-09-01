@@ -19,6 +19,8 @@ type Props = {
   color: string;
   setLastMove: any;
   lastMove: any;
+  movePieceSound: any;
+  capturePieceSound: any;
 };
 
 
@@ -40,7 +42,10 @@ function ChessSquare({
   color,
   setLastMove,
   lastMove,
+  movePieceSound,
+  capturePieceSound,
 }: Props) {
+
 
 
 
@@ -50,6 +55,7 @@ function ChessSquare({
       updateBoard();
     };
     window.board = board;
+    // capturePieceSound.play();
   });
 
   const [moves, setMoves] = createSignal([]);
@@ -213,6 +219,7 @@ function ChessSquare({
         console.log("moving piece", startingIndex, endingIndex);
         // console.log(previousChild.id, draggable.id)
         // here I need to delay this move if I am crowning a pawn
+
         board().movePiece(startingIndex, endingIndex);
         // //this is where I move the piece
 
@@ -220,7 +227,12 @@ function ChessSquare({
 
         if (previousChild?.classList?.contains("piece")) {
           eatenPieces.push(previousChild);
+          let sound = capturePieceSound.play();
           // console.log(eatenPieces);
+        }else{
+          console.log("sound")
+          let sound = movePieceSound.play();
+
         }
 
         let newBoard = board().board;

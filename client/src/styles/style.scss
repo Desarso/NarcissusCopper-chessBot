@@ -554,5 +554,18 @@ section{
 }
 
 
+.oponentsCursor{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    color: red;
+    border-color: red;
+    border: 2px solid red;
+    z-index: 1000000;
+}
+
   
 

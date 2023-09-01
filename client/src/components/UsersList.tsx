@@ -9,7 +9,7 @@ type Props = {
   users: Accessor<User[]>;
   user: Accessor<User | undefined>;
   setNotificationUser: Setter<User | undefined>;
-  onNotificationReceived: () => void;
+  onNotificationReceived: (arg1: Notification) => void;
 };
 
 export class Notification {
@@ -23,7 +23,12 @@ export class Notification {
   }
 }
 
-function UsersList({ users, user, setNotificationUser, onNotificationReceived }: Props) {
+function UsersList({
+  users,
+  user,
+  setNotificationUser,
+  onNotificationReceived
+}: Props) {
   const [selectedUser, setSelectedUser] = createSignal<User>();
   const [notificationSent, setNotificationSent] = createSignal(false);
   const [notificationsReceived, setNotificationsReceived] = createSignal<
@@ -46,9 +51,12 @@ function UsersList({ users, user, setNotificationUser, onNotificationReceived }:
 
     eventSource.onmessage = (event) => {
       const notification = JSON.parse(event.data);
+      onNotificationReceived(notification);
+      //I only want to handle notifications of type promptForGame in here
+      if (notification.type != "promptForGame")return;
       setNotificationUser(notification.from);
-      onNotificationReceived();
-      console.log("notification received");
+    
+      console.log("notification received:", notification);
 
       for (let i = 0; i < notificationsReceived().length; i++) {
         if (notificationsReceived()[i].from.id == notification.from.id) {

@@ -12,6 +12,8 @@ type Props = {
   updateBlackBoard: any;
   setLastMove: any;
   lastMove: any;
+  movePieceSound: any;
+  capturePieceSound: any;
 };
 
 // board.movePiece("e2", "e2");
@@ -23,6 +25,8 @@ function BlackChessboard({
   updateBlackBoard,
   setLastMove,
   lastMove,
+  movePieceSound,
+  capturePieceSound,
 }: Props) {
   board().displayBoard();
 
@@ -147,6 +151,8 @@ function BlackChessboard({
               color="black"
               setLastMove={setLastMove}
               lastMove={lastMove}
+              movePieceSound={movePieceSound}
+              capturePieceSound={capturePieceSound}
             />
           )}
         </For>
