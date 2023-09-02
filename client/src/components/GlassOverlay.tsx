@@ -1,20 +1,22 @@
 import { createSignal, onMount, Accessor, Setter } from "solid-js";
-import { User } from "./Home";
+import { User } from "../Classes/Types";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";
 type Props = {
   user : Accessor<User | undefined>,
   setUser : Setter<User | undefined>,
   setInSession : Setter<boolean>,
-  pingWebSocket : (user: User) => void,
+  chessWebSocket : ChessWebSocket
 };
 
 const GlassOverlay = ({
   user,
   setUser,
   setInSession,
-  pingWebSocket,
+  chessWebSocket,
 }: Props) => {
 
   const [username, setUsername] = createSignal(user()?.username);
+  const [CatUrl, setCatUrl] = createSignal<string>();
 
   const onButtonCLick = async () => {
     //here I add the username to the session and local storage
@@ -31,29 +33,38 @@ const GlassOverlay = ({
     let newUser = new User(
       generateUserid(),
       username(),
-      await getRandomCatLink(),
+      CatUrl()
     )
     setUser(newUser);
-    pingWebSocket(newUser);
+    console.log()
+    chessWebSocket.beginPinging(user);
+    console.log(newUser, newUser.id)
+    chessWebSocket.pingWebSocket(newUser);
 
     sessionStorage.setItem(
       "gabrielmalek/chess.data",
-      JSON.stringify({ id: newUser.id, username: newUser.username, cat_url: newUser.cat_url })
+      JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
     );
     localStorage.setItem(
       "gabrielmalek/chess.data",
-      JSON.stringify({ id: newUser.id, username: newUser.username, cat_url: newUser.cat_url })
+      JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
     )
     setInSession(true);
       return;
   };
 
+  async function getRandomCatLink() {
+    const response =  await fetch("https://api.thecatapi.com/v1/images/search");
+    const data = await response.json();
+    return data[0].url;
+  }
+
   onMount(() => {
     //add evnet listener to the enter key
     document.addEventListener("keyup", function (event) {
-      console.log(event.key)
+      // console.log(event.key)
       if (event.key === "Enter") {
-        console.log("enter key pressed");
+        // console.log("enter key pressed");
         onButtonCLick();
       }
     });
@@ -63,6 +74,10 @@ const GlassOverlay = ({
     if(user()?.username !== undefined){
       input.value = user()?.username;
     }
+
+    getRandomCatLink().then((url) => {
+      setCatUrl(url);
+    });
   });
 
   return (
@@ -108,9 +123,4 @@ function generateUserid() {
   return userid;
 };
 
-async function getRandomCatLink() {
-  //fetch https://api.thecatapi.com/v1/images/search
-  const response = await fetch("https://api.thecatapi.com/v1/images/search");
-  const data = await response.json();
-  return data[0].url;
-}
+

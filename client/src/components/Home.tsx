@@ -17,65 +17,12 @@ import axios from "axios";
 import MoveSound from "../Soundfiles/move-self.mp3";
 import CaptureSound from "../Soundfiles/capture.mp3";
 import BallsBackground from "./BallsBackground";
+import { Position, PositionNotification, User, CreateGameNotification } from "../Classes/Types";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";
 
 type Props = {};
 
-export class User {
-  id: string;
-  username: string;
-  cat_url: string;
-  last_seen: EpochTimeStamp = Date.now();
-  inGame: boolean = false;
-  constructor(id: string, username: string, cat_url: string) {
-    this.id = id;
-    this.username = username;
-    this.cat_url = cat_url;
-  }
-}
 
-class createGameNotification {
-  from: User;
-  fromUserColor: string;
-  to: User;
-  gameID: string;
-  type: string = "createGame";
-  constructor(from: User, to: User) {
-    this.from = from;
-    this.to = to;
-    this.fromUserColor = Math.random() > 0.5 ? "white" : "black";
-    this.gameID = generateRandomId();
-  }
-}
-
-class Position {
-  x: number;
-  y: number;
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-}
-
-class PositionNotification {
-  from: User;
-  to: User;
-  position: Position;
-  screen: Position;
-  type: string = "position";
-  chessBoardWidth: number;
-  constructor(
-    from: User,
-    to: User,
-    position: Position,
-    chessBoardWidth: number
-  ) {
-    this.from = from;
-    this.to = to;
-    this.position = position;
-    this.screen = new Position(window.innerWidth, window.innerHeight);
-    this.chessBoardWidth = chessBoardWidth;
-  }
-}
 
 //here I choose the color of board, but this is too soon, I need to create a pop up screen to choose a username
 //that also checks for a username, in both session, and local storage. And, then requests the graphql to see if the user exisits,
@@ -100,40 +47,41 @@ function Home({}: Props) {
   >();
   const [notificationData, setNotificationData] = createSignal(null);
 
-  const [ws, setWs] = createSignal<WebSocket>();
+  const chessWebSocket = new ChessWebSocket(user());
 
-  const createWS = (url: string) => {
-    const socket = new WebSocket(url);
-    return socket;
-  };
-
-  function pingWebSocket(user: User) {
-   
-    if (!ws()) {
-      //reopen websocket
-      connectUsersWebSocket()
-    }else{
-      ws().send(JSON.stringify(user));
-    }
-    
-  }
 
   onCleanup(() => {
-    if (ws()) {
-      ws().close();
+    if (chessWebSocket.ws) {
+      chessWebSocket.close();
     }
   });
 
   onMount(async () => {
+    window.users = users;
     checkforUser();
-    connectUsersWebSocket();
-    document.ws = ws;
-    document.setInGame = setInGame;
-    document.addEventListener("mousedown", onMouseDown);
     updatePosition();
-    // movePieceSound.play();
-    // capturePieceSound.play();
+    listenForUserUpdates();
+    document.addEventListener("mousedown", (e) => onMouseDown(e));
+    document.ws = chessWebSocket.ws;
   });
+
+  function listenForUserUpdates() {
+    document.addEventListener("usersUpdated", (event) => {
+      let newUsers = event.data.filter((dataUser) => user().id != dataUser.id);
+      setUsers([...newUsers]);
+    });
+    document.addEventListener("notification", (event) => {
+      onNotificationReceived(event.data);
+    });
+    document.addEventListener("updateUser", (event) => {
+      console.log("update user event received", event.data.CatUrl);
+      let mainUser = document.querySelector("#mainUser");
+      console.log(mainUser.querySelector(".catLogo"));
+
+      mainUser.querySelector(".catLogo").style.backgroundImage = "nothing"
+      // mainUser.querySelector(".catLogo").style.backgroundImage = `url("${event.data.CatUrl}");`;
+    })
+  }
 
   function updatePosition() {
     let index = 0;
@@ -160,140 +108,17 @@ function Home({}: Props) {
         position,
         chessBoardWidth
       );
-      ws().send(JSON.stringify(positionNotification));
+      chessWebSocket.ws.send(JSON.stringify(positionNotification));
     });
   }
 
-  function onMouseDown(mouseEvent) {
+  function onMouseDown(mouseEvent: any) {
     // Check if the event is a double click
     if (mouseEvent.detail > 1) {
       mouseEvent.preventDefault(); // Prevent text selection for double clicks
     }
   }
 
-  function normalizeCoordinates(
-    otherUserX,
-    otherUserY,
-    yourScreenWidth,
-    yourScreenHeight,
-    otherUserScreenWidth,
-    otherUserScreenHeight
-  ) {
-    const scaleX = yourScreenWidth / otherUserScreenWidth;
-    const scaleY = yourScreenHeight / otherUserScreenHeight;
-
-    const normalizedX = otherUserX * scaleX;
-    const normalizedY = otherUserY * scaleX;
-
-    return { x: normalizedX, y: normalizedY };
-  }
-
-  function connectUsersWebSocket() {
-    const socket = createWS("ws://localhost:8080/chessUsers");
-    let oponentsCursor = document.querySelector(".oponentsCursor");
-    let windowWidth = window.innerWidth;
-    let windowHeight = window.innerHeight;
-    let x;
-    let y;
-    let destinationChessboardWidth;
-    let scaleFactor;
-    let scaleFactorX;
-    let scaleFactorY; 
-    let sourceChessBoardCenterX;
-    let sourceChessBoardCenterY;
-    let destinationChessBoardCenterX;
-    let destinationChessBoardCenterY;
-    let destinationChessboardHeight;
-    let xOffSet;
-    let yOffSet;
-    let scaledXOffset;
-    let scaledYOffset;
-    let alignedCursorX;
-    let alignedCursorY;
-    let invertedCursorX;
-    let invertedCursorY;
-    socket.addEventListener("open", function (event) {
-      console.log("connected");
-      setWs(socket);
-      //and now we set ping interval
-      pingWebSocket(user());
-      setInterval(() => pingWebSocket(user()), 3000);
-    });
-
-    socket.addEventListener("message", function (e) {
-      // console.log("message", JSON.parse(e.data));
-      let data = JSON.parse(e.data);
-      if (data.type == "position") {
-        x = data.position.x;
-        y = data.position.y;
-
-        // scaleFactor = localChessBoardWidth / data.chessBoardWidth;
-
-        // //THIS CHANGE
-
-        //THIS CHANGE
-        sourceChessBoardCenterX = data.screen.x/2;
-        sourceChessBoardCenterY = data.screen.y/2;
-
-        xOffSet = x - sourceChessBoardCenterX;
-        yOffSet = y - sourceChessBoardCenterY;
-
-        //THIS CHANGE
-        destinationChessBoardCenterX = windowWidth / 2;
-        destinationChessBoardCenterY = windowHeight / 2;
-
-        destinationChessboardWidth = document.querySelector(".chessBoard").offsetWidth;
-        destinationChessboardHeight = destinationChessboardWidth;
-
-        scaleFactorX  = destinationChessboardWidth / data.chessBoardWidth;
-        scaleFactorY  = destinationChessboardHeight / data.chessBoardWidth;
-
-        //THIS CHANGE
-        scaledXOffset = xOffSet * scaleFactorX;
-        scaledYOffset = yOffSet * scaleFactorY;
-
-
-        destinationChessBoardCenterX = window.innerWidth / 2;
-        destinationChessBoardCenterY = window.innerHeight / 2;
-
-        alignedCursorX = destinationChessBoardCenterX + scaledXOffset;
-        alignedCursorY = destinationChessBoardCenterY + scaledYOffset;
-
-        invertedCursorX = destinationChessBoardCenterX - scaledXOffset;
-        invertedCursorY = destinationChessBoardCenterY - scaledYOffset;
-
-        console.log("xOffSet", xOffSet, "yOffSet", yOffSet);
-      
-
-        oponentsCursor.style.transform = `translate(${invertedCursorX-5}px, ${invertedCursorY-5}px)`;
-        return;
-      }
-      //remove current user from data.users
-      let newUsers = data.users;
-      let index = newUsers.findIndex(
-        (singleUser: User) => singleUser.id == user().id
-      );
-      let currentUser = newUsers.splice(index, 1);
-      let newTimeStamp = currentUser[0].last_seen;
-      let newUser = user();
-      newUser.last_seen = newTimeStamp;
-      if (newUser.username == "") {
-        return;
-      }
-      setUser(newUser);
-      if (JSON.stringify(newUsers) == JSON.stringify(users())) {
-        return;
-      }
-      setUsers(newUsers);
-    });
-
-    socket.addEventListener("close", function (e) {
-      console.log("closed", e);
-      setWs(undefined);
-      w().close();
-      setTimeout(connectUsersWebSocket, 3000);
-    });
-  }
 
   async function checkforUser() {
     //check for user in local storage
@@ -305,13 +130,16 @@ function Home({}: Props) {
       console.log("session storage null");
     } else {
       console.log("session storage not null");
-      let user = new User(
+      let stringUser = new User(
         chessDataJson.id,
         chessDataJson.username,
-        chessDataJson.cat_url
+        chessDataJson.CatUrl
       );
-      setUser(user);
+      setUser(stringUser);
       setInSession(true);
+      chessWebSocket.beginPinging(user);
+      
+      console.log("should be pinging");
       return;
     }
     chessData = localStorage.getItem("gabrielmalek/chess.data");
@@ -322,7 +150,7 @@ function Home({}: Props) {
       let newUser = new User(
         chessDataJson.id,
         chessDataJson.username,
-        chessDataJson.cat_url
+        chessDataJson.CatUrl
       );
       if (newUser.username == "" || newUser.username == undefined) {
         return;
@@ -549,19 +377,17 @@ function Home({}: Props) {
     }
   }
 
-  //okay so the pop is coming up
 
   async function createAndJoinGame(notification: any) {
     console.log("we must create a game");
     //we are the receiving(to) user, we create the game
-    let createGameNotif = new createGameNotification(
+    let createGameNotif = new CreateGameNotification(
       notification.from,
       notification.to
     );
+    //need to use ChessWebSockets object
     try {
-      const url = "http://localhost:8080/chessNotifications";
-      const response = await axios.post(url, createGameNotif);
-      console.log("response: ", response.status);
+      chessWebSocket.ws.send(JSON.stringify(createGameNotif));
       setInGameColor(
         createGameNotif.fromUserColor === "white" ? "black" : "white"
       );
@@ -587,14 +413,14 @@ function Home({}: Props) {
 
   return (
     <>
-      <BallsBackground/>
+      <BallsBackground />
       <div class="oponentsCursor"></div>
       <Show when={!inSession() && inGame() == false}>
         <GlassOverlay
           user={user}
           setUser={setUser}
           setInSession={setInSession}
-          pingWebSocket={pingWebSocket}
+          chessWebSocket={chessWebSocket}
         />
       </Show>
       <Show when={inSession() && inGame() == false}>
@@ -603,6 +429,7 @@ function Home({}: Props) {
           user={user}
           setNotificationUser={setNotificationUser}
           onNotificationReceived={onNotificationReceived}
+          chessWebSocket={chessWebSocket}
         />
       </Show>
 
@@ -697,10 +524,3 @@ function Home({}: Props) {
 
 export default Home;
 
-function generateRandomId() {
-  let randomId =
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15);
-  // console.log("random id", randomId);
-  return randomId;
-}
