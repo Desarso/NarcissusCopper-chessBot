@@ -16,6 +16,7 @@ import { Board, Move } from "../Classes/chessClasses";
 import axios from "axios";
 import MoveSound from "../Soundfiles/move-self.mp3";
 import CaptureSound from "../Soundfiles/capture.mp3";
+import BallsBackground from "./BallsBackground";
 
 type Props = {};
 
@@ -107,7 +108,14 @@ function Home({}: Props) {
   };
 
   function pingWebSocket(user: User) {
-    ws().send(JSON.stringify(user));
+   
+    if (!ws()) {
+      //reopen websocket
+      connectUsersWebSocket()
+    }else{
+      ws().send(JSON.stringify(user));
+    }
+    
   }
 
   onCleanup(() => {
@@ -257,7 +265,7 @@ function Home({}: Props) {
         console.log("xOffSet", xOffSet, "yOffSet", yOffSet);
       
 
-        oponentsCursor.style.transform = `translate(${invertedCursorX}px, ${invertedCursorY}px)`;
+        oponentsCursor.style.transform = `translate(${invertedCursorX-5}px, ${invertedCursorY-5}px)`;
         return;
       }
       //remove current user from data.users
@@ -282,9 +290,8 @@ function Home({}: Props) {
     socket.addEventListener("close", function (e) {
       console.log("closed", e);
       setWs(undefined);
-      if (inSession() && !inGame()) {
-        setTimeout(connectUsersWebSocket, 3000);
-      }
+      w().close();
+      setTimeout(connectUsersWebSocket, 3000);
     });
   }
 
@@ -580,6 +587,7 @@ function Home({}: Props) {
 
   return (
     <>
+      <BallsBackground/>
       <div class="oponentsCursor"></div>
       <Show when={!inSession() && inGame() == false}>
         <GlassOverlay

@@ -73,19 +73,10 @@ function ChessSquare({
     const droppable = createDroppable(id);
 
     onHoverOver((e: any) => {
-      // console.log("hover over");
-      // console.log(e);
-      // droppable.droppable = false;
-      //should only accept a drop if it is a legal move;
-      // if(droppable.ref.classList.contains("lighterBackground")){
-      //     droppable.droppable = true;
-      // }
       droppable.ref.classList.add("hovered");
-      // console.log(e.data.legalPieceMoves);
     }, droppable);
 
     onHoverOut((e: any) => {
-      // console.log("hover out");
       droppable.ref.classList.remove("hovered");
     }, droppable);
 
@@ -176,7 +167,7 @@ function ChessSquare({
 
     onDragEnd(async (e: any) => {
       if(displayInlay()) return;
-      // console.log("end")
+      console.log(e)
       if (e === null) return;
       e.occupied = false;
       console.log(e.ref.children);
@@ -185,21 +176,6 @@ function ChessSquare({
       }
       
       let previousChild = e.ref.querySelector(".piece");
-      // previousChild = e.ref.querySelector
-      // console.log("previous",previousChild);
-      // console.log(e.ref.querySelector(".piece") == null);
-      // for(let i = 0; i < e.ref.children.length; i++){
-      //   if(!e.ref.children[i].classList.contains("number-right") || !e.ref.children[i].classList.contains("number-left")){
-      //     previousChild = e.ref.children[i];
-      //   }
-      // }
-      // console.log("prev",previousChild);
-      // console.log("id",e.ref.id)
-      // console.log("ending",endingIndex);
-      // console.log("starting",startingIndex);
-
-
-      // console.log(draggable.id)
       console.log("previous", previousChild);
       await delay(1);
       let oppositeColor;

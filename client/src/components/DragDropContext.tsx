@@ -45,20 +45,37 @@ const DragDropContext = createContext<ContextProps>();
 export function DragDropContextProvider(props: any) {
   //here we are keeping track of some of the global states
   //so we need a function to createDraggable, this function should
-  const [count, setCount] = createSignal(0);
-  const [pageName, setPageName] = createSignal("Home");
   const [mousePosition, setMousePosition] = createSignal({ x: 0, y: 0 });
   const [startingMousePosition, setStartingMousePosition] = createSignal({
     x: 0,
     y: 0,
   });
-  const [droppables, setDropables] = createSignal([] as Droppable[]);
   const [cursorDown, setCursorDown] = createSignal(false);
   const [target, setTarget] = createSignal(null);
   const [previousTarget, setPreviousTarget] = createSignal(null);
   const [previousPosition, setPreviousPosition] = createSignal({ x: 0, y: 0 });
   const [overlapped, setOverlapped] = createSignal(null);
   const [hovered, setHovered] = createSignal(null);
+
+
+  //all variables for virtual mouse
+  const [virtualMousePosition, setVirtualMousePosition] = createSignal({ x: 0, y: 0 });
+  const [virtualStartingMousePosition, setVirtualStartingMousePosition] = createSignal({
+    x: 0,
+    y: 0,
+  });
+  const [virtualCursorDown, setVirtualCursorDown] = createSignal(false);
+  const [virtualTarget, setVirtualTarget] = createSignal(null);
+  const [virtualPreviousTarget, setVirtualPreviousTarget] = createSignal(null);
+  const [virtualPreviousPosition, setVirtualPreviousPosition] = createSignal({ x: 0, y: 0 });
+  const [virtualOverlapped, setVirtualOverlapped] = createSignal(null);
+  const [virtualHovered, setVirtualHovered] = createSignal(null);
+
+
+  const [droppables, setDropables] = createSignal([] as Droppable[]);
+
+
+
   const globalDragStart: Function[] = [];
   const globalDragEnd: Function[] = [];
 
@@ -98,6 +115,8 @@ export function DragDropContextProvider(props: any) {
       setPreviousTarget(target());
       setTarget(null);
     });
+
+    //create listeners for virtual mouses
   });
 
   //injection function
@@ -148,6 +167,7 @@ export function DragDropContextProvider(props: any) {
     };
     onMount(() => {
       draggable.ref.addEventListener("pointerdown", (e : any) => {
+        setTarget(draggable);
         for(let i = 0; i < draggable.dragStart.length; i++){
             draggable.dragStart[i](draggable);
         }
@@ -157,13 +177,32 @@ export function DragDropContextProvider(props: any) {
           setPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
           setStartingMousePosition({x: e.clientX, y: e.clientY});
           setCursorDown(true);
-          setTarget(draggable);
           // setHovered(draggable.ref.parentElement);
           draggable.rectangle = draggable.ref.getBoundingClientRect();
 
       
           });
+      //create listener for virtual pointerdown
+      draggable.ref.addEventListener("virtualpointerdown", (e : any) => {
+        setTarget(draggable);
+        for(let i = 0; i < draggable.dragStart.length; i++){
+            draggable.dragStart[i](draggable);
+        }
+        for(let i = 0; i < globalDragStart.length; i++){
+            globalDragStart[i](draggable);
+        }
+          setPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
+          setStartingMousePosition({x: e.clientX, y: e.clientY});
+          setCursorDown(true);
+          // setHovered(draggable.ref.parentElement);
+          draggable.rectangle = draggable.ref.getBoundingClientRect();
+
+      
+          });
+
+
     });
+    
 
     return draggable;
   };
