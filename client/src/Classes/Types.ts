@@ -59,24 +59,28 @@ export class Notification {
     }
   }
   
-  export class PositionNotification {
+  export class VirtualMouseEvent {
     from: User;
     to: User;
     position: Position;
     screen: Position;
-    type: string = "position";
+    type: string = "virtualMouseEvent";
+    eventType: string;
     chessBoardWidth: number;
     constructor(
       from: User,
       to: User,
       position: Position,
-      chessBoardWidth: number
+      chessBoardWidth: number,
+      eventType: string
+
     ) {
       this.from = from;
       this.to = to;
       this.position = position;
       this.screen = new Position(window.innerWidth, window.innerHeight);
       this.chessBoardWidth = chessBoardWidth;
+      this.eventType = eventType;
     }
   }
   

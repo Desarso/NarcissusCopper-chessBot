@@ -63,10 +63,6 @@ export class ChessWebSocket{
         });
         this.ws.addEventListener("message", (e) => {
             let data = JSON.parse(e.data);
-            //process positions 
-            if(data.type === "position"){
-                this.setVirtualPosition(data);
-            }
             //process users
             if(data.users){
                 this.pingsSinceResponse--;
@@ -90,34 +86,7 @@ export class ChessWebSocket{
     }
 
 
-    public setVirtualPosition(data: any) {
-        let oponentsCursor = document.querySelector(".oponentsCursor");
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-        let x = data.position.x;
-        let y = data.position.y;
-        let sourceChessBoardCenterX = data.screen.x/2;
-        let sourceChessBoardCenterY = data.screen.y/2;
-        let xOffSet = x - sourceChessBoardCenterX;
-        let yOffSet = y - sourceChessBoardCenterY;
-        let destinationChessBoardCenterX = windowWidth / 2;
-        let destinationChessBoardCenterY = windowHeight / 2;
-        let destinationChessboardWidth = document.querySelector(".chessBoard").offsetWidth;
-        let destinationChessboardHeight = destinationChessboardWidth;
-        let scaleFactorX  = destinationChessboardWidth / data.chessBoardWidth;
-        let scaleFactorY  = destinationChessboardHeight / data.chessBoardWidth;
-        let scaledXOffset = xOffSet * scaleFactorX;
-        let scaledYOffset = yOffSet * scaleFactorY;
-        destinationChessBoardCenterX = window.innerWidth / 2;
-        destinationChessBoardCenterY = window.innerHeight / 2;
-        let alignedCursorX = destinationChessBoardCenterX + scaledXOffset;
-        let alignedCursorY = destinationChessBoardCenterY + scaledYOffset;
-        let invertedCursorX = destinationChessBoardCenterX - scaledXOffset;
-        let invertedCursorY = destinationChessBoardCenterY - scaledYOffset;
-        console.log("xOffSet", xOffSet, "yOffSet", yOffSet);
-        oponentsCursor.style.transform = `translate(${invertedCursorX-5}px, ${invertedCursorY-5}px)`;
-        return;
-    }
+   
 
     close(){
         this.ws.close();

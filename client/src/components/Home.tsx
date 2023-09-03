@@ -17,8 +17,9 @@ import axios from "axios";
 import MoveSound from "../Soundfiles/move-self.mp3";
 import CaptureSound from "../Soundfiles/capture.mp3";
 import BallsBackground from "./BallsBackground";
-import { Position, PositionNotification, User, CreateGameNotification } from "../Classes/Types";
+import { User, CreateGameNotification } from "../Classes/Types";
 import { ChessWebSocket } from "../Classes/ChessWebSockets";
+import { VirtualMouse } from "../Classes/VirtualMouse";
 
 type Props = {};
 
@@ -59,7 +60,6 @@ function Home({}: Props) {
   onMount(async () => {
     window.users = users;
     checkforUser();
-    updatePosition();
     listenForUserUpdates();
     document.addEventListener("mousedown", (e) => onMouseDown(e));
     document.ws = chessWebSocket.ws;
@@ -83,35 +83,10 @@ function Home({}: Props) {
     })
   }
 
-  function updatePosition() {
-    let index = 0;
-    document.addEventListener("mousemove", (event) => {
-      if (index % 5 != 0) {
-        if (index == 100) {
-          index = 0;
-        }
-        index++;
-        return;
-      }
-      if (inGame() === false) return;
-      let self = user();
-      let other =
-        notificationData().from.id == self.id
-          ? notificationData().to
-          : notificationData().from;
-      let chessBoard = document.querySelector(".chessBoard");
-      let chessBoardWidth = chessBoard.offsetWidth;
-      let position = new Position(event.clientX, event.clientY);
-      let positionNotification = new PositionNotification(
-        self,
-        other,
-        position,
-        chessBoardWidth
-      );
-      chessWebSocket.ws.send(JSON.stringify(positionNotification));
-    });
-  }
+  //here I send the position info
 
+
+  //prevent double click from selecting text
   function onMouseDown(mouseEvent: any) {
     // Check if the event is a double click
     if (mouseEvent.detail > 1) {
@@ -119,7 +94,7 @@ function Home({}: Props) {
     }
   }
 
-
+  //get user from local storage
   async function checkforUser() {
     //check for user in local storage
     //check for user in session storage
@@ -160,6 +135,7 @@ function Home({}: Props) {
     }
   }
 
+  //sync UI board with backend board
   function updateBoard() {
     //rip all pieces from board
     // //put em back
@@ -292,12 +268,14 @@ function Home({}: Props) {
     board().displayBoard();
   }
 
+  //to-do
   function checkMateFunction() {
     //need to write this function
     //I must delete game from backend
     //and
   }
 
+  //revise
   async function updateAllBoards(result: any) {
     if (result === undefined) {
       console.log("updating boards");
@@ -345,6 +323,7 @@ function Home({}: Props) {
     }
   }
 
+  //syncs board with give fen
   function syncFens(newFen: string) {
     let newBoard = new Board(undefined, newFen);
     board().board = newBoard.board;
@@ -353,6 +332,7 @@ function Home({}: Props) {
     return;
   }
 
+  //receive notification and fire off event
   function onNotificationReceived(notification: any) {
     setNotificationData(notification);
     //I need to either start a game or join a game
@@ -368,16 +348,18 @@ function Home({}: Props) {
       //what we need to do it make sure to ping the server to let it know we are alive
       setInGameColor(notification.fromUserColor);
       setInGame(true);
+      let virtualMouse = new VirtualMouse(chessWebSocket.ws, user(), notification.to);
+      virtualMouse.init();
+      console.log(virtualMouse);
       removeBackDrop();
       console.log("in game", inGame());
       console.log("in game color", inGameColor());
-      joinExistingGame(notification);
     } else if (notification.type == "position") {
       console.log(notification);
     }
   }
 
-
+  //creates a new game after accepting a notification
   async function createAndJoinGame(notification: any) {
     console.log("we must create a game");
     //we are the receiving(to) user, we create the game
@@ -385,19 +367,23 @@ function Home({}: Props) {
       notification.from,
       notification.to
     );
-    //need to use ChessWebSockets object
+    //send websocket notification
     try {
       chessWebSocket.ws.send(JSON.stringify(createGameNotif));
       setInGameColor(
         createGameNotif.fromUserColor === "white" ? "black" : "white"
       );
       setInGame(true);
+      let virtualMouse = new VirtualMouse(chessWebSocket.ws, user(), notification.from);
+      virtualMouse.init();
+      console.log(virtualMouse);
       removeBackDrop();
     } catch (error) {
       console.log("error: ", error);
     }
   }
 
+  //removes modal backdrop after solid js removes the modal
   function removeBackDrop() {
     let backDrop = document.querySelector(".modal-backdrop ");
     if (backDrop != null) {
@@ -405,9 +391,7 @@ function Home({}: Props) {
     }
   }
 
-  function joinExistingGame(notification: any) {
-    console.log("create a game");
-  }
+
 
   //need to highlight the squares that are the last move
 
