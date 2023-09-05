@@ -1,8 +1,9 @@
 // type Props = {};
 import { Move, TEST, Board } from "../Classes/chessClasses";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show, Setter, Accessor } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
 import board from "./WhiteChessboard";
+import { updateMove } from "../Classes/Types";
 import ChessSquare from "./ChessSquare";
 let mainTest = new TEST();
 mainTest.runAllTests();
@@ -12,6 +13,10 @@ type Props = {
   updateBlackBoard: any;
   setLastMove: any;
   lastMove: any;
+  movePieceSound: any;
+  capturePieceSound: any;
+  setMoves: Setter<updateMove[]>;
+  moves: Accessor<updateMove[]>;
 };
 
 // board.movePiece("e2", "e2");
@@ -23,6 +28,10 @@ function BlackChessboard({
   updateBlackBoard,
   setLastMove,
   lastMove,
+  movePieceSound,
+  capturePieceSound,
+  setMoves,
+  moves,
 }: Props) {
   board().displayBoard();
 
@@ -147,6 +156,10 @@ function BlackChessboard({
               color="black"
               setLastMove={setLastMove}
               lastMove={lastMove}
+              movePieceSound={movePieceSound}
+              capturePieceSound={capturePieceSound}
+              setMoves={setMoves}
+              moves={moves}
             />
           )}
         </For>

@@ -1,68 +1,91 @@
 import { createSignal, onMount, Accessor, Setter } from "solid-js";
-import { User } from "./Home";
+import { User } from "../Classes/Types";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";
 type Props = {
   user : Accessor<User | undefined>,
   setUser : Setter<User | undefined>,
   setInSession : Setter<boolean>,
-  pingWebSocket : (user: User) => void,
+  chessWebSocket : ChessWebSocket
 };
 
 const GlassOverlay = ({
   user,
   setUser,
   setInSession,
-  pingWebSocket,
+  chessWebSocket,
 }: Props) => {
 
-  const [username, setUsername] = createSignal(user()?.username);
+  let username = ""
+  const [CatUrl, setCatUrl] = createSignal<string>("");
+
 
   const onButtonCLick = async () => {
-    //here I add the username to the session and local storage
-    //but first I need to generate a user ID
-    let usernameInputed = username();
-    if (usernameInputed == "") {
+    
+    if(username === "") {
       alert("Please enter a username");
       return;
     }
-    if(username() === user()?.username) {
+
+    if(username.length > 10) {
+      username = username.slice(0, 10);
+    }
+    if(username === user()?.username) {
+      let newUser = new User(
+          generateUserid(),
+          username,
+          CatUrl()
+      )
+      setUser(newUser);
       setInSession(true);
+      chessWebSocket.beginPinging(user);
       return;
     }
     let newUser = new User(
       generateUserid(),
-      username(),
-      await getRandomCatLink(),
+      username,
+      CatUrl()
     )
+
+
     setUser(newUser);
-    pingWebSocket(newUser);
+    console.log()
+    chessWebSocket.beginPinging(user);
+    console.log(newUser, newUser.id)
+    chessWebSocket.pingWebSocket(newUser);
 
     sessionStorage.setItem(
       "gabrielmalek/chess.data",
-      JSON.stringify({ id: newUser.id, username: newUser.username, cat_url: newUser.cat_url })
+      JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
     );
     localStorage.setItem(
       "gabrielmalek/chess.data",
-      JSON.stringify({ id: newUser.id, username: newUser.username, cat_url: newUser.cat_url })
+      JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
     )
     setInSession(true);
       return;
   };
 
+  async function getRandomCatLink() {
+    const response =  await fetch("https://api.thecatapi.com/v1/images/search");
+    const data = await response.json();
+    return data[0].url;
+  }
+
   onMount(() => {
     //add evnet listener to the enter key
     document.addEventListener("keyup", function (event) {
-      console.log(event.key)
-      if (event.key === "Enter") {
-        console.log("enter key pressed");
-        onButtonCLick();
-      }
+      if (event.key === "Enter") onButtonCLick();
     });
     let input: any = document.getElementById("userNameInput");
     input?.focus();
     console.log(user()?.username)
     if(user()?.username !== undefined){
       input.value = user()?.username;
+      username = input.value;;
     }
+    getRandomCatLink().then((url) => {
+      setCatUrl(url);
+    });
   });
 
   return (
@@ -73,7 +96,7 @@ const GlassOverlay = ({
           type="username"
           placeholder="username"
           id="userNameInput"
-          onKeyUp={(e) => setUsername(e.target?.value)}
+          onKeyUp={(e) => username = e.currentTarget.value}
         />
       </div>
       <button class="submitUsernameButton" onClick={() => onButtonCLick()}>
@@ -108,9 +131,4 @@ function generateUserid() {
   return userid;
 };
 
-async function getRandomCatLink() {
-  //fetch https://api.thecatapi.com/v1/images/search
-  const response = await fetch("https://api.thecatapi.com/v1/images/search");
-  const data = await response.json();
-  return data[0].url;
-}
+

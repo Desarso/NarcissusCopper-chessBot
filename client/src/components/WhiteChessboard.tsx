@@ -1,6 +1,7 @@
 // type Props = {};
 import { Move, TEST } from "../Classes/chessClasses";
-import { createSignal, For, Show } from "solid-js";
+import { updateMove } from "../Classes/Types";
+import { createSignal, For, Show, Setter, Accessor } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
 import ChessSquare from "./ChessSquare";
 let mainTest = new TEST();
@@ -11,6 +12,10 @@ type Props = {
   updateBoard: any;
   setLastMove: any;
   lastMove: any;
+  movePieceSound: any;
+  capturePieceSound: any;
+  setMoves: Setter<updateMove[]>;
+  moves: Accessor<updateMove[]>;
 };
 
 function WhiteChessboard({
@@ -18,6 +23,10 @@ function WhiteChessboard({
   updateBoard,
   setLastMove,
   lastMove,
+  movePieceSound,
+  capturePieceSound,
+  setMoves,
+  moves,
 }: Props) {
   board().displayBoard();
 
@@ -49,6 +58,11 @@ function WhiteChessboard({
   async function handleSelection(selection: string) {
     setInlaySelection(selection);
     setDisplayInlay(false);
+    let lastMove = moves()[moves().length - 1];
+    lastMove.crownedTo = selection.toLowerCase();
+    let newMoves = moves().splice(0, moves().length - 1);
+    newMoves.push(lastMove);
+    setMoves(newMoves);
     //the index will be the bottom of the board depeiing on the color in this case
     //it is white so the bottom is 0
     //and the x-cord is 7
@@ -140,6 +154,10 @@ function WhiteChessboard({
               color="white"
               setLastMove={setLastMove}
               lastMove={lastMove}
+              movePieceSound={movePieceSound}
+              capturePieceSound={capturePieceSound}
+              setMoves={setMoves}
+              moves={moves}
             />
           )}
         </For>

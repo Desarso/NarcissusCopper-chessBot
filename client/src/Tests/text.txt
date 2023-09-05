@@ -1,0 +1,6 @@
+I can triggerEvents programatically meaning I can
+automatically test the functionality of the UI
+I want to create a test function that will automatically checklist
+all of the UI's functionality.
+
+it should

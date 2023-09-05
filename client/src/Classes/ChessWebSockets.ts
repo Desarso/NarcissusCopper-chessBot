@@ -1,0 +1,154 @@
+import { User, ChessGameUpdate, updateMove } from "./Types";
+import { Accessor, Setter } from "solid-js"
+import { Board } from "./chessClasses";
+
+
+
+export class ChessWebSocket{
+    
+    url = "wss://gabrielmalek.com/v1/api/chessSub";
+    // url = "ws://localhost:8080/chessSub";
+    ws: WebSocket = this.createWS(this.url);
+    pingsSinceResponse: number = 0;
+    board : Accessor<Board>;
+    setBoard: Setter<Board>;
+    setUser: Setter<User>;
+    user: Accessor<User>;
+    pings: number = 0;
+
+    constructor(board: Accessor<Board>, setBoard: Setter<Board>, user: Accessor<User>, setUser: Setter<User>){
+        this.createListeners();
+        this.board = board;
+        this.setBoard = setBoard;
+        this.setUser = setUser;
+        this.user = user;
+
+    }
+
+    public sendChessUpdate(board: Board, user: User, opponent: User, moves: updateMove[]){
+        let chessUpdate = new ChessGameUpdate(
+            board.fen,
+            user,
+            opponent,
+            board.currentTurnColor,
+            moves
+        )
+        this.ws.send(JSON.stringify(chessUpdate));
+    }
+
+    unloadWebSockets(){
+        window.onbeforeunload = () => {
+            this.ws.close();
+        };
+    }
+
+    public createWS(url:string) {
+        const socket = new WebSocket(url);
+        return socket;
+    }
+
+    public pingWebSocket(user : User) {
+        //check if websocket is open
+        if (this.ws.readyState != 3) {
+            // console.log("pinging ws");
+           if (this.ws.readyState === 1) {
+                if(this.pings < -10){
+                    this.pings = 0;
+                }
+                if(this.pings > 10){
+                    this.ws.close();
+                    let newUser = new User(
+                        this.generateUserid(),
+                        this.user().username,
+                        this.user().CatUrl
+                    )
+                    this.setUser(newUser);
+                    this.pings = 0;
+                    return;
+                }
+                this.pings++;
+                this.ws.send(JSON.stringify(user));
+            }
+        }
+    }
+
+    public beginPinging(user : Accessor<User>) {
+        setInterval(() => {
+            this.pingWebSocket(user());
+        }, 3000);
+    }
+
+    public reconnectWebSocket() {
+        //check if websocket is open
+        this.ws = this.createWS(this.url);
+        this.createListeners();
+    }
+
+    public createListeners() {
+        
+        this.ws.addEventListener("open", () => {
+            console.log("ws open");
+        });
+        this.ws.addEventListener("close", () => {
+            console.log("ws closed");
+            this.reconnectWebSocket();
+        });
+        this.ws.addEventListener("message", (e) => {
+            this.pings--;
+            let data = JSON.parse(e.data);
+            //process users
+            if(data.users){
+                this.pingsSinceResponse--;
+                //we need to create event usersUpdated
+                let event = new CustomEvent("usersUpdated");
+                event.data = data.users;
+                document.dispatchEvent(event);
+            }
+            //process notification
+            if(data.type === "promptForGame" || data.type == "createGame" ){
+                let event = new CustomEvent("notification");
+                event.data = data;
+                document.dispatchEvent(event);
+            }
+
+            //process game update
+            if(data.type === "chessGameUpdate"){
+                console.log("chess game update", data);
+                if(data.fen != this.board().fen){
+                    //check which board is older
+                    let newBoard = new Board(data.fen);
+                    if(this.board().fullMoveNumber < newBoard.fullMoveNumber ){
+                        this.setBoard(newBoard);
+                        let event = new CustomEvent("updateBoard");
+                        document.dispatchEvent(event);
+                    }
+                }
+
+            }
+
+        });
+    }
+
+    public sendNotification(notification: Notification){
+        console.log("sending notification", notification);
+        this.ws.send(JSON.stringify(notification));
+    }
+
+
+   
+
+    close(){
+        this.ws.close();
+    }
+
+    generateUserid() {
+        //generate string of 20 digits using a for loop
+        let userid = "";
+        for (let i = 0; i < 20; i++) {
+          userid += Math.floor(Math.random() * 10);
+        }
+        return userid;
+      };
+
+    
+}

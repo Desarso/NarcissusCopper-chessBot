@@ -1,6 +1,7 @@
-import { Show, createSignal, onMount } from "solid-js";
+import { Show, createSignal, onMount, Setter, Accessor } from "solid-js";
 import { className } from "solid-js/web";
 import { useDragDropContext } from "./DragDropContext";
+import {updateMove} from "../Classes/Types";
 
 
 type Props = {
@@ -19,6 +20,10 @@ type Props = {
   color: string;
   setLastMove: any;
   lastMove: any;
+  movePieceSound: any;
+  capturePieceSound: any;
+  setMoves: Setter<updateMove[]>;
+  moves: Accessor<updateMove[]>;
 };
 
 
@@ -40,7 +45,12 @@ function ChessSquare({
   color,
   setLastMove,
   lastMove,
+  movePieceSound,
+  capturePieceSound,
+  setMoves,
+  moves
 }: Props) {
+
 
 
 
@@ -50,9 +60,9 @@ function ChessSquare({
       updateBoard();
     };
     window.board = board;
+    // capturePieceSound.play();
   });
 
-  const [moves, setMoves] = createSignal([]);
 
 
 
@@ -67,19 +77,10 @@ function ChessSquare({
     const droppable = createDroppable(id);
 
     onHoverOver((e: any) => {
-      // console.log("hover over");
-      // console.log(e);
-      // droppable.droppable = false;
-      //should only accept a drop if it is a legal move;
-      // if(droppable.ref.classList.contains("lighterBackground")){
-      //     droppable.droppable = true;
-      // }
       droppable.ref.classList.add("hovered");
-      // console.log(e.data.legalPieceMoves);
     }, droppable);
 
     onHoverOut((e: any) => {
-      // console.log("hover out");
       droppable.ref.classList.remove("hovered");
     }, droppable);
 
@@ -170,31 +171,16 @@ function ChessSquare({
 
     onDragEnd(async (e: any) => {
       if(displayInlay()) return;
-      // console.log("end")
+      // console.log(e)
       if (e === null) return;
       e.occupied = false;
-      console.log(e.ref.children);
+      // console.log(e.ref.children);
       if(e.ref.querySelector(".circle") === null){
         return;
       }
       
       let previousChild = e.ref.querySelector(".piece");
-      // previousChild = e.ref.querySelector
-      // console.log("previous",previousChild);
-      // console.log(e.ref.querySelector(".piece") == null);
-      // for(let i = 0; i < e.ref.children.length; i++){
-      //   if(!e.ref.children[i].classList.contains("number-right") || !e.ref.children[i].classList.contains("number-left")){
-      //     previousChild = e.ref.children[i];
-      //   }
-      // }
-      // console.log("prev",previousChild);
-      // console.log("id",e.ref.id)
-      // console.log("ending",endingIndex);
-      // console.log("starting",startingIndex);
-
-
-      // console.log(draggable.id)
-      console.log("previous", previousChild);
+      // console.log("previous", previousChild);
       await delay(1);
       let oppositeColor;
       if (previousChild?.id === draggable?.id) {
@@ -202,35 +188,51 @@ function ChessSquare({
       }else{
         endingIndex = e.ref.id;
       }
-      console.log("draggable", startingIndex);
-      console.log("ending", endingIndex);
-      console.log(e.ref.id)
+      // console.log("draggable", startingIndex);
+      // console.log("ending", endingIndex);
+      // console.log(e.ref.id)
         if (endingIndex === startingIndex) return;
         // // // console.log("legal move");
         let previousBoard = board().board;
 
 
-        console.log("moving piece", startingIndex, endingIndex);
+        // console.log("moving piece", startingIndex, endingIndex);
         // console.log(previousChild.id, draggable.id)
         // here I need to delay this move if I am crowning a pawn
+        let newMove = new updateMove(
+          startingIndex,
+          endingIndex,
+          board().fen,
+        )
         board().movePiece(startingIndex, endingIndex);
+        // console.log("moved piece", startingIndex, endingIndex);
+        // board().displayBoard();
+        
         // //this is where I move the piece
 
 
-
+        //here I check if I ate a piece and add it to the list of eaten pieces
         if (previousChild?.classList?.contains("piece")) {
           eatenPieces.push(previousChild);
+          newMove.eating = true;
+          newMove.atePiece = board().getPieceAtPosition(endingIndex)?.type;
+          let sound = capturePieceSound.play();
           // console.log(eatenPieces);
+        }else{
+          // console.log("sound")
+          let sound = movePieceSound.play();
+
         }
 
-        let newBoard = board().board;
-        let numberOfChanges = 0;
-        // console.log(board().inCheck);
+        //checks if I am crowning and only send move if not
         let piece = board().getPieceAtPosition(endingIndex);
         if (piece.type === "p" && piece.color === color) {
             if (endingIndex[1] === "8" || endingIndex[1] === "1") {
+              newMove.crowning = true;
               setDisplayInlay(true);
               setDisplayInlayX(piece.position.pos.x);
+
+
             }else{
               let move = { start: startingIndex, end: endingIndex };
               // updateGameQL(move, board().fen);
@@ -239,19 +241,16 @@ function ChessSquare({
             let move = { start: startingIndex, end: endingIndex };
             // updateGameQL(move, board().fen);
           }
-        //I'm gonna implement the crowning logic here,
-        //there is a problem, the board is going to have a pawn of opposite color
-        //at the end of the board
-        //when that happend I need make a popup appear that allows for chess selection
-        //what I need is an absolute position inlay that appears on the board
-        //it extends for four spaces downwards, but has not border, and the backgroud is white
 
-
+      
+        setMoves([...moves(), newMove]);
         updateBoard();
-
+        
+        //fix issues with numbers
         if(previousChild?.classList?.contains("number-right") || previousChild?.classList?.contains("number-left")){
           e.ref.appendChild(previousChild);
         }
+
 
         //highlight last move in green
         setLastMove({ from: startingIndex, to: endingIndex });
@@ -270,7 +269,7 @@ function ChessSquare({
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} style={`${canDrag ? "" : ""}`} id={id}>
+      <section ref={draggable.ref} class={`${className} ${canDrag ? "canDrag" : "noDrag"}`} id={id}>
         {/* //pointer-events: none; */}
         <div class=""> </div>
       </section>

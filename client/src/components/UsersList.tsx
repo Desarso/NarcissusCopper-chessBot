@@ -1,27 +1,27 @@
-import { For, Show, createSignal, onMount, Accessor } from "solid-js";
+import { For, Show, createSignal, onMount, Accessor, Setter } from "solid-js";
 import CatLogo from "./CatLogo";
-import { User } from "./Home";
+import { User, Notification } from "../Classes/Types";
 import axios from "axios";
 import BellIcon from "./BellIcon";
 import { domainToUnicode } from "url";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";;
 
 type Props = {
   users: Accessor<User[]>;
   user: Accessor<User | undefined>;
+  setNotificationUser: Setter<User | undefined>;
+  onNotificationReceived: (arg1: Notification) => void;
+  chessWebSocket: ChessWebSocket;
 };
 
-export class Notification {
-  from: User;
-  to: User;
-  type: string;
-  constructor(from: User, to: User, type: string) {
-    this.from = from;
-    this.to = to;
-    this.type = type;
-  }
-}
 
-function UsersList({ users, user }: Props) {
+function UsersList({
+  users,
+  user,
+  setNotificationUser,
+  onNotificationReceived,
+  chessWebSocket,
+}: Props) {
   const [selectedUser, setSelectedUser] = createSignal<User>();
   const [notificationSent, setNotificationSent] = createSignal(false);
   const [notificationsReceived, setNotificationsReceived] = createSignal<
@@ -33,18 +33,16 @@ function UsersList({ users, user }: Props) {
   const [showNotification, setShowNotification] = createSignal(false);
 
   onMount(() => {
-    document.notifications = notificationsReceived;
-    const url = "http://localhost:8080/chessNotificationsSub";
-    const urlWithQuery = `${url}?userID=${user()?.id}`;
-    const eventSource = new EventSource(urlWithQuery);
 
-    eventSource.onopen = (event) => {
-      console.log("Connection opened");
-    };
-
-    eventSource.onmessage = (event) => {
+    document.addEventListener("notification", (event) => {
+      console.log("notification event received");
       const notification = JSON.parse(event.data);
-      console.log("notification received");
+      onNotificationReceived(notification);
+      //I only want to handle notifications of type promptForGame in here
+      if (notification.type != "promptForGame")return;
+      setNotificationUser(notification.from);
+    
+      console.log("notification received:", notification);
 
       for (let i = 0; i < notificationsReceived().length; i++) {
         if (notificationsReceived()[i].from.id == notification.from.id) {
@@ -55,14 +53,11 @@ function UsersList({ users, user }: Props) {
       newNotificationsReceived.push(notification);
       setNotificationsReceived(newNotificationsReceived);
       setShowNotification(true);
+      
+    });
 
-      // Handle the SSE event data here
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("Error occurred:", error);
-    };
   });
+  
 
   function clickUser(user: any) {
     // console.log("selected user: ", user);
@@ -72,7 +67,7 @@ function UsersList({ users, user }: Props) {
     modal?.style.setProperty("display", "flex");
   }
 
-  async function sendNotification(notification: Notification) {
+  async function sendNotification(notification: any) {
     for (let i = 0; i < notificationsSent().length; i++) {
       if (notificationsSent()[i].to.id == notification.to.id) {
         return;
@@ -81,14 +76,7 @@ function UsersList({ users, user }: Props) {
     let newNotificationsSent = notificationsSent();
     newNotificationsSent.push(notification);
     setNotificationsSent(newNotificationsSent);
-
-    try {
-      const url = "http://localhost:8080/chessNotifications";
-      const response = await axios.post(url, notification);
-      console.log("response: ", response.status);
-    } catch (error) {
-      console.log("error: ", error);
-    }
+    chessWebSocket.sendNotification(notification);
   }
 
   return (
@@ -100,9 +88,9 @@ function UsersList({ users, user }: Props) {
       <div class="glassOverlay">
         <ul class="list">
           <li class="listItem" id="mainUser">
-            <div class="text">{user()?.username}</div>
-            <CatLogo catLink={user()?.cat_url} />
-            <button onClick={() => console.log(users())}>🠮</button>
+            <div class="text">{user().username}</div>
+            <CatLogo catLink={user().CatUrl} />
+            {/* <button onClick={() => console.log(users())}>🠮</button> */}
           </li>
           <For each={users()}>
             {(singleUser) => (
@@ -115,8 +103,8 @@ function UsersList({ users, user }: Props) {
                 onClick={() => clickUser(singleUser)}
               >
                 <div class="text">{singleUser.username}</div>
-                <CatLogo catLink={singleUser.cat_url} />
-                <button onClick={() => console.log(users())}>🠮</button>
+                <CatLogo catLink={singleUser.CatUrl} />
+                {/* <button onClick={() => console.log(users())}>🠮</button> */}
               </li>
             )}
           </For>
@@ -170,7 +158,7 @@ function UsersList({ users, user }: Props) {
                   let newNotification = new Notification(
                     user(),
                     selectedUser(),
-                    "playChess"
+                    "promptForGame"
                   );
                   sendNotification(newNotification);
                   if (notificationSent() == false) {

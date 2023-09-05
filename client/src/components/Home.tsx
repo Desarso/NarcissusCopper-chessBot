@@ -6,132 +6,100 @@ import {
   Show,
   createEffect,
   onCleanup,
+  from,
 } from "solid-js";
 import WhiteChessboard from "./WhiteChessboard";
 import BlackChessboard from "./BlackChessboard";
 import GlassOverlay from "./GlassOverlay";
 import UsersList from "./UsersList";
 import { Board, Move } from "../Classes/chessClasses";
-import { createWS, createWSState } from "@solid-primitives/websocket";
-import { createEventSignal } from "@solid-primitives/event-listener";
+import axios from "axios";
+import MoveSound from "../Soundfiles/move-self.mp3";
+import CaptureSound from "../Soundfiles/capture.mp3";
+import BallsBackground from "./BallsBackground";
+import { User, CreateGameNotification } from "../Classes/Types";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";
+import { VirtualMouse } from "../Classes/VirtualMouse";
+import { updateMove } from "../Classes/Types";
+
 type Props = {};
 
-export class User {
-  id: string;
-  username: string;
-  cat_url: string;
-  last_seen: EpochTimeStamp = Date.now();
-  constructor(id: string, username: string, cat_url: string) {
-    this.id = id;
-    this.username = username;
-    this.cat_url = cat_url;
-  }
-}
+
 
 //here I choose the color of board, but this is too soon, I need to create a pop up screen to choose a username
 //that also checks for a username, in both session, and local storage. And, then requests the graphql to see if the user exisits,
 //and if there are any active games, and if so, it will load the game. Otherwise, it will create the user, in the graphl, or update it.
 
 function Home({}: Props) {
+  const movePieceSound = new Audio(MoveSound);
+  const capturePieceSound = new Audio(CaptureSound);
   const [board, setBoard] = createSignal<Board>(new Board());
   const [inGame, setInGame] = createSignal<boolean>(false);
   const [inGameColor, setInGameColor] = createSignal<string>("");
-  const [gameId, setGameId] = createSignal<string>("");
   const [allPieces, setAllPieces]: any = createSignal([]);
   const [lastMove, setLastMove] = createSignal<Move>();
   const [checkmate, setCheckmate] = createSignal<boolean>(false);
+  const [moves, setMoves] = createSignal<updateMove[]>([]);
 
   const [user, setUser] = createSignal<User>();
+  const [opponent, setOpponent] = createSignal<User>();
   const [users, setUsers] = createSignal<User[]>([]);
   const [inSession, setInSession] = createSignal<boolean>(false);
-  const [notificationUser, setNotificationUser]: any = createSignal(null);
-  const [notificationData, setNotificationData]: any = createSignal(null);
-  
-  const [ws, setWs] = createSignal<WebSocket>();
+  const [notificationUser, setNotificationUser] = createSignal<
+    User | undefined
+  >();
+  const [notificationData, setNotificationData] = createSignal(null);
 
-  const createWS = (url: string) => {
-    const socket = new WebSocket(url);
-    return socket;
-  };
+  const chessWebSocket = new ChessWebSocket(board, setBoard, user, setUser);
 
-
-  function pingWebSocket(user : User) {
-    if (inSession() && !inGame()) {
-      ws().send(JSON.stringify(user));
-    }else if(inSession() && inGame() && ws()?.close()){
-      ws().close();
-    }
-  };
 
   onCleanup(() => {
-    if (ws()) {
-      ws().close();
+    if (chessWebSocket.ws) {
+      chessWebSocket.close();
     }
   });
 
-  // const ws : WebSocket = createWS("ws://localhost:8080/chessGame")
-
-  // // ws.send("hello world");
-  // // const messageEvent = createEventSignal(ws, "message");
-
   onMount(async () => {
+    window.users = users;
     checkforUser();
-    connectUsersWebSocket();
-    document.ws = ws;
-    document.setInGame = setInGame;
-    document.addEventListener("mousedown", onMouseDown);
-
+    listenForUserUpdates();
+    document.addEventListener("mousedown", (e) => onMouseDown(e));
+    document.ws = chessWebSocket.ws;
   });
 
+  function listenForUserUpdates() {
+    document.addEventListener("usersUpdated", (event) => {
+      let newUsers = event.data.filter((dataUser) => user().id != dataUser.id);
+      setUsers([...newUsers]);
+    });
+    document.addEventListener("notification", (event) => {
+      onNotificationReceived(event.data);
+    });
+    document.addEventListener("updateUser", (event) => {
+      console.log("update user event received", event.data.CatUrl);
+      let mainUser = document.querySelector("#mainUser");
+      console.log(mainUser.querySelector(".catLogo"));
 
-  function onMouseDown(mouseEvent) {
+      mainUser.querySelector(".catLogo").style.backgroundImage = "nothing"
+      // mainUser.querySelector(".catLogo").style.backgroundImage = `url("${event.data.CatUrl}");`;
+    });
+    document.addEventListener("updateBoard", (event) => {
+     updateAllBoards(event.data);
+    });
+  }
+
+  //here I send the position info
+
+
+  //prevent double click from selecting text
+  function onMouseDown(mouseEvent: any) {
     // Check if the event is a double click
     if (mouseEvent.detail > 1) {
       mouseEvent.preventDefault(); // Prevent text selection for double clicks
-    } 
+    }
   }
 
-  function connectUsersWebSocket() {
-    const socket = createWS("ws://localhost:8080/chessUsers");
-
-    socket.addEventListener("open", function (event) {
-      console.log("connected");
-      setWs(socket);
-      //and now we set ping interval
-      pingWebSocket(user());
-      setInterval(() => pingWebSocket(user()), 3000);
-    });
-
-    socket.addEventListener("message", function (e) {
-      // console.log("message", JSON.parse(e.data));
-      let data = JSON.parse(e.data);
-      //remove current user from data.users
-      let newUsers = data.users;
-      let index = newUsers.findIndex((singleUser: User) => singleUser.id == user().id);
-      let currentUser = newUsers.splice(index, 1);
-      let newTimeStamp = currentUser[0].last_seen;
-      let newUser = user();
-      newUser.last_seen = newTimeStamp;
-      if(newUser.username == ""){
-        return
-      }
-      setUser(newUser);
-      if(JSON.stringify(newUsers) == JSON.stringify(users())){
-        return
-      }
-      setUsers(newUsers);
-    });
-
-    socket.addEventListener("close", function (e) {
-      console.log("closed", e);
-      setWs(undefined);
-      if(inSession() && !inGame()){
-        setTimeout(connectUsersWebSocket, 3000);
-      }
-     
-    });
-  }
-
+  //get user from local storage
   async function checkforUser() {
     //check for user in local storage
     //check for user in session storage
@@ -142,13 +110,16 @@ function Home({}: Props) {
       console.log("session storage null");
     } else {
       console.log("session storage not null");
-      let user = new User(
+      let stringUser = new User(
         chessDataJson.id,
         chessDataJson.username,
-        chessDataJson.cat_url
+        chessDataJson.CatUrl
       );
-      setUser(user);
+      setUser(stringUser);
       setInSession(true);
+      chessWebSocket.beginPinging(user);
+      
+      console.log("should be pinging");
       return;
     }
     chessData = localStorage.getItem("gabrielmalek/chess.data");
@@ -159,30 +130,17 @@ function Home({}: Props) {
       let newUser = new User(
         chessDataJson.id,
         chessDataJson.username,
-        chessDataJson.cat_url
+        chessDataJson.CatUrl
       );
-      if(newUser.username == "" || newUser.username == undefined){
-        return
+      if (newUser.username == "" || newUser.username == undefined) {
+        return;
       }
       setUser(newUser);
       setInSession(false);
     }
   }
 
-  function generateRandomId() {
-    let randomId =
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15);
-    console.log("random id", randomId);
-    return randomId;
-  }
-
-  function chooseColor() {
-    let color = Math.random() > 0.5 ? "white" : "black";
-    console.log("color", color);
-    return color;
-  }
-
+  //sync UI board with backend board
   function updateBoard() {
     //rip all pieces from board
     // //put em back
@@ -315,57 +273,31 @@ function Home({}: Props) {
     board().displayBoard();
   }
 
+  //to-do
   function checkMateFunction() {
     //need to write this function
     //I must delete game from backend
     //and
   }
 
+  //revise
   async function updateAllBoards(result: any) {
+    // console.log(result);
     if (result === undefined) {
+      console.log("updating boards");
       updateBoard();
+      chessWebSocket.sendChessUpdate(
+        board(), 
+        user(),
+        opponent(),
+        moves()
+      )
+      return;
     }
 
-    console.log(result);
-    let move =
-      result.data.chessGamesSub.moves[
-        result.data.chessGamesSub.moves.length - 1
-      ];
-    // console.log("new move", move);
-    let newFen = result.data.chessGamesSub.fen;
-    if (newFen != board().fen) {
-      // await board().displayBoard();
-      board().movePiece(move.from, move.to);
-      //check new fen against old fen\
-      syncFens(newFen);
-      updateBoard();
-
-      console.log(move);
-      let lastMoveType = new Move(undefined, undefined, move.from, move.to);
-      setLastMove(lastMoveType);
-      let allDroppables = document.querySelectorAll(".chessSquare");
-      for (let i = 0; i < allDroppables.length; i++) {
-        if (
-          allDroppables[i].id === lastMove()?.start ||
-          allDroppables[i].id === lastMove()?.end
-        ) {
-          allDroppables[i]?.classList?.add("lastMove");
-        } else {
-          allDroppables[i]?.classList?.remove("lastMove");
-        }
-      }
-
-      if (board().findLegalMoves(board()).length == 0) {
-        setCheckmate(true);
-        console.log("checkmate", checkmate());
-        if (checkmate() == true) {
-          alert("Checkmate");
-          checkMateFunction();
-        }
-      }
-    }
   }
 
+  //syncs board with give fen
   function syncFens(newFen: string) {
     let newBoard = new Board(undefined, newFen);
     board().board = newBoard.board;
@@ -374,23 +306,90 @@ function Home({}: Props) {
     return;
   }
 
+  //receive notification and fire off event
+  function onNotificationReceived(notification: any) {
+    setNotificationData(notification);
+    //I need to either start a game or join a game
+    if (notification.type == "promptForGame") {
+      setNotificationData(notification);
+      console.log("prompt for game");
+      let button = document.querySelector("#notificationButton");
+      button.click();
+    } else if (notification.type == "createGame") {
+      console.log("received create game notification", notification);
+      setNotificationData(notification);
+      //game has already been created and we are already in it,
+      //what we need to do it make sure to ping the server to let it know we are alive
+      setInGameColor(notification.fromUserColor);
+      setInGame(true);
+      setOpponent(notification.to);
+      let virtualMouse = new VirtualMouse(chessWebSocket.ws, user(), notification.to);
+      virtualMouse.init();
+      console.log(virtualMouse);
+      removeBackDrop();
+      console.log("in game", inGame());
+      console.log("in game color", inGameColor());
+    } else if (notification.type == "position") {
+      console.log(notification);
+    }
+  }
+
+  //creates a new game after accepting a notification
+  async function createAndJoinGame(notification: any) {
+    console.log("we must create a game");
+    //we are the receiving(to) user, we create the game
+    let createGameNotif = new CreateGameNotification(
+      notification.from,
+      notification.to
+    );
+    //send websocket notification
+    try {
+      chessWebSocket.ws.send(JSON.stringify(createGameNotif));
+      setInGameColor(
+        createGameNotif.fromUserColor === "white" ? "black" : "white"
+      );
+      setInGame(true);
+      setOpponent(notification.from);
+      let virtualMouse = new VirtualMouse(chessWebSocket.ws, user(), notification.from);
+      virtualMouse.init();
+      console.log(virtualMouse);
+      removeBackDrop();
+    } catch (error) {
+      console.log("error: ", error);
+    }
+  }
+
+  //removes modal backdrop after solid js removes the modal
+  function removeBackDrop() {
+    let backDrop = document.querySelector(".modal-backdrop ");
+    if (backDrop != null) {
+      backDrop.remove();
+    }
+  }
+
+
+
   //need to highlight the squares that are the last move
 
   return (
     <>
+      <BallsBackground />
       <Show when={!inSession() && inGame() == false}>
         <GlassOverlay
           user={user}
           setUser={setUser}
           setInSession={setInSession}
-          pingWebSocket={pingWebSocket}
+          chessWebSocket={chessWebSocket}
         />
       </Show>
       <Show when={inSession() && inGame() == false}>
-        <UsersList 
-          users={users} 
+        <UsersList
+          users={users}
           user={user}
-          />
+          setNotificationUser={setNotificationUser}
+          onNotificationReceived={onNotificationReceived}
+          chessWebSocket={chessWebSocket}
+        />
       </Show>
 
       <Show
@@ -404,6 +403,10 @@ function Home({}: Props) {
           updateBoard={updateAllBoards}
           setLastMove={setLastMove}
           lastMove={lastMove}
+          movePieceSound={movePieceSound}
+          capturePieceSound={capturePieceSound}
+          setMoves={setMoves}
+          moves={moves}
         />
       </Show>
       <Show
@@ -416,6 +419,10 @@ function Home({}: Props) {
           updateBlackBoard={updateAllBoards}
           setLastMove={setLastMove}
           lastMove={lastMove}
+          movePieceSound={movePieceSound}
+          capturePieceSound={capturePieceSound}
+          setMoves={setMoves}
+          moves={moves}
         />
       </Show>
 
@@ -464,7 +471,7 @@ function Home({}: Props) {
                   class="btn btn-primary"
                   onClick={() => {
                     //
-                    console.log("need to do something");
+                    createAndJoinGame(notificationData());
                   }}
                 >
                   Play Chess
@@ -479,3 +486,4 @@ function Home({}: Props) {
 }
 
 export default Home;
+
