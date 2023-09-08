@@ -348,7 +348,6 @@ html, body, #root {
   border: black 2px solid;
   border-radius: 10px;
   background-color: transparent;
-  padding: 2vmin;
   transition: 0.1s;
 }
 .glassOverlay .userNameInput:focus-within {
@@ -361,6 +360,7 @@ html, body, #root {
   height: 100%;
   background-color: transparent;
   line-height: 0;
+  margin-left: 2vmin;
   font-family: Arial, sans-serif;
 }
 .glassOverlay .userNameInput input::placeholder {

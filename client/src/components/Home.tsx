@@ -86,10 +86,30 @@ function Home({}: Props) {
     document.addEventListener("updateBoard", (event) => {
      updateAllBoards(event.data);
     });
+    document.addEventListener("crowned", (event) => {
+      console.log("listened to crowned event");
+      crown(event.data);
+    
+    })
   }
 
   //here I send the position info
+  function crown(newBoard: Board){
+    let pawnIndex = chessWebSocket.crownedIndex;
+    let pawn = board().getPieceAtBoardIndex(pawnIndex);
+    let previousType = pawn.type;
+    let newPieceType = newBoard.board[pawnIndex];
+    let newLowerCasePieceType = newPieceType.toLowerCase();
+    pawn.type = newLowerCasePieceType;
+    board().board[pawnIndex] = newPieceType;
 
+  
+    let UIPiece = document.getElementById(pawn.position.position)?.children[0];
+    UIPiece?.classList.remove(previousType);
+    UIPiece?.classList.add(newPieceType);
+    
+    updateBoard();
+  }
 
   //prevent double click from selecting text
   function onMouseDown(mouseEvent: any) {

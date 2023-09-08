@@ -11,6 +11,7 @@ const rook = "r";
 export class V2D {
   x: number;
   y: number;
+  state = true;
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
@@ -612,67 +613,71 @@ export class Board {
     }
 
     if (piece.type === "k") {
-        if (piece.color === "white") {
+      if (piece.color === "white") {
         let startPos = new Position(start);
         let endPos = new Position(end);
-        if (startPos.pos.x - endPos.pos.x === 2 && this.castlingRights.includes("Q") ) {
+        if (
+          startPos.pos.x - endPos.pos.x === 2 &&
+          this.castlingRights.includes("Q")
+        ) {
           let rookStart = this.convertToPosition(startPos.boardIndex - 4);
           let rookEnd = this.convertToPosition(startPos.boardIndex - 1);
           //the problem here is that the king and rook move are just one move not two and so the whole thing is wrong.
           //instead of calling move piece I need to call the inner piece function.
           let rook = this.getPieceAtBoardIndex(startPos.boardIndex - 4);
           this.castlingRights = this.castlingRights.replace("KQ", "");
-          if(rook.color != undefined){
+          if (rook.color != undefined) {
             rook.move(rookEnd);
           }
-
         }
-        if (startPos.pos.x - endPos.pos.x === -2 && this.castlingRights.includes("K")) {
+        if (
+          startPos.pos.x - endPos.pos.x === -2 &&
+          this.castlingRights.includes("K")
+        ) {
           let rookStart = this.convertToPosition(startPos.boardIndex + 3);
           let rookEnd = this.convertToPosition(startPos.boardIndex + 1);
           let rook = this.getPieceAtBoardIndex(startPos.boardIndex + 3);
           console.log(rookEnd);
           console.log(rook);
           this.castlingRights = this.castlingRights.replace("KQ", "");
-          if(rook.color != undefined){
+          if (rook.color != undefined) {
             rook.move(rookEnd);
           }
-
         }
         this.castlingRights = this.castlingRights.replace("KQ", "");
-  
-        } else {
-          let startPos = new Position(start);
-          let endPos = new Position(end);
-          if (startPos.pos.x - endPos.pos.x === 2 && this.castlingRights.includes("q")) {
-            let rookStart = this.convertToPosition(startPos.boardIndex - 4);
-            let rookEnd = this.convertToPosition(startPos.boardIndex - 1);
-            let rook = this.getPieceAtBoardIndex(startPos.boardIndex - 4);
-            this.castlingRights = this.castlingRights.replace("kq", "");
-            if(rook.color != undefined){
-              rook.move(rookEnd);
-            }
-
-          }
-          if (startPos.pos.x - endPos.pos.x === -2 && this.castlingRights.includes("k")) {
-            let rookStart = this.convertToPosition(startPos.boardIndex + 3);
-            let rookEnd = this.convertToPosition(startPos.boardIndex + 1);
-            let rook = this.getPieceAtBoardIndex(startPos.boardIndex + 3);
-            this.castlingRights = this.castlingRights.replace("kq", "");
-            // console.log(rookEnd);
-            // console.log("start pos", startPos);
-            // console.log(rook.color);
-            if(rook.color != undefined){
-              rook.move(rookEnd);
-            }
-
-
-          }
+      } else {
+        let startPos = new Position(start);
+        let endPos = new Position(end);
+        if (
+          startPos.pos.x - endPos.pos.x === 2 &&
+          this.castlingRights.includes("q")
+        ) {
+          let rookStart = this.convertToPosition(startPos.boardIndex - 4);
+          let rookEnd = this.convertToPosition(startPos.boardIndex - 1);
+          let rook = this.getPieceAtBoardIndex(startPos.boardIndex - 4);
           this.castlingRights = this.castlingRights.replace("kq", "");
-
+          if (rook.color != undefined) {
+            rook.move(rookEnd);
+          }
         }
-      if(this.castlingRights === "") this.castlingRights = "-";
-        
+        if (
+          startPos.pos.x - endPos.pos.x === -2 &&
+          this.castlingRights.includes("k")
+        ) {
+          let rookStart = this.convertToPosition(startPos.boardIndex + 3);
+          let rookEnd = this.convertToPosition(startPos.boardIndex + 1);
+          let rook = this.getPieceAtBoardIndex(startPos.boardIndex + 3);
+          this.castlingRights = this.castlingRights.replace("kq", "");
+          // console.log(rookEnd);
+          // console.log("start pos", startPos);
+          // console.log(rook.color);
+          if (rook.color != undefined) {
+            rook.move(rookEnd);
+          }
+        }
+        this.castlingRights = this.castlingRights.replace("kq", "");
+      }
+      if (this.castlingRights === "") this.castlingRights = "-";
     }
 
     if (this.currentTurnColor === "black") {
@@ -701,21 +706,21 @@ export class Board {
       //logs whenever piece capture is possible
       let capturedPieceIndex = this.getPieceIndex(end);
       let capturedPiece = this.Pieces[capturedPieceIndex];
-      if(capturedPiece.type === "r"){
-        if(capturedPiece.color === "white"){
-          if(capturedPiece.getIndex() === 56){
+      if (capturedPiece.type === "r") {
+        if (capturedPiece.color === "white") {
+          if (capturedPiece.getIndex() === 56) {
             this.castlingRights = this.castlingRights.replace("Q", "");
-          }else if(capturedPiece.getIndex() === 63){
+          } else if (capturedPiece.getIndex() === 63) {
             this.castlingRights = this.castlingRights.replace("K", "");
           }
-      }else{
-        if(capturedPiece.getIndex() === 0){
-          this.castlingRights = this.castlingRights.replace("q", "");
-        }else if(capturedPiece.getIndex() === 7){
-          this.castlingRights = this.castlingRights.replace("k", "");
+        } else {
+          if (capturedPiece.getIndex() === 0) {
+            this.castlingRights = this.castlingRights.replace("q", "");
+          } else if (capturedPiece.getIndex() === 7) {
+            this.castlingRights = this.castlingRights.replace("k", "");
+          }
         }
       }
-    }
       this.capturedPieces.push(capturedPiece);
       this.Pieces.splice(capturedPieceIndex, 1);
       this.halfMoveClock = 0;
@@ -1323,7 +1328,9 @@ export class Board {
       let moveLeft = new V2D(pos.x - 1, pos.y - 1);
       if (
         board.Piece(moveLeft) != " " &&
-        board.Piece(moveLeft)?.color == "black"
+        board.Piece(moveLeft)?.color == "black" &&
+        pos.x - 1 >= 0 &&
+        pos.y - 1 >= 0
       ) {
         moves.push(new Move(pos, moveLeft));
       }
@@ -1331,7 +1338,9 @@ export class Board {
       let moveRight = new V2D(pos.x + 1, pos.y - 1);
       if (
         board.Piece(moveRight) != " " &&
-        board.Piece(moveRight)?.color == "black"
+        board.Piece(moveRight)?.color == "black" &&
+        pos.x + 1 <= 7 &&
+        pos.y - 1 >= 0
       ) {
         moves.push(new Move(pos, moveRight));
       }
@@ -1368,7 +1377,9 @@ export class Board {
       let moveLeft = new V2D(pos.x - 1, pos.y + 1);
       if (
         board.Piece(moveLeft) != " " &&
-        board.Piece(moveLeft)?.color == "white"
+        board.Piece(moveLeft)?.color == "white" &&
+        pos.x - 1 >= 0 &&
+        pos.y + 1 <= 7
       ) {
         moves.push(new Move(pos, moveLeft));
       }
@@ -1376,7 +1387,9 @@ export class Board {
       let moveRight = new V2D(pos.x + 1, pos.y + 1);
       if (
         board.Piece(moveRight) != " " &&
-        board.Piece(moveRight)?.color == "white"
+        board.Piece(moveRight)?.color == "white" &&
+        pos.x + 1 <= 7 &&
+        pos.y + 1 <= 7
       ) {
         moves.push(new Move(pos, moveRight));
       }
@@ -1982,57 +1995,73 @@ export class Board {
   private findKingMoves(piece: Piece, board: Board): Move[] {
     let moves: Move[] = [];
     let pos = piece.getPos().pos;
-    let move = new V2D(pos.x, pos.y + 1);
     //here I need to add a move that is castling in witch
     //the king can move two squares in either direction depending on the castling rights of the board state
     //
     if (piece.color === "black") {
-      //
+      //move down once
+      let move = new V2D(pos.x, pos.y + 1);
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (board.Piece(move)?.color === "white" && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x, pos.y - 1);
       if (board.Piece(move) === " " && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (board.Piece(move)?.color === "white" && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x + 1, pos.y);
       if (board.Piece(move) === " " && pos.x + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (board.Piece(move)?.color === "white" && pos.x + 1 <= 7) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x - 1, pos.y);
       if (board.Piece(move) === " " && pos.x - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (board.Piece(move)?.color === "white" && pos.x - 1 >= 0) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x + 1, pos.y + 1);
       if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (
+        board.Piece(move)?.color === "white" &&
+        pos.x + 1 <= 7 &&
+        pos.y + 1 <= 7
+      ) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x - 1, pos.y + 1);
       if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (
+        board.Piece(move)?.color === "white" &&
+        pos.x - 1 >= 0 &&
+        pos.y + 1 <= 7
+      ) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x + 1, pos.y - 1);
       if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (
+        board.Piece(move)?.color === "white" &&
+        pos.x + 1 <= 7 &&
+        pos.y - 1 >= 0
+      ) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x - 1, pos.y - 1);
       if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "white") {
+      } else if (
+        board.Piece(move)?.color === "white" &&
+        pos.x - 1 >= 0 &&
+        pos.y - 1 >= 0
+      ) {
         moves.push(new Move(pos, move));
       }
       //black king side castling
@@ -2069,52 +2098,68 @@ export class Board {
         }
       }
     } else {
-      move = new V2D(pos.x, pos.y + 1);
+      let move = new V2D(pos.x, pos.y + 1);
       if (board.Piece(move) === " " && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (board.Piece(move)?.color === "black" && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x, pos.y - 1);
       if (board.Piece(move) === " " && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (board.Piece(move)?.color === "black" && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x + 1, pos.y);
       if (board.Piece(move) === " " && pos.x + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (board.Piece(move)?.color === "black" && pos.x + 1 <= 7) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x - 1, pos.y);
       if (board.Piece(move) === " " && pos.x - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (board.Piece(move)?.color === "black" && pos.x - 1 >= 0) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x + 1, pos.y + 1);
       if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (
+        board.Piece(move)?.color === "black" &&
+        pos.x + 1 <= 7 &&
+        pos.y + 1 <= 7
+      ) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x - 1, pos.y + 1);
       if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y + 1 <= 7) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (
+        board.Piece(move)?.color === "black" &&
+        pos.x - 1 >= 0 &&
+        pos.y + 1 <= 7
+      ) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x + 1, pos.y - 1);
       if (board.Piece(move) === " " && pos.x + 1 <= 7 && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (
+        board.Piece(move)?.color === "black" &&
+        pos.x + 1 <= 7 &&
+        pos.y - 1 >= 0
+      ) {
         moves.push(new Move(pos, move));
       }
       move = new V2D(pos.x - 1, pos.y - 1);
       if (board.Piece(move) === " " && pos.x - 1 >= 0 && pos.y - 1 >= 0) {
         moves.push(new Move(pos, move));
-      } else if (board.Piece(move)?.color === "black") {
+      } else if (
+        board.Piece(move)?.color === "black" &&
+        pos.x - 1 >= 0 &&
+        pos.y - 1 >= 0
+      ) {
         moves.push(new Move(pos, move));
       }
       //white king side castling

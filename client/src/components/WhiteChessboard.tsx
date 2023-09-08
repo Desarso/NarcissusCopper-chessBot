@@ -83,8 +83,8 @@ function WhiteChessboard({
     await delay(10);
 
     updateBoard();
-    let move = {start: lastMove().from, end: lastMove().to};
-    console.log(move);
+    // let move = {start: lastMove().from, end: lastMove().to};
+    // console.log(move);
   }
 
   function delay(ms: number) {

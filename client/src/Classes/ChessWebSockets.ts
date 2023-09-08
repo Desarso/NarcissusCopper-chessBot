@@ -6,8 +6,8 @@ import { Board } from "./chessClasses";
 
 export class ChessWebSocket{
     
-    url = "wss://gabrielmalek.com/v1/api/chessSub";
-    // url = "ws://localhost:8080/chessSub";
+    // url = "wss://gabrielmalek.com/v1/api/chessSub";
+    url = "ws://localhost:8080/chessSub";
     ws: WebSocket = this.createWS(this.url);
     pingsSinceResponse: number = 0;
     board : Accessor<Board>;
@@ -15,6 +15,7 @@ export class ChessWebSocket{
     setUser: Setter<User>;
     user: Accessor<User>;
     pings: number = 0;
+    crownedIndex: number = -1;
 
     constructor(board: Accessor<Board>, setBoard: Setter<Board>, user: Accessor<User>, setUser: Setter<User>){
         this.createListeners();
@@ -55,14 +56,8 @@ export class ChessWebSocket{
                 if(this.pings < -10){
                     this.pings = 0;
                 }
-                if(this.pings > 10){
+                if(this.pings > 5){
                     this.ws.close();
-                    let newUser = new User(
-                        this.generateUserid(),
-                        this.user().username,
-                        this.user().CatUrl
-                    )
-                    this.setUser(newUser);
                     this.pings = 0;
                     return;
                 }
@@ -114,12 +109,15 @@ export class ChessWebSocket{
             //process game update
             if(data.type === "chessGameUpdate"){
                 console.log("chess game update", data);
+                // console.log("equal fens", data.fen == this.board().fen)
                 if(data.fen != this.board().fen){
                     //check which board is older
                     let newBoard = new Board(data.fen);
-                    if(this.board().fullMoveNumber < newBoard.fullMoveNumber ){
-                        this.setBoard(newBoard);
-                        let event = new CustomEvent("updateBoard");
+                    let crowned = this.pawnsAtEndOfBoard();
+                    if(crowned){
+                        console.log("crowned");
+                        let event = new CustomEvent("crowned");
+                        event.data = newBoard;
                         document.dispatchEvent(event);
                     }
                 }
@@ -132,6 +130,27 @@ export class ChessWebSocket{
     public sendNotification(notification: Notification){
         console.log("sending notification", notification);
         this.ws.send(JSON.stringify(notification));
+    }
+
+    private pawnsAtEndOfBoard(){
+        let endTopRow = [];
+        let endBottomRow = [];
+        // console.log(this.board().board)
+        for(let i = 0; i < 8; i++){
+            if(this.board().board[i] === "P"){
+                endTopRow.push(this.board().board[i]);
+                this.crownedIndex = i;
+            }
+        }
+        for(let i = 56; i < 64; i++){
+            if(this.board().board[i] === "p"){
+                endBottomRow.push(this.board().board[i]);
+                this.crownedIndex = i;
+            }
+        }
+        // console.log("end top row", endTopRow);
+        // console.log("end bottom row", endBottomRow);
+        return endTopRow.length > 0 || endBottomRow.length > 0;
     }
 
 

@@ -86,7 +86,7 @@ function BlackChessboard({
     await delay(10);
 
     updateBlackBoard();
-    let move = {start: lastMove().from, end: lastMove().to};
+    // let move = {start: lastMove().from, end: lastMove().to};
   }
 
   function delay(ms: number) {
