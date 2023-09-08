@@ -1,18 +1,18 @@
 import { create } from "domain";
 import { VirtualMouseEvent, Position, User } from "./Types";
+import { Accessor } from "solid-js";
 
 
 
 
 
 export class VirtualMouse {
-    ws : WebSocket;
+    ws : Accessor<WebSocket>;
     initialized: boolean = false;
     virtualCursor : HTMLElement;
     self: User;
     opponent: User;
-    cursorWidth: number;
-  constructor (ws: WebSocket, self: User, opponent: User){
+  constructor (ws: Accessor<WebSocket>, self: User, opponent: User){
     this.ws = ws;
     this.virtualCursor = this.createVirtualCursor();
     this.self = self;
@@ -27,13 +27,19 @@ export class VirtualMouse {
     this.sendMouseEvents();
   }
   catchWedSocketEvents(){
-    this.ws.addEventListener("message", (event) => {
+    this.ws().addEventListener("message", (event) => {
       let data = JSON.parse(event.data);
       if(data.type != "virtualMouseEvent") return;
       let virtualMouseEvent : VirtualMouseEvent = JSON.parse(event.data);
       this.triggerVirtualMouseEvent(virtualMouseEvent);
+      console.log("virtual mouse event", virtualMouseEvent)
       
   
+      });
+    
+      this.ws().addEventListener("close", async() => {
+        await this.sleep (1000);
+        this.catchWedSocketEvents();
       });
   }
   private triggerVirtualMouseEvent(virtualMouseEvent: VirtualMouseEvent){
@@ -98,7 +104,7 @@ export class VirtualMouse {
         chessBoardWidth,
         "pointermove"
       );
-      this.ws.send(JSON.stringify(virtualMouseEvent));
+      this.ws().send(JSON.stringify(virtualMouseEvent));
     });
     document.addEventListener("pointerdown", (event) => {
       
@@ -111,7 +117,7 @@ export class VirtualMouse {
         chessBoardWidth,
         "pointerdown"
       );
-      this.ws.send(JSON.stringify(virtualMouseEvent));
+      this.ws().send(JSON.stringify(virtualMouseEvent));
     });
     document.addEventListener("pointerup", (event) => {
       
@@ -124,7 +130,7 @@ export class VirtualMouse {
         chessBoardWidth,
         "pointerup"
       );
-      this.ws.send(JSON.stringify(virtualMouseEvent));
+      this.ws().send(JSON.stringify(virtualMouseEvent));
     });
   }
 
@@ -164,6 +170,10 @@ export class VirtualMouse {
     document.body.appendChild(virtualCursor);
     this.cursorWidth = virtualCursor.offsetHeight;
     return virtualCursor;
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
 

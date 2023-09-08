@@ -54,7 +54,7 @@ function Home({}: Props) {
 
 
   onCleanup(() => {
-    if (chessWebSocket.ws) {
+    if (chessWebSocket.ws()) {
       chessWebSocket.close();
     }
   });
@@ -64,7 +64,7 @@ function Home({}: Props) {
     checkforUser();
     listenForUserUpdates();
     document.addEventListener("mousedown", (e) => onMouseDown(e));
-    document.ws = chessWebSocket.ws;
+    document.ws = chessWebSocket.ws();
   });
 
   function listenForUserUpdates() {
@@ -95,10 +95,15 @@ function Home({}: Props) {
 
   //here I send the position info
   function crown(newBoard: Board){
+    console.log("crowned event received", newBoard)
     let pawnIndex = chessWebSocket.crownedIndex;
+    console.log("crowned index", pawnIndex);
     let pawn = board().getPieceAtBoardIndex(pawnIndex);
+    console.log("crowned pawn", pawn);
     let previousType = pawn.type;
+    console.log("previous type", previousType);
     let newPieceType = newBoard.board[pawnIndex];
+    console.log("new piece type", newPieceType);
     let newLowerCasePieceType = newPieceType.toLowerCase();
     pawn.type = newLowerCasePieceType;
     board().board[pawnIndex] = newPieceType;
@@ -364,7 +369,7 @@ function Home({}: Props) {
     );
     //send websocket notification
     try {
-      chessWebSocket.ws.send(JSON.stringify(createGameNotif));
+      chessWebSocket.ws().send(JSON.stringify(createGameNotif));
       setInGameColor(
         createGameNotif.fromUserColor === "white" ? "black" : "white"
       );

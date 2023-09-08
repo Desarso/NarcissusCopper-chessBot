@@ -1,14 +1,15 @@
 import { User, ChessGameUpdate, updateMove } from "./Types";
-import { Accessor, Setter } from "solid-js"
+import { Accessor, Setter, createSignal } from "solid-js"
 import { Board } from "./chessClasses";
 
 
 
 export class ChessWebSocket{
     
-    // url = "wss://gabrielmalek.com/v1/api/chessSub";
-    url = "ws://localhost:8080/chessSub";
-    ws: WebSocket = this.createWS(this.url);
+    url = "wss://gabrielmalek.com/v1/api/chessSub";
+    // url = "ws://localhost:8080/chessSub";
+    ws: Accessor<WebSocket>;
+    setWS: Setter<WebSocket>;
     pingsSinceResponse: number = 0;
     board : Accessor<Board>;
     setBoard: Setter<Board>;
@@ -18,11 +19,15 @@ export class ChessWebSocket{
     crownedIndex: number = -1;
 
     constructor(board: Accessor<Board>, setBoard: Setter<Board>, user: Accessor<User>, setUser: Setter<User>){
-        this.createListeners();
         this.board = board;
         this.setBoard = setBoard;
         this.setUser = setUser;
         this.user = user;
+        let [ws, setWS] = createSignal<WebSocket>(this.createWS(this.url));
+        this.ws = ws;
+        console.log("ws", this.ws());
+        this.setWS = setWS;
+        this.createListeners();
 
     }
 
@@ -34,12 +39,12 @@ export class ChessWebSocket{
             board.currentTurnColor,
             moves
         )
-        this.ws.send(JSON.stringify(chessUpdate));
+        this.ws().send(JSON.stringify(chessUpdate));
     }
 
     unloadWebSockets(){
         window.onbeforeunload = () => {
-            this.ws.close();
+            this.ws().close();
         };
     }
 
@@ -50,19 +55,19 @@ export class ChessWebSocket{
 
     public pingWebSocket(user : User) {
         //check if websocket is open
-        if (this.ws.readyState != 3) {
+        if (this.ws().readyState != 3) {
             // console.log("pinging ws");
-           if (this.ws.readyState === 1) {
+           if (this.ws().readyState === 1) {
                 if(this.pings < -10){
                     this.pings = 0;
                 }
                 if(this.pings > 5){
-                    this.ws.close();
+                    this.ws().close();
                     this.pings = 0;
                     return;
                 }
                 this.pings++;
-                this.ws.send(JSON.stringify(user));
+                this.ws().send(JSON.stringify(user));
             }
         }
     }
@@ -75,20 +80,20 @@ export class ChessWebSocket{
 
     public reconnectWebSocket() {
         //check if websocket is open
-        this.ws = this.createWS(this.url);
+        this.setWS(this.createWS(this.url));
         this.createListeners();
     }
 
     public createListeners() {
         
-        this.ws.addEventListener("open", () => {
+        this.ws().addEventListener("open", () => {
             console.log("ws open");
         });
-        this.ws.addEventListener("close", () => {
+        this.ws().addEventListener("close", () => {
             console.log("ws closed");
             this.reconnectWebSocket();
         });
-        this.ws.addEventListener("message", (e) => {
+        this.ws().addEventListener("message", (e) => {
             this.pings--;
             let data = JSON.parse(e.data);
             //process users
@@ -112,7 +117,7 @@ export class ChessWebSocket{
                 // console.log("equal fens", data.fen == this.board().fen)
                 if(data.fen != this.board().fen){
                     //check which board is older
-                    let newBoard = new Board(data.fen);
+                    let newBoard = new Board(undefined, data.fen);
                     let crowned = this.pawnsAtEndOfBoard();
                     if(crowned){
                         console.log("crowned");
@@ -129,7 +134,7 @@ export class ChessWebSocket{
 
     public sendNotification(notification: Notification){
         console.log("sending notification", notification);
-        this.ws.send(JSON.stringify(notification));
+        this.ws().send(JSON.stringify(notification));
     }
 
     private pawnsAtEndOfBoard(){
@@ -157,7 +162,7 @@ export class ChessWebSocket{
    
 
     close(){
-        this.ws.close();
+        this.ws().close();
     }
 
     generateUserid() {
