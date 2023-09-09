@@ -8,16 +8,39 @@ type Props = {
 };
 
 function Arrows({ moves }: Props) {
+  function positionArrows() {
+    let chessboard = document.querySelector(".chessBoard");
+    let chessboardRect = chessboard.getBoundingClientRect();
+    let height = chessboardRect.height;
+    let windowHeight = window.innerHeight;
+    let arrows = document.querySelector(".arrows");
+    let arrowsRect = arrows.getBoundingClientRect();
+    let userNameWidget = document.querySelector(".userNameWidgetHolder");
+    let userNameWidgetRect = userNameWidget.getBoundingClientRect();
+    let userHeight = userNameWidgetRect.height;
+    arrows.style.top = `${
+      (height + ((windowHeight - height) / 2)) + (userHeight/1.3)
+    }px`;
+  }
+
+  onMount(() => {
+    positionArrows();
+    window.addEventListener("resize", () => {
+      positionArrows();
+    });
+  })
+
+
+
   const [moveIndex, setMoveIndex] = createSignal(-1);
   const moveSound = new Audio(MoveSound);
   let forwardClick = false;
-  let backwardClick = false;
-  let blockForward = false;
-  let blockBackward = false;
+  let block = false;
 
   onMount(() => {
     document.addEventListener("boardUpdated", (e) => {
       setMoveIndex(moves().length - 1);
+      block = false;
     });
   });
 
@@ -55,9 +78,9 @@ function Arrows({ moves }: Props) {
       UIPiece.style.transform = `translate(${normalized.x * i}px, ${
         normalized.y * i
       }px)`;
-      if (i % 5 === 0 && singleMove) {
+      if (i % 10 === 0 && singleMove) {
         await sleep(0.001);
-      } else if (i % 25 === 0) {
+      } else if (i % 50 === 0) {
         await sleep(0.001);
       }
     }
@@ -87,7 +110,7 @@ function Arrows({ moves }: Props) {
     }
 
     if (singleMove) moveSound.play();
-    moveSound.play();
+    if(singleMove )moveSound.play();
   }
 
   async function executeMove(move: updateMove, singleMove: boolean = true) {
@@ -116,9 +139,9 @@ function Arrows({ moves }: Props) {
         UIPiece.style.transform = `translate(${normalized.x * i}px, ${
           normalized.y * i
         }px)`;
-        if (i % 5 === 0 && singleMove) {
+        if (i % 10 === 0 && singleMove) {
           await sleep(0.001);
-        } else if (i % 25 === 0) {
+        } else if (i % 50 === 0) {
           await sleep(0.001);
         }
       }
@@ -145,15 +168,17 @@ function Arrows({ moves }: Props) {
     for (let i = moveIndex(); i > -1; i--) {
       await goBackOneMove(false);
     }
+    moveSound.play();
   }
   async function goBackOneMove(singleMove: boolean = true) {
-    blockBackward = true;
+    console.log("here")
+    block = true;
     if (moves().length === 0) {
-      blockBackward = false;
+      block = false;
       return;
     }
     if (moveIndex() === -1) {
-      blockBackward = false;
+      block = false;
       return;
     }
     //first thing we do is we undo a move;
@@ -181,16 +206,16 @@ function Arrows({ moves }: Props) {
       }
     }
     setMoveIndex(moveIndex() - 1);
-    blockBackward = false;
+    block = false;
   }
   async function goForwardOneMove(singleMove: boolean = true) {
-    blockForward = true;
+    block = true;
     if (moves().length === 0) {
-      blockForward = false;
+      block = false;
       return;
     }
     if (moveIndex() === moves().length - 1) {
-      blockForward = false;
+      block = false;
       return;
     }
     await executeMove(moves()[moveIndex() + 1], singleMove);
@@ -217,44 +242,45 @@ function Arrows({ moves }: Props) {
           document.getElementById("d8")?.appendChild(rockUIPiece);
       }
     }
-    blockForward = false;
+    block = false;
   }
   async function goForwardToLastMove() {
     for (let i = moveIndex(); i < moves().length - 1; i++) {
       await goForwardOneMove(false);
     }
+    moveSound.play();
   }
   return (
     <div class="arrows">
-      <button
+      <div
         onClick={async () => {
-          await goBackToFirstMove();
+          block === false ?  goBackToFirstMove() : null;
         }}
       >
-        {"<<"}&nbsp;
-      </button>
-      <button
+        {"<<"}
+      </div>
+      <div
         onClick={async () => {
-          blockBackward ? null : goBackOneMove();
+          console.log(block);
+          block === false ? goBackOneMove() : null;
         }}
       >
         {"<"}
-      </button>
-      &nbsp;
-      <button
+      </div>
+      <div
         onClick={async () => {
-          blockForward ? null : goForwardOneMove();
+          block === false ? goForwardOneMove() : null;
         }}
       >
         {">"}
-      </button>
-      <button
+      </div>
+      <div
         onClick={async () => {
-          await goForwardToLastMove();
+          block === false ? goForwardToLastMove() : null;
         }}
       >
-        &nbsp;{">>"}
-      </button>
+        {">>"}
+      </div>
     </div>
   );
 }

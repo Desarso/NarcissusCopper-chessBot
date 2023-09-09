@@ -33,7 +33,7 @@ function Home({}: Props) {
   const capturePieceSound = new Audio(CaptureSound);
   const [board, setBoard] = createSignal<Board>(new Board());
   const [inGame, setInGame] = createSignal<boolean>(false);
-  const [inGameColor, setInGameColor] = createSignal<string>("white");
+  const [inGameColor, setInGameColor] = createSignal<string>("");
   const [allPieces, setAllPieces]: any = createSignal([]);
   const [lastMove, setLastMove] = createSignal<Move>();
   const [checkmate, setCheckmate] = createSignal<boolean>(false);
@@ -48,7 +48,7 @@ function Home({}: Props) {
   >();
   const [notificationData, setNotificationData] = createSignal(null);
 
-  const chessWebSocket = new ChessWebSocket(board, setBoard, user, setUser);
+  const chessWebSocket = new ChessWebSocket(board, setBoard, user, setUser);; 
 
   onCleanup(() => {
     if (chessWebSocket.ws()) {
@@ -367,8 +367,9 @@ function Home({}: Props) {
       //game has already been created and we are already in it,
       //what we need to do it make sure to ping the server to let it know we are alive
       setInGameColor(notification.fromUserColor);
-      setInGame(true);
       setOpponent(notification.to);
+      setInGame(true);
+    
       let virtualMouse = new VirtualMouse(
         chessWebSocket.ws,
         user(),
@@ -398,8 +399,15 @@ function Home({}: Props) {
       setInGameColor(
         createGameNotif.fromUserColor === "white" ? "black" : "white"
       );
-      setInGame(true);
+      console.log("oppoent", notification.from)
+      let OpponentUser = new User(
+        notification.from.id,
+        notification.from.username,
+        notification.from.CatUrl
+      )
       setOpponent(notification.from);
+      setInGame(true);
+     
       let virtualMouse = new VirtualMouse(
         chessWebSocket.ws,
         user(),
@@ -426,7 +434,7 @@ function Home({}: Props) {
   return (
     <>
       <BallsBackground />
-      {/* <Show when={!inSession() && inGame() == false}>
+      <Show when={!inSession() && inGame() == false}>
         <GlassOverlay
           user={user}
           setUser={setUser}
@@ -442,9 +450,11 @@ function Home({}: Props) {
           onNotificationReceived={onNotificationReceived}
           chessWebSocket={chessWebSocket}
         />
-      </Show> */}
+      </Show>
 
-      <Show when={(inGameColor() == "white" && inGame() == true) || true}>
+      <Show when={(inGameColor() == "white" && inGame() == true)
+      //  || true
+       }>
         <WhiteChessboard
           board={board}
           updateBoard={updateAllBoards}
@@ -456,9 +466,10 @@ function Home({}: Props) {
           moves={moves}
           user={user}
           opponent={opponent}
+          inGame = {inGame}
         />
       </Show>
-      {/* <Show
+      <Show
         when={
           inGame() == false || (inGameColor() == "black" && inGame() == true)
         }
@@ -472,6 +483,9 @@ function Home({}: Props) {
           capturePieceSound={capturePieceSound}
           setMoves={setMoves}
           moves={moves}
+          user={user}
+          opponent={opponent}
+          inGame={inGame}
         />
       </Show>
 
@@ -529,7 +543,7 @@ function Home({}: Props) {
             </div>
           </div>
         </div>
-      </Show> */}
+      </Show>
     </>
   );
 }

@@ -19,9 +19,9 @@ function UserName({ user, color, board, moves }: Props) {
     let height = chessboardRect.height;
     let windowHeight = window.innerHeight;
     let userNameWidget = document.querySelector(".userNameWidgetHolder.user");
-    // let userNameWidgetRect = userNameWidget.getBoundingClientRect();
+    let userNameWidgetRect = userNameWidget.getBoundingClientRect();
     userNameWidget.style.top = `${
-      windowHeight - (windowHeight - height) / 2
+      height + ((windowHeight - height) / 2)
     }px`;
   }
 
@@ -33,11 +33,11 @@ function UserName({ user, color, board, moves }: Props) {
   });
 
   return (
+    <>
     <div class="userNameWidgetHolder user">
       <div class="userNameWidget">
         <div class="userName">
           {user()?.username || "404 not found"}
-          <Arrows moves={moves} />
         </div>
       
         <CatLogo
@@ -50,6 +50,9 @@ function UserName({ user, color, board, moves }: Props) {
       </div>
       <ScoreNPieces color={color} board={board} />
     </div>
+    <Arrows moves={moves} />
+    </>
+    
   );
 }
 

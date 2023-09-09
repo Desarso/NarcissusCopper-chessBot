@@ -35,6 +35,14 @@ const GlassOverlay = ({
           username,
           CatUrl()
       )
+      sessionStorage.setItem(
+        "gabrielmalek/chess.data",
+        JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
+      );
+      localStorage.setItem(
+        "gabrielmalek/chess.data",
+        JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
+      )
       setUser(newUser);
       setInSession(true);
       chessWebSocket.beginPinging(user);
