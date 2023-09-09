@@ -24,8 +24,6 @@ import { updateMove } from "../Classes/Types";
 
 type Props = {};
 
-
-
 //here I choose the color of board, but this is too soon, I need to create a pop up screen to choose a username
 //that also checks for a username, in both session, and local storage. And, then requests the graphql to see if the user exisits,
 //and if there are any active games, and if so, it will load the game. Otherwise, it will create the user, in the graphl, or update it.
@@ -35,7 +33,7 @@ function Home({}: Props) {
   const capturePieceSound = new Audio(CaptureSound);
   const [board, setBoard] = createSignal<Board>(new Board());
   const [inGame, setInGame] = createSignal<boolean>(false);
-  const [inGameColor, setInGameColor] = createSignal<string>("");
+  const [inGameColor, setInGameColor] = createSignal<string>("white");
   const [allPieces, setAllPieces]: any = createSignal([]);
   const [lastMove, setLastMove] = createSignal<Move>();
   const [checkmate, setCheckmate] = createSignal<boolean>(false);
@@ -51,7 +49,6 @@ function Home({}: Props) {
   const [notificationData, setNotificationData] = createSignal(null);
 
   const chessWebSocket = new ChessWebSocket(board, setBoard, user, setUser);
-
 
   onCleanup(() => {
     if (chessWebSocket.ws()) {
@@ -80,22 +77,21 @@ function Home({}: Props) {
       let mainUser = document.querySelector("#mainUser");
       console.log(mainUser.querySelector(".catLogo"));
 
-      mainUser.querySelector(".catLogo").style.backgroundImage = "nothing"
+      mainUser.querySelector(".catLogo").style.backgroundImage = "nothing";
       // mainUser.querySelector(".catLogo").style.backgroundImage = `url("${event.data.CatUrl}");`;
     });
     document.addEventListener("updateBoard", (event) => {
-     updateAllBoards(event.data);
+      updateAllBoards(event.data);
     });
     document.addEventListener("crowned", (event) => {
       console.log("listened to crowned event");
       crown(event.data);
-    
-    })
+    });
   }
 
   //here I send the position info
-  function crown(newBoard: Board){
-    console.log("crowned event received", newBoard)
+  function crown(newBoard: Board) {
+    console.log("crowned event received", newBoard);
     let pawnIndex = chessWebSocket.crownedIndex;
     console.log("crowned index", pawnIndex);
     let pawn = board().getPieceAtBoardIndex(pawnIndex);
@@ -108,11 +104,10 @@ function Home({}: Props) {
     pawn.type = newLowerCasePieceType;
     board().board[pawnIndex] = newPieceType;
 
-  
     let UIPiece = document.getElementById(pawn.position.position)?.children[0];
     UIPiece?.classList.remove(previousType);
     UIPiece?.classList.add(newPieceType);
-    
+
     updateBoard();
   }
 
@@ -143,7 +138,7 @@ function Home({}: Props) {
       setUser(stringUser);
       setInSession(true);
       chessWebSocket.beginPinging(user);
-      
+
       console.log("should be pinging");
       return;
     }
@@ -296,6 +291,38 @@ function Home({}: Props) {
     }
 
     board().displayBoard();
+    let boardUpdated = new Event("boardUpdated");
+    document.dispatchEvent(boardUpdated);
+    checkBoardState();
+  }
+
+
+  function checkBoardState() {
+    let possibleMoves = board().findLegalMoves(board());
+    let checked = board().isInCheck(board());
+    // console.log("checked", checked); 
+    let previousChecked = document.querySelector(".checked");
+    if (previousChecked != null) {
+      previousChecked.classList.remove("checked");
+    }
+
+    if (checked) {
+      //let's find the king of the correct color
+      for (let i = 0; i < board().Pieces.length; i++) {
+        if (
+          board().Pieces[i].type == "k" &&
+          board().Pieces[i].color == board().currentTurnColor
+        ) {
+          console.log("made it here")
+          let king = board().Pieces[i];
+          console.log("king", king);
+          console.log("king position", king.getPosition());
+          let UIKingSquare = document.getElementById(king.getPosition());
+          console.log("UIKingSquare", UIKingSquare);
+          UIKingSquare?.classList.add("checked");
+        }
+      }
+    }
   }
 
   //to-do
@@ -311,15 +338,9 @@ function Home({}: Props) {
     if (result === undefined) {
       console.log("updating boards");
       updateBoard();
-      chessWebSocket.sendChessUpdate(
-        board(), 
-        user(),
-        opponent(),
-        moves()
-      )
+      chessWebSocket.sendChessUpdate(board(), user(), opponent(), moves());
       return;
     }
-
   }
 
   //syncs board with give fen
@@ -348,7 +369,11 @@ function Home({}: Props) {
       setInGameColor(notification.fromUserColor);
       setInGame(true);
       setOpponent(notification.to);
-      let virtualMouse = new VirtualMouse(chessWebSocket.ws, user(), notification.to);
+      let virtualMouse = new VirtualMouse(
+        chessWebSocket.ws,
+        user(),
+        notification.to
+      );
       virtualMouse.init();
       console.log(virtualMouse);
       removeBackDrop();
@@ -375,7 +400,11 @@ function Home({}: Props) {
       );
       setInGame(true);
       setOpponent(notification.from);
-      let virtualMouse = new VirtualMouse(chessWebSocket.ws, user(), notification.from);
+      let virtualMouse = new VirtualMouse(
+        chessWebSocket.ws,
+        user(),
+        notification.from
+      );
       virtualMouse.init();
       console.log(virtualMouse);
       removeBackDrop();
@@ -392,14 +421,12 @@ function Home({}: Props) {
     }
   }
 
-
-
   //need to highlight the squares that are the last move
 
   return (
     <>
       <BallsBackground />
-      <Show when={!inSession() && inGame() == false}>
+      {/* <Show when={!inSession() && inGame() == false}>
         <GlassOverlay
           user={user}
           setUser={setUser}
@@ -415,14 +442,9 @@ function Home({}: Props) {
           onNotificationReceived={onNotificationReceived}
           chessWebSocket={chessWebSocket}
         />
-      </Show>
+      </Show> */}
 
-      <Show
-        when={
-          inGameColor() == "white" && inGame() == true
-          // || true
-        }
-      >
+      <Show when={(inGameColor() == "white" && inGame() == true) || true}>
         <WhiteChessboard
           board={board}
           updateBoard={updateAllBoards}
@@ -432,9 +454,11 @@ function Home({}: Props) {
           capturePieceSound={capturePieceSound}
           setMoves={setMoves}
           moves={moves}
+          user={user}
+          opponent={opponent}
         />
       </Show>
-      <Show
+      {/* <Show
         when={
           inGame() == false || (inGameColor() == "black" && inGame() == true)
         }
@@ -505,10 +529,9 @@ function Home({}: Props) {
             </div>
           </div>
         </div>
-      </Show>
+      </Show> */}
     </>
   );
 }
 
 export default Home;
-

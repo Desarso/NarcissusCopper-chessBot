@@ -1,9 +1,11 @@
 // type Props = {};
 import { Move, TEST } from "../Classes/chessClasses";
-import { updateMove } from "../Classes/Types";
+import { User, updateMove } from "../Classes/Types";
 import { createSignal, For, Show, Setter, Accessor } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
 import ChessSquare from "./ChessSquare";
+import UserName from "./UserName";
+import OpponentName from "./OpponentName";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
@@ -16,6 +18,9 @@ type Props = {
   capturePieceSound: any;
   setMoves: Setter<updateMove[]>;
   moves: Accessor<updateMove[]>;
+  user : Accessor<User>;
+  opponent : Accessor<User>;
+
 };
 
 function WhiteChessboard({
@@ -27,6 +32,8 @@ function WhiteChessboard({
   capturePieceSound,
   setMoves,
   moves,
+  user,
+  opponent
 }: Props) {
   board().displayBoard();
 
@@ -93,7 +100,13 @@ function WhiteChessboard({
 
   //later I will make a black board, and white board component and just change all the settings accordingly
   return (
-    <div class="chessBoard">
+    <>
+     <OpponentName 
+    opponent={opponent}
+    color="black"
+    board={board}
+    />
+     <div class="chessBoard">
       <DragDropContextProvider>
         <Show when={displayInlay()}>
           <div class={`chessInlay ml-[${displayInlayX()}]`}>
@@ -163,6 +176,14 @@ function WhiteChessboard({
         </For>
       </DragDropContextProvider>
     </div>
+    <UserName 
+    user={user}
+    color="white"
+    board={board}
+    moves={moves}
+    />
+    </>
+   
   );
 }
 

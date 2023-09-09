@@ -92,6 +92,10 @@ export class Notification {
     eating: Boolean = false;
     atePiece: string = "";
     crownedTo: string = "";
+    castle: Boolean = false;
+    turnColor: string = "";
+    enPassant: Boolean = false;
+    enPassantSquare: string = "";
     constructor(from: string, to: string, fen: string) {
       this.from = from;
       this.to = to;

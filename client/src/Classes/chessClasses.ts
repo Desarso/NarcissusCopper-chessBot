@@ -1345,7 +1345,7 @@ export class Board {
         moves.push(new Move(pos, moveRight));
       }
       //check for en passant
-      if (board.enPassantTargetSquare != "-" && index <= 31 && index >= 24) {
+      if (board.enPassantTargetSquare != "-" && pos.y == 3) {
         let enPassantTarget = new V2D(
           board.enPassantTargetSquare.charCodeAt(0) - 97,
           8 - parseInt(board.enPassantTargetSquare[1])
@@ -1394,15 +1394,17 @@ export class Board {
         moves.push(new Move(pos, moveRight));
       }
 
-      if (board.enPassantTargetSquare != "-" && index <= 15 && index >= 8) {
+      if (board.enPassantTargetSquare != "-" && pos.y === 4) {
         let enPassantTarget = new V2D(
           board.enPassantTargetSquare.charCodeAt(0) - 97,
           8 - parseInt(board.enPassantTargetSquare[1])
+         
         );
-        if (moveRight == enPassantTarget) {
+        console.log(enPassantTarget)
+        if (deepEqual(enPassantTarget, moveRight) === true) {
           moves.push(new Move(pos, moveRight));
         }
-        if (moveLeft == enPassantTarget) {
+        if (deepEqual(enPassantTarget, moveLeft) === true) {
           moves.push(new Move(pos, moveLeft));
         }
       }

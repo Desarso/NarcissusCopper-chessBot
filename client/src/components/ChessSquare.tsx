@@ -204,7 +204,29 @@ function ChessSquare({
           endingIndex,
           board().fen,
         )
-        board().movePiece(startingIndex, endingIndex);
+        if(board().enPassantTargetSquare === endingIndex){
+          newMove.enPassant = true;
+          newMove.enPassantSquare = board().enPassantTargetSquare;
+          
+          if(board().currentTurnColor === "white"){
+            newMove.enPassantSquare = newMove.enPassantSquare[0] + (parseInt(newMove.enPassantSquare[1]) - 1).toString();
+          }else{
+            newMove.enPassantSquare = newMove.enPassantSquare[0] + (parseInt(newMove.enPassantSquare[1]) + 1).toString();
+          }
+          newMove.atePiece = board().getPieceAtPosition(newMove.enPassantSquare)?.type;
+          
+      }
+        newMove.turnColor = board().currentTurnColor;
+        //need to check if I castled
+        if(board().getPieceAtPosition(startingIndex)?.type === "k"){
+            let beginingLetter = startingIndex[0];
+            let endingLetter = endingIndex[0];
+            if(Math.abs(beginingLetter.charCodeAt(0) - endingLetter.charCodeAt(0)) === 2){
+              newMove.castle = true;
+            }
+        }
+
+     
         // console.log("moved piece", startingIndex, endingIndex);
         // board().displayBoard();
         
@@ -223,6 +245,7 @@ function ChessSquare({
           let sound = movePieceSound.play();
 
         }
+        board().movePiece(startingIndex, endingIndex);
 
         //checks if I am crowning and only send move if not
         let piece = board().getPieceAtPosition(endingIndex);
@@ -269,7 +292,7 @@ function ChessSquare({
     const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={`${className} ${canDrag ? "canDrag" : "noDrag "}`} id={id}>
+      <section ref={draggable.ref} class={`${className} ${canDrag ? "canDrag" : " "}`} id={id}>
       {/* noDrag */}
         <div class=""> </div>
       </section>
