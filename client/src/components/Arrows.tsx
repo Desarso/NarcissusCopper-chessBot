@@ -52,18 +52,8 @@ function Arrows({ moves }: Props) {
     move: updateMove,
     singleMove: boolean = true
   ) {
-    let lastMove = move;
-    let allDroppables = document.querySelectorAll(".chessSquare");
-    for (let i = 0; i < allDroppables.length; i++) {
-      if (
-        allDroppables[i].id === lastMove.from ||
-        allDroppables[i].id === lastMove.to
-      ) {
-        allDroppables[i]?.classList?.add("lastMove");
-      } else {
-        allDroppables[i]?.classList?.remove("lastMove");
-      }
-    }
+
+
 
 
     let UIPiece = document.getElementById(move.to)?.querySelector(".piece");
@@ -212,6 +202,26 @@ function Arrows({ moves }: Props) {
     //first thing we do is we undo a move;
     //then we set the move index to the previous move
     await executeMoveInReverse(moves()[moveIndex()], singleMove);
+    let lastMove = moves()[moveIndex()-1];
+    if(lastMove != undefined){
+      let allDroppables = document.querySelectorAll(".chessSquare");
+      for (let i = 0; i < allDroppables.length; i++) {
+        if (
+          allDroppables[i].id === lastMove.from ||
+          allDroppables[i].id === lastMove.to
+        ) {
+          allDroppables[i]?.classList?.add("lastMove");
+        } else {
+          allDroppables[i]?.classList?.remove("lastMove");
+        }
+      }
+    }else{
+      let allDroppables = document.querySelectorAll(".chessSquare");
+      for (let i = 0; i < allDroppables.length; i++) {
+        allDroppables[i]?.classList?.remove("lastMove");
+      }
+    }
+  
     if (moves()[moveIndex()].castle) {
       let to = moves()[moveIndex()].to;
       let rockUIPiece;
