@@ -48,7 +48,7 @@ function Home({}: Props) {
   >();
   const [notificationData, setNotificationData] = createSignal(null);
 
-  const chessWebSocket = new ChessWebSocket(board, setBoard, user, setUser);; 
+  const chessWebSocket = new ChessWebSocket(board, setBoard, user, setUser,moves, setMoves);; 
 
   onCleanup(() => {
     if (chessWebSocket.ws()) {
@@ -73,9 +73,9 @@ function Home({}: Props) {
       onNotificationReceived(event.data);
     });
     document.addEventListener("updateUser", (event) => {
-      console.log("update user event received", event.data.CatUrl);
+      // console.log("update user event received", event.data.CatUrl);
       let mainUser = document.querySelector("#mainUser");
-      console.log(mainUser.querySelector(".catLogo"));
+      // console.log(mainUser.querySelector(".catLogo"));
 
       mainUser.querySelector(".catLogo").style.backgroundImage = "nothing";
       // mainUser.querySelector(".catLogo").style.backgroundImage = `url("${event.data.CatUrl}");`;
@@ -86,6 +86,10 @@ function Home({}: Props) {
     document.addEventListener("crowned", (event) => {
       console.log("listened to crowned event");
       crown(event.data);
+    });
+    document.addEventListener("forceBoardUpdate", (event) => {
+      updateBoard();
+      movePieceSound.play();
     });
   }
 
@@ -161,7 +165,7 @@ function Home({}: Props) {
   }
 
   //sync UI board with backend board
-  function updateBoard() {
+  async function updateBoard() {
     //rip all pieces from board
     // //put em back
 
@@ -195,7 +199,7 @@ function Home({}: Props) {
         let UIboardPiece = UIBoard[i]?.querySelector(".piece");
         if (UIboardPiece != undefined && board().board[i] != " ") {
           if (UIboardPiece.classList.contains(board().board[i])) {
-            console.log("piece is correct");
+            // console.log("piece is correct");
           } else {
             console.log("something is funky");
             console.log("piece", UIboardPiece);
@@ -291,6 +295,7 @@ function Home({}: Props) {
     }
 
     board().displayBoard();
+    console.log("moves", moves());
     let boardUpdated = new Event("boardUpdated");
     document.dispatchEvent(boardUpdated);
     checkBoardState();
@@ -336,8 +341,8 @@ function Home({}: Props) {
   async function updateAllBoards(result: any) {
     // console.log(result);
     if (result === undefined) {
-      console.log("updating boards");
-      updateBoard();
+      console.log("DATA", result);
+      await updateBoard();
       chessWebSocket.sendChessUpdate(board(), user(), opponent(), moves());
       return;
     }
@@ -358,11 +363,11 @@ function Home({}: Props) {
     //I need to either start a game or join a game
     if (notification.type == "promptForGame") {
       setNotificationData(notification);
-      console.log("prompt for game");
+      // console.log("prompt for game");
       let button = document.querySelector("#notificationButton");
       button.click();
     } else if (notification.type == "createGame") {
-      console.log("received create game notification", notification);
+      // console.log("received create game notification", notification);
       setNotificationData(notification);
       //game has already been created and we are already in it,
       //what we need to do it make sure to ping the server to let it know we are alive
@@ -376,12 +381,12 @@ function Home({}: Props) {
         notification.to
       );
       virtualMouse.init();
-      console.log(virtualMouse);
+      // console.log(virtualMouse);
       removeBackDrop();
-      console.log("in game", inGame());
-      console.log("in game color", inGameColor());
+      // console.log("in game", inGame());
+      // console.log("in game color", inGameColor());
     } else if (notification.type == "position") {
-      console.log(notification);
+      // console.log(notification);
     }
   }
 
@@ -414,7 +419,7 @@ function Home({}: Props) {
         notification.from
       );
       virtualMouse.init();
-      console.log(virtualMouse);
+      // console.log(virtualMouse);
       removeBackDrop();
     } catch (error) {
       console.log("error: ", error);

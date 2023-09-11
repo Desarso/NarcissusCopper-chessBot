@@ -32,7 +32,7 @@ export class VirtualMouse {
       if(data.type != "virtualMouseEvent") return;
       let virtualMouseEvent : VirtualMouseEvent = JSON.parse(event.data);
       this.triggerVirtualMouseEvent(virtualMouseEvent);
-      console.log("virtual mouse event", virtualMouseEvent)
+      // console.log("virtual mouse event", virtualMouseEvent)
       
   
       });

@@ -52,6 +52,20 @@ function Arrows({ moves }: Props) {
     move: updateMove,
     singleMove: boolean = true
   ) {
+    let lastMove = move;
+    let allDroppables = document.querySelectorAll(".chessSquare");
+    for (let i = 0; i < allDroppables.length; i++) {
+      if (
+        allDroppables[i].id === lastMove.from ||
+        allDroppables[i].id === lastMove.to
+      ) {
+        allDroppables[i]?.classList?.add("lastMove");
+      } else {
+        allDroppables[i]?.classList?.remove("lastMove");
+      }
+    }
+
+
     let UIPiece = document.getElementById(move.to)?.querySelector(".piece");
     let currentSquare = document.getElementById(move.to);
     let previousSquare = document.getElementById(move.from);
@@ -114,6 +128,21 @@ function Arrows({ moves }: Props) {
   }
 
   async function executeMove(move: updateMove, singleMove: boolean = true) {
+    let lastMove = move;
+    let allDroppables = document.querySelectorAll(".chessSquare");
+    for (let i = 0; i < allDroppables.length; i++) {
+      if (
+        allDroppables[i].id === lastMove.from ||
+        allDroppables[i].id === lastMove.to
+      ) {
+        allDroppables[i]?.classList?.add("lastMove");
+      } else {
+        allDroppables[i]?.classList?.remove("lastMove");
+      }
+    }
+
+
+
     let UIPiece = document.getElementById(move.from)?.querySelector(".piece");
     let currentSquare = document.getElementById(move.from);
     let previousSquare = document.getElementById(move.to);
@@ -171,7 +200,6 @@ function Arrows({ moves }: Props) {
     moveSound.play();
   }
   async function goBackOneMove(singleMove: boolean = true) {
-    console.log("here")
     block = true;
     if (moves().length === 0) {
       block = false;
@@ -261,7 +289,6 @@ function Arrows({ moves }: Props) {
       </div>
       <div
         onClick={async () => {
-          console.log(block);
           block === false ? goBackOneMove() : null;
         }}
       >

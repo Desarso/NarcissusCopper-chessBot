@@ -17,8 +17,10 @@ export class ChessWebSocket{
     user: Accessor<User>;
     pings: number = 0;
     crownedIndex: number = -1;
+    moves: Accessor<updateMove[]>;
+    setMoves: Setter<updateMove[]>;
 
-    constructor(board: Accessor<Board>, setBoard: Setter<Board>, user: Accessor<User>, setUser: Setter<User>){
+    constructor(board: Accessor<Board>, setBoard: Setter<Board>, user: Accessor<User>, setUser: Setter<User>,moves: Accessor<updateMove[]>,  setMoves: Setter<updateMove[]>){
         this.board = board;
         this.setBoard = setBoard;
         this.setUser = setUser;
@@ -28,10 +30,13 @@ export class ChessWebSocket{
         console.log("ws", this.ws());
         this.setWS = setWS;
         this.createListeners();
+        this.moves = moves;
+        this.setMoves = setMoves;
 
     }
 
     public sendChessUpdate(board: Board, user: User, opponent: User, moves: updateMove[]){
+        console.log("sending chess update",moves)
         let chessUpdate = new ChessGameUpdate(
             board.fen,
             user,
@@ -93,7 +98,7 @@ export class ChessWebSocket{
             console.log("ws closed");
             this.reconnectWebSocket();
         });
-        this.ws().addEventListener("message", (e) => {
+        this.ws().addEventListener("message", async (e) => {
             this.pings--;
             let data = JSON.parse(e.data);
             //process users
@@ -113,14 +118,43 @@ export class ChessWebSocket{
 
             //process game update
             if(data.type === "chessGameUpdate"){
+                await this.sleep(100);
                 console.log("chess game update", data);
                 // console.log("equal fens", data.fen == this.board().fen)
                 if(data.fen != this.board().fen){
-                    //check which board is older
+                    console.log(data.fen, "vs", this.board().fen);
+                    // check which board is older
                     let newBoard = new Board(undefined, data.fen);
+                    console.log("new board", newBoard);
+                    this.board().fen = data.fen;
+                    this.board().board = newBoard.board;
+                    this.board().currentTurnColor = newBoard.currentTurnColor;
+                    this.board().capturedPieces = newBoard.capturedPieces;
+                    this.board().Pieces = newBoard.Pieces;
+                    this.board().checkMate = newBoard.checkMate;
+                    this.board().enPassantTargetSquare = newBoard.enPassantTargetSquare;
+                    this.board().halfMoveClock = newBoard.halfMoveClock;
+                    this.board().fullMoveNumber = newBoard.fullMoveNumber;
+                    this.board().inCheck = newBoard.inCheck;
+                    this.board().legalMoves = newBoard.legalMoves;
+                    this.mergeMoves(data.moves);
+                    let lastMove = this.moves()[this.moves().length - 1];
+                    let allDroppables = document.querySelectorAll(".chessSquare");
+                    for (let i = 0; i < allDroppables.length; i++) {
+                      if (
+                        allDroppables[i].id === lastMove.from ||
+                        allDroppables[i].id === lastMove.to
+                      ) {
+                        allDroppables[i]?.classList?.add("lastMove");
+                      } else {
+                        allDroppables[i]?.classList?.remove("lastMove");
+                      }
+                    }
+                    let newEvent = new CustomEvent("forceBoardUpdate");
+                    document.dispatchEvent(newEvent);
                     let crowned = this.pawnsAtEndOfBoard();
                     if(crowned){
-                        console.log("crowned");
+                        // console.log("crowned");
                         let event = new CustomEvent("crowned");
                         event.data = newBoard;
                         document.dispatchEvent(event);
@@ -132,8 +166,33 @@ export class ChessWebSocket{
         });
     }
 
+    private mergeMoves(moves: updateMove[]){
+        // console.log("merging moves");
+        let newMoves = [...this.moves()];
+        for(let i=0; i < moves.length; i++){
+            let found = false;
+            for(let j=0; j < this.moves().length; j++){
+                if(moves[i].from === this.moves()[j].from && moves[i].to === this.moves()[j].to){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                newMoves.push(moves[i]);
+            }
+        }
+        console.log("new moves", newMoves);
+        console.log(newMoves.length, "vs", this.moves().length, "vs", moves.length);
+        this.setMoves(newMoves);
+
+    }
+
+    public async sleep(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     public sendNotification(notification: Notification){
-        console.log("sending notification", notification);
+        // console.log("sending notification", notification);
         this.ws().send(JSON.stringify(notification));
     }
 

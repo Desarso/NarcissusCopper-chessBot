@@ -95,18 +95,15 @@ export function DragDropContextProvider(props: any) {
         }
       }
     });
-    document.addEventListener("pointerup", () => {
+    document.addEventListener("pointerup", (e) => {
       if (target() == null) return;
       target().dragEnd(hovered());
       globalDragEnd.forEach((callback) => {
-        callback();
+        callback(e);
       });
-    //   console.log("mouse up");
-      // console.log("target", target());
       if (target()?.ref) {
         target().ref.style.transform = `translate(${0}px, ${.1}px)`;
         target().ref.style.zIndex = 0;
-        // console.log(target().ref.style)
       }
       setCursorDown(false);
       setPreviousTarget(target());
@@ -117,17 +114,11 @@ export function DragDropContextProvider(props: any) {
       //this are general functions, I need to specify them.
       setVirtualMousePosition({ x: e.clientX, y: e.clientY });
       if (virtualCursorDown() && virtualTarget()) {
-        console.log("virtual mouse move")
         virtualTarget().ref.style.transform = `translate(${
           virtualMousePosition().x - virtualStartingMousePosition().x + virtualPreviousPosition().x
         }px, ${
           virtualMousePosition().y - virtualStartingMousePosition().y + virtualPreviousPosition().y
         }px)`;
-
-        // console.log("virtual target", virtualTarget())
-        // console.log("virtual mouse position", virtualMousePosition())
-        // console.log("virtual starting mouse position", virtualStartingMousePosition())
-        // console.log("virtual previous position", virtualPreviousPosition())
         virtualTarget().ref.style.zIndex = 100;
         virtualTarget().rectangle = virtualTarget().ref.getBoundingClientRect();
         if(virtualOverlapped()?.length > 0){
@@ -135,11 +126,11 @@ export function DragDropContextProvider(props: any) {
         }
       }
     });
-    document.addEventListener("virtualpointerup", () => {
+    document.addEventListener("virtualpointerup", (e) => {
       if (virtualTarget() == null) return;
       virtualTarget().dragEnd(virtualHovered());
       globalDragEnd.forEach((callback) => {
-        callback();
+        callback(e);
       });
     //   console.log("mouse up");
       // console.log("target", target());
@@ -368,10 +359,10 @@ export function DragDropContextProvider(props: any) {
         if(!droppable.hovering) return;
         droppable.hovering = false;
         droppable.hoverOut(previousTarget());
-        console.log("hi")
         if(previousTarget() == null) return;
         // if(droppable.occupied) return;
         if(droppable.droppable === false) return;
+
 
         // console.log("removed something");
         //also modified for chess
@@ -380,7 +371,7 @@ export function DragDropContextProvider(props: any) {
           //right here I am removing the children, if the droppable is occupied
           //what I need to do it take this child and send it back to the event
           droppable.ref.querySelector(".piece").remove();
-          console.log("PIECE REMOVED")
+          // console.log("PIECE REMOVED")
         }else if(droppable.ref.querySelector(".circle") !== null){
           droppable.ref.querySelector(".circle").remove();
         }
@@ -473,7 +464,7 @@ export function DragDropContextProvider(props: any) {
         if(!droppable.hovering) return;
         droppable.hovering = false;
         droppable.hoverOut(virtualPreviousTarget());
-        console.log("hi")
+        // console.log("hi")
         if(virtualPreviousTarget() == null) return;
         // if(droppable.occupied) return;
         if(droppable.droppable === false) return;
@@ -485,7 +476,7 @@ export function DragDropContextProvider(props: any) {
           //right here I am removing the children, if the droppable is occupied
           //what I need to do it take this child and send it back to the event
           droppable.ref.querySelector(".piece").remove();
-          console.log("PIECE REMOVED")
+          // console.log("PIECE REMOVED")
         }else if(droppable.ref.querySelector(".circle") !== null){
           droppable.ref.querySelector(".circle").remove();
         }
@@ -507,7 +498,6 @@ export function DragDropContextProvider(props: any) {
  //universal
  function getPreviousPosition(style: string) {
   if (style === null) return { x: 0, y: 0 };
-  // console.log("this is the function input", style)
   let ass = style.split("translate(")[0];
   let position;
   if (ass) {

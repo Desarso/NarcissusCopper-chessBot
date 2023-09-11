@@ -1159,6 +1159,7 @@ export class Board {
       }
     }
     // console.log(legalMoves)
+    board.legalMoves = legalMoves;
     return legalMoves;
   }
 
@@ -1400,7 +1401,7 @@ export class Board {
           8 - parseInt(board.enPassantTargetSquare[1])
          
         );
-        console.log(enPassantTarget)
+        // console.log(enPassantTarget)
         if (deepEqual(enPassantTarget, moveRight) === true) {
           moves.push(new Move(pos, moveRight));
         }
