@@ -1,8 +1,11 @@
 // type Props = {};
 import { Move, TEST } from "../Classes/chessClasses";
-import { createSignal, For, Show } from "solid-js";
+import { User, updateMove } from "../Classes/Types";
+import { createSignal, For, Show, Setter, Accessor } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
 import ChessSquare from "./ChessSquare";
+import UserName from "./UserName";
+import OpponentName from "./OpponentName";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
@@ -13,6 +16,11 @@ type Props = {
   lastMove: any;
   movePieceSound: any;
   capturePieceSound: any;
+  setMoves: Setter<updateMove[]>;
+  moves: Accessor<updateMove[]>;
+  user: Accessor<User>;
+  opponent: Accessor<User>;
+  inGame: Accessor<boolean>;
 };
 
 function WhiteChessboard({
@@ -22,6 +30,11 @@ function WhiteChessboard({
   lastMove,
   movePieceSound,
   capturePieceSound,
+  setMoves,
+  moves,
+  user,
+  opponent,
+  inGame,
 }: Props) {
   board().displayBoard();
 
@@ -53,6 +66,11 @@ function WhiteChessboard({
   async function handleSelection(selection: string) {
     setInlaySelection(selection);
     setDisplayInlay(false);
+    let lastMove = moves()[moves().length - 1];
+    lastMove.crownedTo = selection.toLowerCase();
+    let newMoves = moves().splice(0, moves().length - 1);
+    newMoves.push(lastMove);
+    setMoves(newMoves);
     //the index will be the bottom of the board depeiing on the color in this case
     //it is white so the bottom is 0
     //and the x-cord is 7
@@ -73,8 +91,8 @@ function WhiteChessboard({
     await delay(10);
 
     updateBoard();
-    let move = {start: lastMove().from, end: lastMove().to};
-    console.log(move);
+    // let move = {start: lastMove().from, end: lastMove().to};
+    // console.log(move);
   }
 
   function delay(ms: number) {
@@ -83,74 +101,84 @@ function WhiteChessboard({
 
   //later I will make a black board, and white board component and just change all the settings accordingly
   return (
-    <div class="chessBoard">
-      <DragDropContextProvider>
-        <Show when={displayInlay()}>
-          <div class={`chessInlay ml-[${displayInlayX()}]`}>
-            <div
-              class="chessInlaySquare"
-              id="queenSelection"
-              onClick={() => handleSelection("Q")}
-            >
-              <div class="piece Q"></div>
+    <>
+      <Show when={inGame()}>
+        <OpponentName opponent={opponent} color="black" board={board} />
+      </Show>
+      <div class="chessBoard">
+        <DragDropContextProvider>
+          <Show when={displayInlay()}>
+            <div class={`chessInlay ml-[${displayInlayX()}]`}>
+              <div
+                class="chessInlaySquare"
+                id="queenSelection"
+                onClick={() => handleSelection("Q")}
+              >
+                <div class="piece Q"></div>
+              </div>
+              <div
+                class="chessInlaySquare"
+                id="knightSelection"
+                onClick={() => handleSelection("N")}
+              >
+                <div class="piece N"></div>
+              </div>
+              <div
+                class="chessInlaySquare"
+                id="rookSelection"
+                onClick={() => handleSelection("R")}
+              >
+                <div class="piece R"></div>
+              </div>
+              <div
+                class="chessInlaySquare"
+                id="bishopSelection"
+                onClick={() => handleSelection("B")}
+              >
+                <div class="piece B"></div>
+              </div>
             </div>
-            <div
-              class="chessInlaySquare"
-              id="knightSelection"
-              onClick={() => handleSelection("N")}
-            >
-              <div class="piece N"></div>
-            </div>
-            <div
-              class="chessInlaySquare"
-              id="rookSelection"
-              onClick={() => handleSelection("R")}
-            >
-              <div class="piece R"></div>
-            </div>
-            <div
-              class="chessInlaySquare"
-              id="bishopSelection"
-              onClick={() => handleSelection("B")}
-            >
-              <div class="piece B"></div>
-            </div>
-          </div>
-        </Show>
+          </Show>
 
-        <For each={board().board}>
-          {(square, index) => (
-            <ChessSquare
-              style={index()}
-              pieceClassName={board().board[index()]}
-              className={`chessSquare ${
-                index() % 16 < 8
-                  ? index() % 2 == 0
-                    ? "lighterBackground"
-                    : ""
-                  : index() % 2 == 0
-                  ? ""
-                  : "lighterBackground"
-              }`}
-              id={boardIds[index()]}
-              board={board}
-              updateBoard={updateBoard}
-              draggableId={generateRandomID()}
-              eatenPieces={eatenPieces}
-              setDisplayInlay={setDisplayInlay}
-              setDisplayInlayX={setDisplayInlayX}
-              inlaySelection={inlaySelection}
-              displayInlay={displayInlay}
-              color="white"
-              setLastMove={setLastMove}
-              lastMove={lastMove}
-              movePieceSound={movePieceSound}
-              capturePieceSound={capturePieceSound}
-            />
-          )}
-        </For>
-      </DragDropContextProvider>
-    </div>
+          <For each={board().board}>
+            {(square, index) => (
+              <ChessSquare
+                style={index()}
+                pieceClassName={board().board[index()]}
+                className={`chessSquare ${
+                  index() % 16 < 8
+                    ? index() % 2 == 0
+                      ? "lighterBackground"
+                      : ""
+                    : index() % 2 == 0
+                    ? ""
+                    : "lighterBackground"
+                }`}
+                id={boardIds[index()]}
+                board={board}
+                updateBoard={updateBoard}
+                draggableId={generateRandomID()}
+                eatenPieces={eatenPieces}
+                setDisplayInlay={setDisplayInlay}
+                setDisplayInlayX={setDisplayInlayX}
+                inlaySelection={inlaySelection}
+                displayInlay={displayInlay}
+                color="white"
+                setLastMove={setLastMove}
+                lastMove={lastMove}
+                movePieceSound={movePieceSound}
+                capturePieceSound={capturePieceSound}
+                setMoves={setMoves}
+                moves={moves}
+              />
+            )}
+          </For>
+        </DragDropContextProvider>
+      </div>
+      <Show when={inGame()}>
+        <UserName user={user} color="white" board={board} moves={moves} />
+      </Show>
+    </>
   );
 }
 

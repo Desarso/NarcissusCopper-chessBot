@@ -1,9 +1,12 @@
 // type Props = {};
 import { Move, TEST, Board } from "../Classes/chessClasses";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show, Setter, Accessor } from "solid-js";
 import { DragDropContextProvider } from "./DragDropContext";
 import board from "./WhiteChessboard";
+import { User, updateMove } from "../Classes/Types";
 import ChessSquare from "./ChessSquare";
+import OpponentName from "./OpponentName";
+import UserName from "./UserName";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
@@ -14,6 +17,11 @@ type Props = {
   lastMove: any;
   movePieceSound: any;
   capturePieceSound: any;
+  setMoves: Setter<updateMove[]>;
+  moves: Accessor<updateMove[]>;
+  user: Accessor<User>;
+  opponent: Accessor<User>;
+  inGame: Accessor<boolean>;
 };
 
 // board.movePiece("e2", "e2");
@@ -27,12 +35,15 @@ function BlackChessboard({
   lastMove,
   movePieceSound,
   capturePieceSound,
+  setMoves,
+  moves,
+  user,
+  opponent,
+  inGame,
 }: Props) {
   board().displayBoard();
 
   let boardIds = getBoardIds();
-
-
 
   //this gets the white board IDs
   //black board ID's are the same array but reversed
@@ -64,7 +75,9 @@ function BlackChessboard({
     //need to get the piece at the position
     //it is basically 63 - displayInlayX
 
-    let piece = board().getPieceAtBoardIndex(63 - (7 - parseInt(displayInlayX())));
+    let piece = board().getPieceAtBoardIndex(
+      63 - (7 - parseInt(displayInlayX()))
+    );
     let previousType = piece.type;
     console.log(piece);
     piece.type = selection;
@@ -81,7 +94,7 @@ function BlackChessboard({
     await delay(10);
 
     updateBlackBoard();
-    let move = {start: lastMove().from, end: lastMove().to};
+    // let move = {start: lastMove().from, end: lastMove().to};
   }
 
   function delay(ms: number) {
@@ -90,74 +103,86 @@ function BlackChessboard({
 
   //later I will make a black board, and white board component and just change all the settings accordingly
   return (
-    <div class="chessBoard">
-      <DragDropContextProvider>
-        <Show when={displayInlay()}>
-          <div class={`chessInlay ml-[${7 - parseInt(displayInlayX())}]`}>
-            <div
-              class="chessInlaySquare"
-              id="queenSelection"
-              onClick={() => handleSelection("q")}
-            >
-              <div class="piece q"></div>
+    <>
+      <Show when={inGame()}>
+        <OpponentName opponent={opponent} color="white" board={board} />
+      </Show>
+      <div class="chessBoard">
+        <DragDropContextProvider>
+          <Show when={displayInlay()}>
+            <div class={`chessInlay ml-[${7 - parseInt(displayInlayX())}]`}>
+              <div
+                class="chessInlaySquare"
+                id="queenSelection"
+                onClick={() => handleSelection("q")}
+              >
+                <div class="piece q"></div>
+              </div>
+              <div
+                class="chessInlaySquare"
+                id="knightSelection"
+                onClick={() => handleSelection("n")}
+              >
+                <div class="piece n"></div>
+              </div>
+              <div
+                class="chessInlaySquare"
+                id="rookSelection"
+                onClick={() => handleSelection("r")}
+              >
+                <div class="piece r"></div>
+              </div>
+              <div
+                class="chessInlaySquare"
+                id="bishopSelection"
+                onClick={() => handleSelection("b")}
+              >
+                <div class="piece b"></div>
+              </div>
             </div>
-            <div
-              class="chessInlaySquare"
-              id="knightSelection"
-              onClick={() => handleSelection("n")}
-            >
-              <div class="piece n"></div>
-            </div>
-            <div
-              class="chessInlaySquare"
-              id="rookSelection"
-              onClick={() => handleSelection("r")}
-            >
-              <div class="piece r"></div>
-            </div>
-            <div
-              class="chessInlaySquare"
-              id="bishopSelection"
-              onClick={() => handleSelection("b")}
-            >
-              <div class="piece b"></div>
-            </div>
-          </div>
-        </Show>
+          </Show>
 
-        <For each={board().board}>
-          {(square, index) => (
-            <ChessSquare
-              style={index()}
-              pieceClassName={board().board[board().board.length - 1 - index()]}
-              className={`chessSquare ${
-                (board().board.length - 1 - index()) % 16 < 8
-                  ? (board().board.length - 1 - index()) % 2 == 0
-                    ? "lighterBackground"
-                    : ""
-                  : (board().board.length - 1 - index()) % 2 == 0
-                  ? ""
-                  : "lighterBackground"
-              }`}
-              id={boardIds[board().board.length - 1 - index()]}
-              board={board}
-              updateBoard={updateBlackBoard}
-              draggableId={generateRandomID()}
-              eatenPieces={eatenPieces}
-              setDisplayInlay={setDisplayInlay}
-              setDisplayInlayX={setDisplayInlayX}
-              inlaySelection={inlaySelection}
-              displayInlay={displayInlay}
-              color="black"
-              setLastMove={setLastMove}
-              lastMove={lastMove}
-              movePieceSound={movePieceSound}
-              capturePieceSound={capturePieceSound}
-            />
-          )}
-        </For>
-      </DragDropContextProvider>
-    </div>
+          <For each={board().board}>
+            {(square, index) => (
+              <ChessSquare
+                style={index()}
+                pieceClassName={
+                  board().board[board().board.length - 1 - index()]
+                }
+                className={`chessSquare ${
+                  (board().board.length - 1 - index()) % 16 < 8
+                    ? (board().board.length - 1 - index()) % 2 == 0
+                      ? "lighterBackground"
+                      : ""
+                    : (board().board.length - 1 - index()) % 2 == 0
+                    ? ""
+                    : "lighterBackground"
+                }`}
+                id={boardIds[board().board.length - 1 - index()]}
+                board={board}
+                updateBoard={updateBlackBoard}
+                draggableId={generateRandomID()}
+                eatenPieces={eatenPieces}
+                setDisplayInlay={setDisplayInlay}
+                setDisplayInlayX={setDisplayInlayX}
+                inlaySelection={inlaySelection}
+                displayInlay={displayInlay}
+                color="black"
+                setLastMove={setLastMove}
+                lastMove={lastMove}
+                movePieceSound={movePieceSound}
+                capturePieceSound={capturePieceSound}
+                setMoves={setMoves}
+                moves={moves}
+              />
+            )}
+          </For>
+        </DragDropContextProvider>
+      </div>
+      <Show when={inGame()}>
+        <UserName user={user} color="black" board={board} moves={moves} />
+      </Show>
+    </>
   );
 }
 

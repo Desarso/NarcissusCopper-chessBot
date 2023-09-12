@@ -90,7 +90,7 @@ function UsersList({
           <li class="listItem" id="mainUser">
             <div class="text">{user().username}</div>
             <CatLogo catLink={user().CatUrl} />
-            <button onClick={() => console.log(users())}>🠮</button>
+            {/* <button onClick={() => console.log(users())}>🠮</button> */}
           </li>
           <For each={users()}>
             {(singleUser) => (
@@ -104,7 +104,7 @@ function UsersList({
               >
                 <div class="text">{singleUser.username}</div>
                 <CatLogo catLink={singleUser.CatUrl} />
-                <button onClick={() => console.log(users())}>🠮</button>
+                {/* <button onClick={() => console.log(users())}>🠮</button> */}
               </li>
             )}
           </For>

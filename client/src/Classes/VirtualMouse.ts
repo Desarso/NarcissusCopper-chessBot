@@ -1,18 +1,18 @@
 import { create } from "domain";
 import { VirtualMouseEvent, Position, User } from "./Types";
+import { Accessor } from "solid-js";
 
 
 
 
 
 export class VirtualMouse {
-    ws : WebSocket;
+    ws : Accessor<WebSocket>;
     initialized: boolean = false;
     virtualCursor : HTMLElement;
     self: User;
     opponent: User;
-
-  constructor (ws: WebSocket, self: User, opponent: User){
+  constructor (ws: Accessor<WebSocket>, self: User, opponent: User){
     this.ws = ws;
     this.virtualCursor = this.createVirtualCursor();
     this.self = self;
@@ -27,13 +27,19 @@ export class VirtualMouse {
     this.sendMouseEvents();
   }
   catchWedSocketEvents(){
-    this.ws.addEventListener("message", (event) => {
+    this.ws().addEventListener("message", (event) => {
       let data = JSON.parse(event.data);
       if(data.type != "virtualMouseEvent") return;
       let virtualMouseEvent : VirtualMouseEvent = JSON.parse(event.data);
       this.triggerVirtualMouseEvent(virtualMouseEvent);
+      // console.log("virtual mouse event", virtualMouseEvent)
       
   
+      });
+    
+      this.ws().addEventListener("close", async() => {
+        await this.sleep (1000);
+        this.catchWedSocketEvents();
       });
   }
   private triggerVirtualMouseEvent(virtualMouseEvent: VirtualMouseEvent){
@@ -50,24 +56,27 @@ export class VirtualMouse {
           virtualEvent.clientY = newPosition.y;
           document.dispatchEvent(virtualEvent);
 
+
         break;
       case "pointerdown":
           newPosition = this.setVirtualPosition(virtualMouseEvent);
           elements = document.elementsFromPoint(newPosition.x, newPosition.y);
           element  = elements[1];
-          console.log("element", element)
+          // console.log("element", element)
           if(element.classList.contains("canDrag")) return;
-          console.log("pointerdown element", element);
+          // console.log("pointerdown element", element);
           virtualEvent = new Event("virtualpointerdown");
           virtualEvent.clientX = newPosition.x;
           virtualEvent.clientY = newPosition.y;
           element.dispatchEvent(virtualEvent);
           document.dispatchEvent(virtualEvent);
+          this.virtualCursor.style.backgroundColor= "rgba(255, 0, 0, 0.541)"
         break;
       case "pointerup":
           virtualEvent = new Event("virtualpointerup");
-          console.log("virtual pointerup element");
+          // console.log("virtual pointerup element");
           document.dispatchEvent(virtualEvent);
+          this.virtualCursor.style.backgroundColor= "rgba(255, 0, 0, 0)"
         break;
           
     }
@@ -95,7 +104,7 @@ export class VirtualMouse {
         chessBoardWidth,
         "pointermove"
       );
-      this.ws.send(JSON.stringify(virtualMouseEvent));
+      this.ws().send(JSON.stringify(virtualMouseEvent));
     });
     document.addEventListener("pointerdown", (event) => {
       
@@ -108,7 +117,7 @@ export class VirtualMouse {
         chessBoardWidth,
         "pointerdown"
       );
-      this.ws.send(JSON.stringify(virtualMouseEvent));
+      this.ws().send(JSON.stringify(virtualMouseEvent));
     });
     document.addEventListener("pointerup", (event) => {
       
@@ -121,11 +130,9 @@ export class VirtualMouse {
         chessBoardWidth,
         "pointerup"
       );
-      this.ws.send(JSON.stringify(virtualMouseEvent));
+      this.ws().send(JSON.stringify(virtualMouseEvent));
     });
   }
-
-
 
 
   private setVirtualPosition(data: any) {
@@ -153,7 +160,7 @@ export class VirtualMouse {
     let invertedCursorX = destinationChessBoardCenterX - scaledXOffset;
     let invertedCursorY = destinationChessBoardCenterY - scaledYOffset;
     // console.log("xOffSet", xOffSet, "yOffSet", yOffSet);
-    oponentsCursor.style.transform = `translate(${invertedCursorX-5}px, ${invertedCursorY-5}px)`;
+    oponentsCursor.style.transform = `translate(${invertedCursorX-(this.cursorWidth/2)}px, ${invertedCursorY-this.cursorWidth/2}px)`;
     return {x: invertedCursorX, y: invertedCursorY};
   }
 
@@ -161,7 +168,12 @@ export class VirtualMouse {
     let virtualCursor = document.createElement("div");
     virtualCursor.classList.add("oponentsCursor");
     document.body.appendChild(virtualCursor);
+    this.cursorWidth = virtualCursor.offsetHeight;
     return virtualCursor;
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
 

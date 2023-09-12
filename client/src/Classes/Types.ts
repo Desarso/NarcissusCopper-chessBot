@@ -83,4 +83,39 @@ export class Notification {
       this.eventType = eventType;
     }
   }
+
+  export class updateMove {
+    from: string;
+    to: string;
+    previousFen: string;
+    crowning: Boolean = false;
+    eating: Boolean = false;
+    atePiece: string = "";
+    crownedTo: string = "";
+    castle: Boolean = false;
+    turnColor: string = "";
+    enPassant: Boolean = false;
+    enPassantSquare: string = "";
+    constructor(from: string, to: string, fen: string) {
+      this.from = from;
+      this.to = to;
+      this.previousFen = fen;
+    }
+  }
+
+  export class ChessGameUpdate {
+    fen: string;
+    from: User;
+    to: User;
+    type: string = "chessGameUpdate";
+    turn: string;
+    moves: updateMove[];
+    constructor(fen: string, from: User, to: User, turn: string, moves: updateMove[]) {
+      this.fen = fen;
+      this.from = from;
+      this.to = to;
+      this.turn = turn;
+      this.moves = moves;
+    }
+  }
   
