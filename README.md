@@ -1,24 +1,23 @@
-
 # NarcissusCopper-ChessUI
 
-An online multiplayer chess UI, like chess.com written in solidjs. It uses graphql and SSE(server-sent-events) for the backend functionality. 
-
+An online multiplayer chess UI, like chess.com written in solidjs. It uses a golang backend and utilizes websockets.
 
 ## Screenshots
 
 #### Display players online
+
 ![App Screenshot](https://raw.githubusercontent.com/Desarso/NarcissusCopper-chessBot/typescript/screenshots/players.JPG)
 
 #### Playing chess
-![App Screenshot](https://raw.githubusercontent.com/Desarso/NarcissusCopper-chessBot/typescript/screenshots/playing.JPG)
 
+![App Screenshot](https://raw.githubusercontent.com/Desarso/NarcissusCopper-chessBot/typescript/screenshots/playing.JPG)
 
 ## Demo
 
-
 Go to:
- https://gabrielmalek.com/chess/ 
- to play with a friend online. Or go to https://desarso.github.io/NarcissusCopper-chessBot/ to use the bare board. This is a work in progress I will be adding a the option to play with character bots, as well as improving the UI.
+https://gabrielmalek.com/chess/
+to play with a friend online. Or go to https://desarso.github.io/NarcissusCopper-chessBot/ to use the bare board. This is a work in progress I will be adding a the option to play with character bots, as well as improving the UI.
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
@@ -42,4 +41,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
