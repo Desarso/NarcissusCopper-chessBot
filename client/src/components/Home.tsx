@@ -58,11 +58,29 @@ function Home({}: Props) {
   });
 
   onMount(async () => {
+
     window.users = users;
     checkforUser();
     listenForUserUpdates();
     document.addEventListener("mousedown", (e) => onMouseDown(e));
     document.ws = chessWebSocket.ws();
+    //check for user in local storage and session storage
+    let pieces = document.querySelectorAll(".piece");
+    setAllPieces(pieces);
+    await checkforUser();
+    await client
+      .query({
+        query: getUsers
+      })
+      .then((result: any) => {
+        console.log("users from query", result.data.getUsers);
+        //we need to sort to make sure to put user in index 0;
+        // setUsers(result.data.getUsers);
+        putUserFirst(result.data.getUsers);
+        return result.data.getUsers;
+      });
+
+    //get all pieces into array
   });
 
   function listenForUserUpdates() {
@@ -466,6 +484,7 @@ function Home({}: Props) {
     }
   }
 
+
   //removes modal backdrop after solid js removes the modal
   function removeBackDrop() {
     let backDrop = document.querySelector(".modal-backdrop ");
@@ -475,6 +494,12 @@ function Home({}: Props) {
   }
 
   //need to highlight the squares that are the last move
+
+  onMount(() => {
+    console.log("session storage user", sessionStorageUser());
+    console.log("in game", inGame());
+  })
+
 
   return (
     <>
