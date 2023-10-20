@@ -1,98 +1,99 @@
-import { createSignal, onMount } from "solid-js";
-
+import { createSignal, onMount, Accessor, Setter } from "solid-js";
+import { User } from "../Classes/Types";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";
 type Props = {
-  oldUserName: any;
-  oldUserId: any;
-  setSessionStorageUser: any;
-  addUserToGraphql: any;
-  updateLastSeen: any;
-  setOldUserName: any;
-  setOldUserId: any;
+  user : Accessor<User | undefined>,
+  setUser : Setter<User | undefined>,
+  setInSession : Setter<boolean>,
+  chessWebSocket : ChessWebSocket
 };
 
 const GlassOverlay = ({
-  oldUserName,
-  oldUserId,
-  setSessionStorageUser,
-  addUserToGraphql,
-  updateLastSeen,
-  setOldUserName,
-  setOldUserId,
+  user,
+  setUser,
+  setInSession,
+  chessWebSocket,
 }: Props) => {
-  const [username, setUsername] = createSignal("");
-  const [userid, setUserid] = createSignal("");
+
+  let username = ""
+  const [CatUrl, setCatUrl] = createSignal<string>("");
+
 
   const onButtonCLick = async () => {
-    //here I add the username to the session and local storage
-    //but first I need to generate a user ID
-    let newUserID = generateUserid();
-    let usernameInputed = username();
-    if (usernameInputed == "") {
+    
+    if(username === "") {
       alert("Please enter a username");
       return;
     }
 
-    
-    if (usernameInputed == oldUserName()) {
-      console.log("userid: ", oldUserId());
-      console.log("username: ", usernameInputed);
-      setUserid(oldUserId());
-      let currentID = userid();
-      let currentName = usernameInputed;
-      console.log("kept from local storage");
-      await setSessionStorageUser(true);
-      console.log("hi there")
-      updateLastSeen();
-      setInterval(updateLastSeen, 6000);
-      console.log("made it here");
-      await addUserToGraphql();
+    if(username.length > 10) {
+      username = username.slice(0, 10);
+    }
+    if(username === user()?.username) {
+      let newUser = new User(
+          generateUserid(),
+          username,
+          CatUrl()
+      )
       sessionStorage.setItem(
         "gabrielmalek/chess.data",
-        JSON.stringify({ userId: currentID, userName: currentName })
+        JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
       );
+      localStorage.setItem(
+        "gabrielmalek/chess.data",
+        JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
+      )
+      setUser(newUser);
+      setInSession(true);
+      chessWebSocket.beginPinging(user);
       return;
     }
-    console.log("userid: ", userid());
-    console.log("username: ", usernameInputed);
-    setOldUserId(newUserID);
-    setOldUserName(usernameInputed);
-    let inputElement = document.getElementById(
-      "userNameInput"
-    ) as HTMLInputElement;
-    inputElement.value = "";
-    setUsername("");
-    await setSessionStorageUser(true);
-    updateLastSeen();
-    setInterval(updateLastSeen, 6000);
-    addUserToGraphql();
+    let newUser = new User(
+      generateUserid(),
+      username,
+      CatUrl()
+    )
+
+
+    setUser(newUser);
+    console.log()
+    chessWebSocket.beginPinging(user);
+    console.log(newUser, newUser.id)
+    chessWebSocket.pingWebSocket(newUser);
+
     sessionStorage.setItem(
       "gabrielmalek/chess.data",
-      JSON.stringify({ userId: newUserID, userName: usernameInputed })
+      JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
     );
     localStorage.setItem(
       "gabrielmalek/chess.data",
-      JSON.stringify({ userId: newUserID, userName: usernameInputed })
-    );
+      JSON.stringify({ id: newUser.id, username: newUser.username, CatUrl: newUser.CatUrl })
+    )
+    setInSession(true);
+      return;
   };
+
+  async function getRandomCatLink() {
+    const response =  await fetch("https://api.thecatapi.com/v1/images/search");
+    const data = await response.json();
+    return data[0].url;
+  }
 
   onMount(() => {
     //add evnet listener to the enter key
     document.addEventListener("keyup", function (event) {
-      if (event.key === "Enter") {
-        onButtonCLick();
-      }
+      if (event.key === "Enter") onButtonCLick();
     });
-    console.log("username: " + username());
-    console.log("oldUserName " + oldUserName());
-    console.log("oldUserId " + oldUserId());
-    if (oldUserName() != "") {
-      setUsername(oldUserName());
-      setUserid(oldUserId());
-      let inputElement = document.getElementById(
-        "userNameInput"
-      ) as HTMLInputElement;
-      inputElement.value = username();
+    let input: any = document.getElementById("userNameInput");
+    input?.focus();
+    console.log(user()?.username)
+    if(user()?.username !== undefined){
+      input.value = user()?.username;
+      username = input.value;;
     }
+    getRandomCatLink().then((url) => {
+      setCatUrl(url);
+    });
   });
 
   return (
@@ -103,7 +104,7 @@ const GlassOverlay = ({
           type="username"
           placeholder="username"
           id="userNameInput"
-          onKeyUp={(e) => setUsername(e.target?.value)}
+          onKeyUp={(e) => username = e.currentTarget.value}
         />
       </div>
       <button class="submitUsernameButton" onClick={() => onButtonCLick()}>
@@ -137,3 +138,5 @@ function generateUserid() {
   }
   return userid;
 };
+
+

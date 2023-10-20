@@ -1,6 +1,4 @@
 import {
-  Accessor,
-  Setter,
   createContext,
   useContext,
   createSignal,
@@ -47,20 +45,34 @@ const DragDropContext = createContext<ContextProps>();
 export function DragDropContextProvider(props: any) {
   //here we are keeping track of some of the global states
   //so we need a function to createDraggable, this function should
-  const [count, setCount] = createSignal(0);
-  const [pageName, setPageName] = createSignal("Home");
   const [mousePosition, setMousePosition] = createSignal({ x: 0, y: 0 });
   const [startingMousePosition, setStartingMousePosition] = createSignal({
     x: 0,
     y: 0,
   });
-  const [droppables, setDropables] = createSignal([] as Droppable[]);
   const [cursorDown, setCursorDown] = createSignal(false);
   const [target, setTarget] = createSignal(null);
   const [previousTarget, setPreviousTarget] = createSignal(null);
   const [previousPosition, setPreviousPosition] = createSignal({ x: 0, y: 0 });
   const [overlapped, setOverlapped] = createSignal(null);
   const [hovered, setHovered] = createSignal(null);
+
+
+  //all variables for virtual mouse
+  const [virtualMousePosition, setVirtualMousePosition] = createSignal({ x: 0, y: 0 });
+  const [virtualStartingMousePosition, setVirtualStartingMousePosition] = createSignal({x: 0,y: 0,});
+  const [virtualCursorDown, setVirtualCursorDown] = createSignal(false);
+  const [virtualTarget, setVirtualTarget] = createSignal(null);
+  const [virtualPreviousTarget, setVirtualPreviousTarget] = createSignal(null);
+  const [virtualPreviousPosition, setVirtualPreviousPosition] = createSignal({ x: 0, y: 0 });
+  const [virtualOverlapped, setVirtualOverlapped] = createSignal(null);
+  const [virtualHovered, setVirtualHovered] = createSignal(null);
+
+
+  const [droppables, setDropables] = createSignal([] as Droppable[]);
+
+
+
   const globalDragStart: Function[] = [];
   const globalDragEnd: Function[] = [];
 
@@ -83,23 +95,56 @@ export function DragDropContextProvider(props: any) {
         }
       }
     });
-    document.addEventListener("pointerup", () => {
+    document.addEventListener("pointerup", (e) => {
       if (target() == null) return;
       target().dragEnd(hovered());
       globalDragEnd.forEach((callback) => {
-        callback();
+        callback(e);
       });
-    //   console.log("mouse up");
-    //   console.log("target", target());
       if (target()?.ref) {
-        target().ref.style.transform = `translate(${0}px, ${0}px)`;
+        target().ref.style.transform = `translate(${0}px, ${.1}px)`;
         target().ref.style.zIndex = 0;
-        // console.log(target().ref.style)
       }
       setCursorDown(false);
       setPreviousTarget(target());
       setTarget(null);
     });
+
+    document.addEventListener("virtualpointermove", (e) => {
+      //this are general functions, I need to specify them.
+      setVirtualMousePosition({ x: e.clientX, y: e.clientY });
+      if (virtualCursorDown() && virtualTarget()) {
+        virtualTarget().ref.style.transform = `translate(${
+          virtualMousePosition().x - virtualStartingMousePosition().x + virtualPreviousPosition().x
+        }px, ${
+          virtualMousePosition().y - virtualStartingMousePosition().y + virtualPreviousPosition().y
+        }px)`;
+        virtualTarget().ref.style.zIndex = 100;
+        virtualTarget().rectangle = virtualTarget().ref.getBoundingClientRect();
+        if(virtualOverlapped()?.length > 0){
+          setVirtualHovered(virtualFindHovered(virtualOverlapped()));
+        }
+      }
+    });
+    document.addEventListener("virtualpointerup", (e) => {
+      if (virtualTarget() == null) return;
+      virtualTarget().dragEnd(virtualHovered());
+      globalDragEnd.forEach((callback) => {
+        callback(e);
+      });
+    //   console.log("mouse up");
+      // console.log("target", target());
+      if (virtualTarget()?.ref) {
+        virtualTarget().ref.style.transform = `translate(${0}px, ${.1}px)`;
+        virtualTarget().ref.style.zIndex = 0;
+        // console.log(target().ref.style)
+      }
+      setVirtualCursorDown(false);
+      setVirtualPreviousTarget(virtualTarget());
+      setVirtualTarget(null);
+    });
+
+    //create listeners for virtual mouses
   });
 
   //injection function
@@ -149,14 +194,10 @@ export function DragDropContextProvider(props: any) {
       data: {}
     };
     onMount(() => {
-    //   draggable.ref.addEventListener("mouseup", () => {
-    //     draggable.dragEnd();
-    //     setTarget(null);
-    //     setCursorDown(false);
-    //     draggable.ref.style.transform = `translate(${0}px, ${0}px)`;
-    //     console.log("dragEnd");
-    //   });
       draggable.ref.addEventListener("pointerdown", (e : any) => {
+        if(draggable.ref.classList.contains("noDrag")) return;
+        setTarget(draggable);
+       
         for(let i = 0; i < draggable.dragStart.length; i++){
             draggable.dragStart[i](draggable);
         }
@@ -166,10 +207,32 @@ export function DragDropContextProvider(props: any) {
           setPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
           setStartingMousePosition({x: e.clientX, y: e.clientY});
           setCursorDown(true);
-          setTarget(draggable);
+          // setHovered(draggable.ref.parentElement);
           draggable.rectangle = draggable.ref.getBoundingClientRect();
+
+      
           });
+      //create listener for virtual pointerdown
+      draggable.ref.addEventListener("virtualpointerdown", (e : any) => {
+        setVirtualTarget(draggable);
+        for(let i = 0; i < draggable.dragStart.length; i++){
+            draggable.dragStart[i](draggable);
+        }
+        for(let i = 0; i < globalDragStart.length; i++){
+            globalDragStart[i](draggable);
+        }
+          setVirtualPreviousPosition(getPreviousPosition(e.target.getAttribute("style")));
+          setVirtualStartingMousePosition({x: e.clientX, y: e.clientY});
+          setVirtualCursorDown(true);
+          // setHovered(draggable.ref.parentElement);
+          draggable.rectangle = draggable.ref.getBoundingClientRect();
+
+      
+          });
+
+
     });
+    
 
     return draggable;
   };
@@ -210,9 +273,17 @@ export function DragDropContextProvider(props: any) {
 
     onMount(() => {
       droppable.rectangle = droppable.ref.getBoundingClientRect();
-      if(droppable.ref.children.length > 0){
+      //injecting special code for chess board
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      if(droppable.ref.querySelector(".piece") !== null){
         droppable.occupied = true;
       }
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      //old base code
+      // if(droppable.ref.children.length > 0){
+      //   droppable.occupied = true;
+      // }
       document.addEventListener("pointermove", () => {
         if(target() == null) return;
         if (target().rectangle == null) return;
@@ -243,6 +314,41 @@ export function DragDropContextProvider(props: any) {
           
 
       });
+      document.addEventListener("pointerdown", () =>{
+          if(target() == null) return;
+          if (target().rectangle == null) return;
+            let rect1 = target().ref.getBoundingClientRect();
+            let rect2 = droppable.ref.getBoundingClientRect();
+            if (rect1.top > rect2.bottom ||
+                rect1.right < rect2.left ||
+                rect1.bottom < rect2.top ||
+                rect1.left > rect2.right
+                  ) {
+                    removeHovered(droppable);
+                    if(!droppable.hovering) return;
+                    droppable.hovering = false;
+                    droppable.hoverOut(target());
+                  } else {
+                    if(droppable.ref === hovered()?.ref){
+                      if(droppable.hovering) return;
+                      droppable.hovering = true;
+                      droppable.hoverOver(target());
+                    }else{
+                      droppable.hovering = false;
+                      droppable.hoverOut(target());
+                    }
+                    addHovered(droppable);
+                    
+                  }
+
+              if(overlapped()?.length > 0){
+                setHovered(findHovered(overlapped()));
+                // console.log("hovered", hovered() )
+              }
+
+
+      
+      });
       document.addEventListener("pointerup", () => {
         // if(droppable.ref.children.length === 0){
         //   droppable.occupied = false;
@@ -256,13 +362,130 @@ export function DragDropContextProvider(props: any) {
         if(previousTarget() == null) return;
         // if(droppable.occupied) return;
         if(droppable.droppable === false) return;
-        if(droppable.ref.children.length > 0){
+
+
+        // console.log("removed something");
+        //also modified for chess
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if(droppable.ref.querySelector(".piece") !== null){
           //right here I am removing the children, if the droppable is occupied
           //what I need to do it take this child and send it back to the event
-          droppable.ref.children[0].remove();
+          droppable.ref.querySelector(".piece").remove();
+          // console.log("PIECE REMOVED")
+        }else if(droppable.ref.querySelector(".circle") !== null){
+          droppable.ref.querySelector(".circle").remove();
         }
-        
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        //in a regular program I would just remove the only child, but the board square has
+        //numbers and letters that mess this up, so I must specify the child types to remove
+
+     
         droppable.ref.appendChild(previousTarget().ref);
+          
+
+      });
+
+      document.addEventListener("virtualpointermove", () => {
+        if(virtualTarget() == null) return;
+        if (virtualTarget().rectangle == null) return;
+          let rect1 = virtualTarget().ref.getBoundingClientRect();
+          let rect2 = droppable.ref.getBoundingClientRect();
+          if (rect1.top > rect2.bottom ||
+              rect1.right < rect2.left ||
+              rect1.bottom < rect2.top ||
+              rect1.left > rect2.right
+                ) {
+                  virtualRemoveHovered(droppable);
+                  if(!droppable.hovering) return;
+                  droppable.hovering = false;
+                  droppable.hoverOut(virtualTarget());
+                } else {
+                  if(droppable.ref === virtualHovered()?.ref){
+                    if(droppable.hovering) return;
+                    droppable.hovering = true;
+                    droppable.hoverOver(virtualTarget());
+                  }else{
+                    droppable.hovering = false;
+                    droppable.hoverOut(virtualTarget());
+                  }
+                  virtualAddHovered(droppable);
+                  // for (let i=0; i < virtualHovered().length; i++){
+                  //   console.log(virtualHovered())
+                  // }
+                  
+                }
+    
+          
+
+      });
+      document.addEventListener("virtualpointerdown", () =>{
+          if(virtualTarget() == null) return;
+          if (virtualTarget().rectangle == null) return;
+            let rect1 = virtualTarget().ref.getBoundingClientRect();
+            let rect2 = droppable.ref.getBoundingClientRect();
+            if (rect1.top > rect2.bottom ||
+                rect1.right < rect2.left ||
+                rect1.bottom < rect2.top ||
+                rect1.left > rect2.right
+                  ) {
+                    virtualRemoveHovered(droppable);
+                    if(!droppable.hovering) return;
+                    droppable.hovering = false;
+                    droppable.hoverOut(virtualTarget());
+                  } else {
+                    if(droppable.ref === virtualHovered()?.ref){
+                      if(droppable.hovering) return;
+                      droppable.hovering = true;
+                      droppable.hoverOver(virtualTarget());
+                    }else{
+                      droppable.hovering = false;
+                      droppable.hoverOut(virtualTarget());
+                    }
+                    virtualAddHovered(droppable);
+                    
+                  }
+
+              if(virtualOverlapped()?.length > 0){
+                setVirtualHovered(virtualFindHovered(virtualOverlapped()));
+                // console.log("hovered", hovered() )
+              }
+
+
+      
+      });
+      //DOUBLE CHECKED
+      document.addEventListener("virtualpointerup", () => {
+        // if(droppable.ref.children.length === 0){
+        //   droppable.occupied = false;
+        // }
+        // if(droppable.ref.children.length > 0){
+        //   droppable.occupied = true;
+        // }
+        if(!droppable.hovering) return;
+        droppable.hovering = false;
+        droppable.hoverOut(virtualPreviousTarget());
+        // console.log("hi")
+        if(virtualPreviousTarget() == null) return;
+        // if(droppable.occupied) return;
+        if(droppable.droppable === false) return;
+
+        // console.log("removed something");
+        //also modified for chess
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if(droppable.ref.querySelector(".piece") !== null){
+          //right here I am removing the children, if the droppable is occupied
+          //what I need to do it take this child and send it back to the event
+          droppable.ref.querySelector(".piece").remove();
+          // console.log("PIECE REMOVED")
+        }else if(droppable.ref.querySelector(".circle") !== null){
+          droppable.ref.querySelector(".circle").remove();
+        }
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        //in a regular program I would just remove the only child, but the board square has
+        //numbers and letters that mess this up, so I must specify the child types to remove
+
+     
+        droppable.ref.appendChild(virtualPreviousTarget().ref);
           
 
       });
@@ -271,9 +494,10 @@ export function DragDropContextProvider(props: any) {
  }
 
 
+
+ //universal
  function getPreviousPosition(style: string) {
   if (style === null) return { x: 0, y: 0 };
-  // console.log("this is the function input", style)
   let ass = style.split("translate(")[0];
   let position;
   if (ass) {
@@ -298,6 +522,67 @@ function removeHovered(droppable: Droppable) {
 function findHovered(overlapped: Droppable[])  {
   if(overlapped == null) return;
   let targetRect = target().ref.getBoundingClientRect();
+  let hovered = overlapped.sort((a, b) => {
+    //we are given two rectangles, we must compare with target()
+    //and return same but calculate correctly
+    let arect = a.ref.getBoundingClientRect();
+    let brect = b.ref.getBoundingClientRect();
+    let awidht;
+    let aheight;
+    let bwidth;
+    let bheight;
+    let areaA;
+    let areaB;
+
+    //bottom is actually top, need to reverse y coords
+    if(targetRect.x > arect.x){
+      awidht = arect.right - targetRect.x;
+    }else{
+      awidht = targetRect.right - arect.x;
+    }
+    if(targetRect.bottom > arect.bottom){
+      aheight = arect.bottom - targetRect.top;
+    }else{
+      aheight = targetRect.bottom - arect.top;
+    }
+    areaA = awidht * aheight;
+
+    if(targetRect.x > brect.x){
+      bwidth = brect.right - targetRect.x;
+    }else{
+      bwidth = targetRect.right - brect.x;
+    }
+    if(targetRect.bottom > brect.bottom){
+      bheight = brect.bottom - targetRect.top;
+    }else{
+      bheight = targetRect.bottom - brect.top;
+    }
+
+    areaB = bwidth * bheight;
+
+   
+    return areaB - areaA;
+  });
+
+  return hovered[0];
+}
+
+function virtualAddHovered(droppable: Droppable) {
+  if(virtualOverlapped() == null) setVirtualOverlapped([droppable]);
+  if(virtualOverlapped().includes(droppable)) return;
+  if(!virtualOverlapped()?.includes(droppable)) setVirtualOverlapped([...virtualOverlapped(), droppable]);
+}
+
+function virtualRemoveHovered(droppable: Droppable) {
+  if(virtualOverlapped() == null) return;
+  if(!virtualOverlapped()?.includes(droppable)) return;
+  if(virtualOverlapped().includes(droppable)) setVirtualOverlapped(virtualOverlapped()?.filter((d) => d !== droppable));
+
+}
+
+function virtualFindHovered(overlapped: Droppable[])  {
+  if(overlapped == null) return;
+  let targetRect = virtualTarget().ref.getBoundingClientRect();
   let hovered = overlapped.sort((a, b) => {
     //we are given two rectangles, we must compare with target()
     //and return same but calculate correctly

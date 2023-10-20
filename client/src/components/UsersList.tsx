@@ -1,52 +1,110 @@
-import { For, Show, createSignal, onMount } from "solid-js";
+import { For, Show, createSignal, onMount, Accessor, Setter } from "solid-js";
 import CatLogo from "./CatLogo";
+import { User, Notification } from "../Classes/Types";
+import axios from "axios";
+import BellIcon from "./BellIcon";
+import { domainToUnicode } from "url";
+import { ChessWebSocket } from "../Classes/ChessWebSockets";;
 
 type Props = {
-  users: any;
-  userId: any;
-  playChess: any;
-  refetchUsers: any;
+  users: Accessor<User[]>;
+  user: Accessor<User | undefined>;
+  setNotificationUser: Setter<User | undefined>;
+  onNotificationReceived: (arg1: Notification) => void;
+  chessWebSocket: ChessWebSocket;
 };
 
-function UsersList({ users, userId, playChess, refetchUsers }: Props) {
-  const [selectedUser, setSelectedUser] = createSignal(null);
+
+function UsersList({
+  users,
+  user,
+  setNotificationUser,
+  onNotificationReceived,
+  chessWebSocket,
+}: Props) {
+  const [selectedUser, setSelectedUser] = createSignal<User>();
   const [notificationSent, setNotificationSent] = createSignal(false);
+  const [notificationsReceived, setNotificationsReceived] = createSignal<
+    Notification[]
+  >([]);
+  const [notificationsSent, setNotificationsSent] = createSignal<
+    Notification[]
+  >([]);
+  const [showNotification, setShowNotification] = createSignal(false);
+
+  onMount(() => {
+
+    document.addEventListener("notification", (event) => {
+      console.log("notification event received");
+      const notification = JSON.parse(event.data);
+      onNotificationReceived(notification);
+      //I only want to handle notifications of type promptForGame in here
+      if (notification.type != "promptForGame")return;
+      setNotificationUser(notification.from);
+    
+      console.log("notification received:", notification);
+
+      for (let i = 0; i < notificationsReceived().length; i++) {
+        if (notificationsReceived()[i].from.id == notification.from.id) {
+          return;
+        }
+      }
+      let newNotificationsReceived = notificationsReceived();
+      newNotificationsReceived.push(notification);
+      setNotificationsReceived(newNotificationsReceived);
+      setShowNotification(true);
+      
+    });
+
+  });
+  
 
   function clickUser(user: any) {
-    console.log("selected user: ", user);
+    // console.log("selected user: ", user);
     setSelectedUser(user);
     let modal = document.getElementById("exampleModal");
     //add clas flex important
     modal?.style.setProperty("display", "flex");
   }
 
-  onMount(() => {
-    if(users().length === 0){
-      refetchUsers();
+  async function sendNotification(notification: any) {
+    for (let i = 0; i < notificationsSent().length; i++) {
+      if (notificationsSent()[i].to.id == notification.to.id) {
+        return;
+      }
     }
-  });
+    let newNotificationsSent = notificationsSent();
+    newNotificationsSent.push(notification);
+    setNotificationsSent(newNotificationsSent);
+    chessWebSocket.sendNotification(notification);
+  }
 
   return (
     <>
+      <Show when={showNotification()}>
+        <BellIcon notifications={notificationsReceived} onClick={() => {}} />
+      </Show>
+
       <div class="glassOverlay">
         <ul class="list">
+          <li class="listItem" id="mainUser">
+            <div class="text">{user().username}</div>
+            <CatLogo catLink={user().CatUrl} />
+            {/* <button onClick={() => console.log(users())}>🠮</button> */}
+          </li>
           <For each={users()}>
-            {(user) => (
+            {(singleUser) => (
               //here I list users
               <li
                 class="listItem"
-                id={`${user.id == userId() ? "mainUser" : ""}`}
-                data-bs-toggle={`${user.id == userId() ? "" : "modal"}`}
-                data-bs-target={`${user.id == userId() ? "" : "#exampleModal"}`}
-                onClick={
-                  user.id == userId()
-                    ? () => console.log("clicked main user -- do nothing")
-                    : () => clickUser(user)
-                }
+                id={singleUser.id}
+                data-bs-toggle={"modal"}
+                data-bs-target={"#exampleModal"}
+                onClick={() => clickUser(singleUser)}
               >
-                <div class="text">{user.username}</div>
-                <CatLogo catLink={user.cat_url} />
-                <button onClick={() => console.log(users())}>🠮</button>
+                <div class="text">{singleUser.username}</div>
+                <CatLogo catLink={singleUser.CatUrl} />
+                {/* <button onClick={() => console.log(users())}>🠮</button> */}
               </li>
             )}
           </For>
@@ -82,7 +140,7 @@ function UsersList({ users, userId, playChess, refetchUsers }: Props) {
             <div class="modal-footer">
               <Show when={notificationSent()}>
                 <div class="absolute left-3 text-red-500">
-                  Notification sent!,
+                  Notification sent!
                 </div>
               </Show>
 
@@ -97,19 +155,16 @@ function UsersList({ users, userId, playChess, refetchUsers }: Props) {
                 type="button"
                 class="btn btn-primary"
                 onClick={() => {
-                  if(notificationSent() == false){
+                  let newNotification = new Notification(
+                    user(),
+                    selectedUser(),
+                    "promptForGame"
+                  );
+                  sendNotification(newNotification);
+                  if (notificationSent() == false) {
                     setNotificationSent(true);
-                    playChess(selectedUser())
-                    setTimeout(() => {
-                      setNotificationSent(false);
-                    }, 5000);
                   }
-                  
-                  }
-
-                  
-                  }
-             
+                }}
               >
                 Play Chess
               </button>

@@ -1,7 +1,7 @@
-import { Show, createSignal, onMount } from "solid-js";
+import { Show, createSignal, onMount, Setter, Accessor } from "solid-js";
 import { className } from "solid-js/web";
 import { useDragDropContext } from "./DragDropContext";
-
+import { updateMove } from "../Classes/Types";
 
 type Props = {
   pieceClassName: string;
@@ -17,15 +17,15 @@ type Props = {
   inlaySelection: any;
   style: any;
   color: string;
-  client: any;
-  gql: any;
-  gameId: string;
   setLastMove: any;
   lastMove: any;
+  movePieceSound: any;
+  capturePieceSound: any;
+  setMoves: Setter<updateMove[]>;
+  moves: Accessor<updateMove[]>;
+  allPieces: Accessor<HTMLElement[]>;
+  setAllPieces: Setter<HTMLElement[]>;
 };
-
-
-
 
 function ChessSquare({
   pieceClassName,
@@ -41,34 +41,23 @@ function ChessSquare({
   displayInlay,
   style,
   color,
-  client,
-  gql,
-  gameId,
   setLastMove,
   lastMove,
+  movePieceSound,
+  capturePieceSound,
+  setMoves,
+  moves,
+  allPieces,
+  setAllPieces
 }: Props) {
-
-
-  const updateGame = gql`
-  mutation move($from: String!, $to: String!, $endFen: String!, $gameId: String!) {
-    move(from: $from, to: $to, endFen: $endFen, gameId: $gameId) {
-      fen
-    }
-
-  }
-`
-
   onMount(() => {
-    window.movePiece = function(start, end){
+    window.movePiece = function (start, end) {
       board().movePiece(start, end);
       updateBoard();
     };
     window.board = board;
+    // capturePieceSound.play();
   });
-
-  const [moves, setMoves] = createSignal([]);
-
-
 
   const Droppable = ({ id, className, draggable, draggableClass }: any) => {
     const {
@@ -81,46 +70,66 @@ function ChessSquare({
     const droppable = createDroppable(id);
 
     onHoverOver((e: any) => {
-      // console.log("hover over");
-      // console.log(e);
-      // droppable.droppable = false;
-      //should only accept a drop if it is a legal move;
-      // if(droppable.ref.classList.contains("lighterBackground")){
-      //     droppable.droppable = true;
-      // }
       droppable.ref.classList.add("hovered");
-      // console.log(e.data.legalPieceMoves);
     }, droppable);
 
     onHoverOut((e: any) => {
-      // console.log("hover out");
       droppable.ref.classList.remove("hovered");
     }, droppable);
 
     onGlobalDragStart((e: any) => {
-        if(displayInlay()){return;}
-        if (e.data.legalPieceMoves.includes(droppable.id)) {
-          // console.log(e.data.legalPieceMoves);
-          // console.log(droppable.id)
-          if (droppable.ref.children.length === 0) {
-            droppable.droppable = true;
-            let newElement = document.createElement("section");
-            newElement.classList.add("circle");
-            droppable.ref.appendChild(newElement);
-          } else if (droppable.ref.children.length === 1) {
-            droppable.droppable = true;
-            // droppable.ref.children[0].children[0].classList.add('circle');
-            droppable.ref.children[0].children[0].classList.add("circle");
+      // console.log("global drag start", e);
+      if(OpponentsPawnAtEnd())return;
+      if (displayInlay()) {
+        return;
+      }
+      if (e.data.legalPieceMoves.includes(droppable.id)) {
+        if (
+          droppable.ref.children.length === 0 ||
+          droppable.ref.querySelector(".piece") == undefined
+        ) {
+          droppable.droppable = true;
+          let newElement = document.createElement("section");
+          newElement.classList.add("circle");
+          droppable.ref.appendChild(newElement);
+        } else if (
+          droppable.ref.children.length > 0 &&
+          droppable.ref.querySelector(".piece") != undefined
+        ) {
+          droppable.droppable = true;
+          let piece;
+          for (let i = 0; i < droppable.ref.children.length; i++) {
+            if (droppable.ref.children[i].classList.contains("piece")) {
+              piece = droppable.ref.children[i];
+            }
           }
-        } else {
-          droppable.droppable = false;
+          piece.children[0]?.classList.add("circle");
+          // droppable.ref.children[0]?.children[0]?.classList.add("circle");
         }
+      } else {
+        droppable.droppable = false;
+      }
     });
 
     onGlobalDragEnd((e: any) => {
-      // droppable.droppable = false;
-      // droppable.ref.classList.remove("hovered");
+      // console.log(e.srcElement.classList?.contains("piece") || false);
+      // console.log(color);
+      // console.log(board().currentTurnColor);
+      if(e.srcElement.classList?.contains("piece") || false){
+        if(color !== board().currentTurnColor){
+          return;
+        }
+      }else{
+        if (color == board().currentTurnColor) {
+          return;
+        }
+      }
+
+
+
+
       let circles = droppable.ref.querySelectorAll("section.circle");
+      //removing  circle
       for (let i = 0; i < circles.length; i++) {
         circles[i].remove();
       }
@@ -139,7 +148,26 @@ function ChessSquare({
     return (
       <div id={id} class={className} ref={droppable.ref} style={style}>
         <Show when={draggable != undefined}>{draggable}</Show>
-        {/* <div class="number">1</div> */}
+        <Show
+          when={
+            (id[1] === "8" && color === "black") ||
+            (id[1] === "1" && color === "white")
+          }
+        >
+          <div class={"number-right"} style={"pointer-events: none;"}>
+            {id[0]}
+          </div>
+        </Show>
+        <Show
+          when={
+            (id[0] === "h" && color === "black") ||
+            (id[0] === "a" && color === "white")
+          }
+        >
+          <div class="number-left" style={"pointer-events: none;"}>
+            {id[1]}
+          </div>
+        </Show>
       </div>
     );
   };
@@ -154,9 +182,14 @@ function ChessSquare({
     onDragStart(() => {
       // console.log("dragging piece", board().currentTurnColor);
       // board().displayBoard();
-      if(displayInlay()) return;
+      if (displayInlay()) return;
       startingIndex = draggable.ref.parentElement.id;
       let legalMoves = board().findLegalMoves(board());
+      // console.log(legalMoves);
+      // console.log(board().Pieces)
+      if (legalMoves.length === 0) {
+        board().checkMate = true;
+      }
       let legalPieceMoves = [];
       // console.log("start")
 
@@ -169,96 +202,164 @@ function ChessSquare({
     }, draggable);
 
     onDragEnd(async (e: any) => {
-      if(displayInlay()) return;
-      // console.log("end")
+      //if crowning, delay this move
+      if (displayInlay()) return;
+      // console.log("opponents pawn at end",OpponentsPawnAtEnd())
+      if(OpponentsPawnAtEnd()){
+        // console.log("opponents pawn at end")
+        return;
+      };
+      // if no event then return
       if (e === null) return;
-      e.occupied = false;
-      let previousChild = e.ref.children[0];
-      // console.log(previousChild);
+      // e.occupied = false;
 
+
+      //here I get the starting and ending index
+      let previousChild = e.ref.querySelector(".piece");
       await delay(1);
-      let oppositeColor;
-      if (!e.ref.children[0]) return;
-      if (e.ref.children[0].id === draggable.id) {
+      if (previousChild?.id === draggable?.id) {
         endingIndex = draggable.ref.parentElement.id;
-        if (endingIndex === startingIndex) return;
-        // console.log("legal move");
-        let previousBoard = board().board;
+      } else {
+        endingIndex = e.ref.id;
+      }
+      if(e.ref.querySelector(".circle") === undefined){
+        return
+      }
+      //check if the move exits in board.legalMoves
+      // console.log("legal moves",board().legalMoves.length)
+      if(board().checkMate) return;
+      for(let i=0;i<board().legalMoves.length;i++){
+        if(board().legalMoves[i].start === startingIndex && board().legalMoves[i].end === endingIndex){
+          break;
+        }
+        if(i === board().legalMoves.length-1){
+          return;
+        }
+      }
 
-        board().movePiece(startingIndex, endingIndex);
-        //this is where I move the piece
+
+      if (endingIndex === startingIndex) return;
+
+      let newMove = new updateMove(startingIndex, endingIndex, board().fen);
+      if (board().enPassantTargetSquare === endingIndex) {
+        newMove.enPassant = true;
+        newMove.enPassantSquare = board().enPassantTargetSquare;
+
+        if (board().currentTurnColor === "white") {
+          newMove.enPassantSquare =
+            newMove.enPassantSquare[0] +
+            (parseInt(newMove.enPassantSquare[1]) - 1).toString();
+        } else {
+          newMove.enPassantSquare =
+            newMove.enPassantSquare[0] +
+            (parseInt(newMove.enPassantSquare[1]) + 1).toString();
+        }
+        newMove.atePiece = board().getPieceAtPosition(newMove.enPassantSquare)?.type;
+      }
+      newMove.turnColor = board().currentTurnColor;
+      //need to check if I castled
+      if (board().getPieceAtPosition(startingIndex)?.type === "k") {
+        let beginingLetter = startingIndex[0];
+        let endingLetter = endingIndex[0];
+        if (
+          Math.abs(
+            beginingLetter.charCodeAt(0) - endingLetter.charCodeAt(0)
+          ) === 2
+        ) {
+          newMove.castle = true;
+        }
+      }
+
+      // console.log("moved piece", startingIndex, endingIndex);
+      // board().displayBoard();
+
+      // //this is where I move the piece
+
+      //here I check if I ate a piece and add it to the list of eaten pieces
+      if (previousChild?.classList?.contains("piece")) {
+        eatenPieces.push(previousChild);
+        let circles = previousChild?.querySelectorAll(".circle");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].remove();
+        }
+        setAllPieces([...allPieces(), previousChild]);
+        newMove.eating = true;
+        newMove.atePiece = board().getPieceAtPosition(endingIndex)?.type;
+        let sound = capturePieceSound.play();
+        // console.log(eatenPieces);
+      } else {
+        // console.log("sound")
+        let sound = movePieceSound.play();
+      }
+      board().movePiece(startingIndex, endingIndex);
+
+      //checks if I am crowning and only send move if not
+      let piece = board().getPieceAtPosition(endingIndex);
+      if (piece.type === "p" && piece.color === color) {
+        if (endingIndex[1] === "8" || endingIndex[1] === "1") {
+          newMove.crowning = true;
+          setDisplayInlay(true);
+          setDisplayInlayX(piece.position.pos.x);
+        } else {
+          let move = { start: startingIndex, end: endingIndex };
+          // updateGameQL(move, board().fen);
+        }
+      } else {
         let move = { start: startingIndex, end: endingIndex };
-        updateGameQL(move, board().fen);
+        // updateGameQL(move, board().fen);
+      }
+
+      setMoves([...moves(), newMove]);
+      // updateBoard();
 
 
-        setMoves([...moves(), { start: startingIndex, end: endingIndex }]);
-        if (previousChild.classList.contains("piece")) {
-          eatenPieces.push(previousChild);
-          console.log(eatenPieces);
+      //fix issues with numbers
+      if (
+        previousChild?.classList?.contains("number-right") ||
+        previousChild?.classList?.contains("number-left")
+      ) {
+        e.ref.appendChild(previousChild);
+      }
+
+      //highlight last move in green
+      setLastMove({ from: startingIndex, to: endingIndex });
+      let allDroppables = document.querySelectorAll(".chessSquare");
+      for (let i = 0; i < allDroppables.length; i++) {
+        if (
+          allDroppables[i].id === lastMove().from ||
+          allDroppables[i].id === lastMove().to
+        ) {
+          allDroppables[i]?.classList?.add("lastMove");
+        } else {
+          allDroppables[i]?.classList?.remove("lastMove");
         }
-
-        let newBoard = board().board;
-        let numberOfChanges = 0;
-        console.log(board().inCheck);
-        let piece = board().getPieceAtPosition(endingIndex);
-        if (piece.type === "p" && piece.color === color) {
-            if (endingIndex[1] === "8" || endingIndex[1] === "1") {
-              setDisplayInlay(true);
-              setDisplayInlayX(piece.position.pos.x);
-            }
-          }
-        //I'm gonna implement the crowning logic here,
-        //there is a problem, the board is going to have a pawn of opposite color
-        //at the end of the board
-        //when that happend I need make a popup appear that allows for chess selection
-        //what I need is an absolute position inlay that appears on the board
-        //it extends for four spaces downwards, but has not border, and the backgroud is white
-
-        updateBoard();
-        board().displayBoard();
-
-        setLastMove({ from: startingIndex, to: endingIndex });
-        let allDroppables = document.querySelectorAll(".chessSquare");
-        for (let i = 0; i < allDroppables.length; i++) {
-          if (allDroppables[i].id === lastMove().from || allDroppables[i].id === lastMove().to) {
-            allDroppables[i]?.classList?.add("lastMove");
-          } else {
-            allDroppables[i]?.classList?.remove("lastMove");
-          }
-        }
-        // console.log(board.fen);
-        //here I need to help the UI update
-        //so for example I should be able to find the differences
-        //from the previous board
-        //and apply it to the UI.
       }
     }, draggable);
 
-    const currentPieceColor = pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
+
+    
+
+    const currentPieceColor =
+      pieceClassName.toUpperCase() === pieceClassName ? "white" : "black";
     const canDrag = color === currentPieceColor;
     return (
-      <section ref={draggable.ref} class={className} style={canDrag ? "" : "pointer-events: none;"} id={id}>
+      <section
+        ref={draggable.ref}
+        class={`${className} ${canDrag ? "canDrag" : "noDrag"}`}
+        id={id}
+      >
+        {/* noDrag */}
         <div class=""> </div>
       </section>
     );
   };
 
-
-  function updateGameQL(move: any, fen: string) {
-    console.log("update game", gameId());
-    client.
-    mutate({
-      mutation: updateGame,
-      variables: {
-        from: move.start,
-        to: move.end,
-        endFen: fen,
-        gameId: gameId()
+  function OpponentsPawnAtEnd(){
+    for(let i=0;i<board().Pieces.length;i++){
+      if(board().Pieces[i].type === "p" && board().Pieces[i].color != color && (board().Pieces[i].position.pos.y === 0 || board().Pieces[i].position.pos.y === 7)){
+        return true;
       }
-    })
-    .then((result: any) => {
-      console.log(result);
-    })
+    }
   }
 
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));

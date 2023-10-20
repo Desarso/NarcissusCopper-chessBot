@@ -21,8 +21,12 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.1",
+    "@solid-primitives/event-listener": "^2.3.0",
+    "@solid-primitives/websocket": "^1.1.0",
+    "axios": "^1.5.0",
     "bootstrap": "^5.2.3",
     "graphql": "^16.6.0",
+    "graphql-ws": "^5.14.0",
     "solid-js": "^1.4.7"
   }
 }
