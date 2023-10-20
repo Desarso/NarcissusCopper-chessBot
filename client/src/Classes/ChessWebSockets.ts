@@ -36,7 +36,7 @@ export class ChessWebSocket{
     }
 
     public sendChessUpdate(board: Board, user: User, opponent: User, moves: updateMove[]){
-        console.log("sending chess update",moves)
+        // console.log("sending chess update",moves)
         let chessUpdate = new ChessGameUpdate(
             board.fen,
             user,
@@ -172,8 +172,12 @@ export class ChessWebSocket{
         for(let i=0; i < moves.length; i++){
             let found = false;
             for(let j=0; j < this.moves().length; j++){
-                if(moves[i].from === this.moves()[j].from && moves[i].to === this.moves()[j].to){
+                if(moves[i].from === this.moves()[j].from && moves[i].to === this.moves()[j].to ){
                     found = true;
+                    if(moves[i].crowning && !this.moves()[j].crowning){
+                        newMoves[j].crowning = true;
+                        newMoves[j].crownedTo = moves[i].crownedTo;
+                    }
                     break;
                 }
             }

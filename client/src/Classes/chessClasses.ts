@@ -320,6 +320,8 @@ export class Board {
   inCheck = false;
   checkMate = false;
   capturedPieces: Piece[] = [];
+  UIPieces : HTMLElement[] = [];
+  CapturedPieces: HTMLElement[] = [];
 
   //constructor creates a board with all the pieces in their starting positions
   constructor(board?: string[], fen?: string) {

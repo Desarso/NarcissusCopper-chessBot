@@ -21,6 +21,8 @@ type Props = {
   user: Accessor<User>;
   opponent: Accessor<User>;
   inGame: Accessor<boolean>;
+  allPieces: Accessor<HTMLElement[]>;
+  setAllPieces: Setter<HTMLElement[]>;
 };
 
 function WhiteChessboard({
@@ -35,6 +37,8 @@ function WhiteChessboard({
   user,
   opponent,
   inGame,
+  allPieces,
+  setAllPieces
 }: Props) {
   board().displayBoard();
 
@@ -170,13 +174,15 @@ function WhiteChessboard({
                 capturePieceSound={capturePieceSound}
                 setMoves={setMoves}
                 moves={moves}
+                allPieces={allPieces}
+                setAllPieces={setAllPieces}
               />
             )}
           </For>
         </DragDropContextProvider>
       </div>
       <Show when={inGame()}>
-        <UserName user={user} color="white" board={board} moves={moves} />
+        <UserName user={user} color="white" board={board} moves={moves} allPieces={allPieces} setAllPieces={setAllPieces} />
       </Show>
     </>
   );

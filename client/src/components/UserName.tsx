@@ -1,4 +1,4 @@
-import { Accessor, onMount } from "solid-js";
+import { Accessor, onMount, Setter } from "solid-js";
 import { User, updateMove } from "../Classes/Types";
 import CatLogo from "./CatLogo";
 import ScoreNPieces from "./ScoreNPieces";
@@ -10,9 +10,11 @@ type Props = {
   color: string;
   board: Accessor<Board>;
   moves: Accessor<updateMove[]>;
+  allPieces: Accessor<HTMLElement[]>;
+  setAllPieces: Setter<HTMLElement[]>;
 };
 
-function UserName({ user, color, board, moves }: Props) {
+function UserName({ user, color, board, moves, allPieces, setAllPieces }: Props) {
   function positionWidget() {
     let chessboard = document.querySelector(".chessBoard");
     let chessboardRect = chessboard.getBoundingClientRect();
@@ -50,7 +52,7 @@ function UserName({ user, color, board, moves }: Props) {
       </div>
       <ScoreNPieces color={color} board={board} />
     </div>
-    <Arrows moves={moves} />
+    <Arrows board={board} allPieces={allPieces} setAllPieces={setAllPieces}/>
     </>
     
   );

@@ -13,7 +13,7 @@ import BlackChessboard from "./BlackChessboard";
 import GlassOverlay from "./GlassOverlay";
 import UsersList from "./UsersList";
 import { Board, Move } from "../Classes/chessClasses";
-import axios from "axios";
+import axios, { all } from "axios";
 import MoveSound from "../Soundfiles/move-self.mp3";
 import CaptureSound from "../Soundfiles/capture.mp3";
 import BallsBackground from "./BallsBackground";
@@ -34,7 +34,8 @@ function Home({}: Props) {
   const [board, setBoard] = createSignal<Board>(new Board());
   const [inGame, setInGame] = createSignal<boolean>(false);
   const [inGameColor, setInGameColor] = createSignal<string>("");
-  const [allPieces, setAllPieces]: any = createSignal([]);
+  const [allPieces, setAllPieces] = createSignal<HTMLElement[]>([]);
+  const [everyPiece, setEveryPiece] = createSignal<HTMLElement[]>([]);
   const [lastMove, setLastMove] = createSignal<Move>();
   const [checkmate, setCheckmate] = createSignal<boolean>(false);
   const [moves, setMoves] = createSignal<updateMove[]>([]);
@@ -85,6 +86,7 @@ function Home({}: Props) {
     });
     document.addEventListener("crowned", (event) => {
       console.log("listened to crowned event");
+      console.log("event data", event.data)
       crown(event.data);
     });
     document.addEventListener("forceBoardUpdate", (event) => {
@@ -92,6 +94,8 @@ function Home({}: Props) {
       movePieceSound.play();
     });
   }
+
+
 
   //here I send the position info
   function crown(newBoard: Board) {
@@ -111,6 +115,12 @@ function Home({}: Props) {
     let UIPiece = document.getElementById(pawn.position.position)?.children[0];
     UIPiece?.classList.remove(previousType);
     UIPiece?.classList.add(newPieceType);
+    let newLastMove = moves()[moves().length - 1];
+    newLastMove.crownedTo = newPieceType;
+    newLastMove.crowning = true;
+    let newMoves = moves().splice(0, moves().length - 1);
+    newMoves.push(newLastMove);
+    setMoves(newMoves);
 
     updateBoard();
   }
@@ -170,24 +180,28 @@ function Home({}: Props) {
     // //put em back
 
     let UIBoard = document.querySelectorAll(".chessSquare");
-
-    let allUIPieces = document.querySelectorAll("section.piece");
+    let allUIPieces = everyPiece();
+    // allUIPieces.push(...allPieces())
 
     if (inGameColor() == "white") {
       for (let i = 0; i < allUIPieces.length; i++) {
         allUIPieces[i].remove();
       }
       let indexUsed: any = [];
+      let UIBoardIndexesUsed: any = [];
       for (let i = 0; i < board().board.length; i++) {
         if (board().board[i] != " ") {
           for (let j = 0; j < allUIPieces.length; j++) {
             if (
               allUIPieces[j].classList.contains(board().board[i]) &&
-              !indexUsed.includes(j)
+              !indexUsed.includes(j) &&
+              !UIBoardIndexesUsed.includes(i)
+
             ) {
               UIBoard[i].appendChild(allUIPieces[j]);
               // console.log("found piece", allUIPieces[j]);
               indexUsed.push(j);
+              UIBoardIndexesUsed.push(i);
               break;
             }
           }
@@ -214,7 +228,8 @@ function Home({}: Props) {
             if (
               (allUIPieces[j].classList.contains("p") ||
                 allUIPieces[j].classList.contains("P")) &&
-              !indexUsed.includes(j)
+              !indexUsed.includes(j) &&
+              !UIBoardIndexesUsed.includes(i)
             ) {
               console.log("found piece", allUIPieces[j]);
               let piece = allUIPieces[j];
@@ -225,9 +240,19 @@ function Home({}: Props) {
                 piece.classList.remove("P");
                 piece.classList.add(board().board[i]);
               }
+              indexUsed.push(j);
+              UIBoardIndexesUsed.push(i);
               UIBoard[i].appendChild(piece);
             }
           }
+          let newAllPieces = [];
+          for(let i=0;i<allUIPieces.length;i++){
+            if(!indexUsed.includes(i)){
+              newAllPieces.push(allUIPieces[i]);
+            }
+          }
+          setAllPieces(newAllPieces);
+          console.log("all pieces", allPieces());
           break;
         }
       }
@@ -236,17 +261,19 @@ function Home({}: Props) {
         allUIPieces[i].remove();
       }
       let indexUsed: any = [];
+      let UIBoardIndexesUsed: any = [];
       let index = 0;
       for (let i = board().board.length - 1; i >= 0; i--) {
         if (board().board[i] != " ") {
           for (let j = 0; j < allUIPieces.length; j++) {
             if (
               allUIPieces[j].classList.contains(board().board[i]) &&
-              !indexUsed.includes(j)
+              !indexUsed.includes(j) && !UIBoardIndexesUsed.includes(index)
             ) {
               UIBoard[index].appendChild(allUIPieces[j]);
               // console.log("found piece", allUIPieces[j]);
               indexUsed.push(j);
+              UIBoardIndexesUsed.push(index);
               break;
             }
           }
@@ -274,7 +301,8 @@ function Home({}: Props) {
             if (
               (allUIPieces[j].classList.contains("p") ||
                 allUIPieces[j].classList.contains("P")) &&
-              !indexUsed.includes(j)
+              !indexUsed.includes(j) &&
+              !UIBoardIndexesUsed.includes(index)
             ) {
               // console.log("found piece", allUIPieces[j]);
               let piece = allUIPieces[j];
@@ -286,16 +314,26 @@ function Home({}: Props) {
                 piece.classList.add(board().board[i]);
               }
               UIBoard[index].appendChild(piece);
+              indexUsed.push(j);
+              UIBoardIndexesUsed.push(index);
             }
           }
+          let newAllPieces = [];
+          for(let i=0;i<allUIPieces.length;i++){
+            if(!indexUsed.includes(i)){
+              newAllPieces.push(allUIPieces[i]);
+            }
+          }
+          setAllPieces(newAllPieces);
+          console.log("all pieces", allPieces());
           break;
         }
         index++;
       }
     }
 
-    board().displayBoard();
-    console.log("moves", moves());
+    // board().displayBoard();
+    // console.log("moves", moves());
     let boardUpdated = new Event("boardUpdated");
     document.dispatchEvent(boardUpdated);
     checkBoardState();
@@ -372,6 +410,7 @@ function Home({}: Props) {
       //game has already been created and we are already in it,
       //what we need to do it make sure to ping the server to let it know we are alive
       setInGameColor(notification.fromUserColor);
+      setEveryPiece(document.querySelectorAll("section.piece"));
       setOpponent(notification.to);
       setInGame(true);
     
@@ -412,6 +451,7 @@ function Home({}: Props) {
       )
       setOpponent(notification.from);
       setInGame(true);
+      setEveryPiece(document.querySelectorAll("section.piece"));
      
       let virtualMouse = new VirtualMouse(
         chessWebSocket.ws,
@@ -472,6 +512,8 @@ function Home({}: Props) {
           user={user}
           opponent={opponent}
           inGame = {inGame}
+          allPieces={allPieces}
+          setAllPieces={setAllPieces}
         />
       </Show>
       <Show
@@ -491,6 +533,8 @@ function Home({}: Props) {
           user={user}
           opponent={opponent}
           inGame={inGame}
+          allPieces={allPieces}
+          setAllPieces={setAllPieces}
         />
       </Show>
 

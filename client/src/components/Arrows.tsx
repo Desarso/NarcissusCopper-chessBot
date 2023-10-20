@@ -1,62 +1,83 @@
-import { Accessor, createSignal, onMount } from "solid-js";
+import { Accessor, createSignal, onMount, Setter } from "solid-js";
 import { updateMove } from "../Classes/Types";
 import MoveSound from "../Soundfiles/move-self.mp3";
-import { Move } from "../Classes/chessClasses";
+import { Board, Move } from "../Classes/chessClasses";
+import { useDragDropContext } from "./DragDropContext";
+import { all } from "axios";
 
 type Props = {
-  moves: Accessor<updateMove[]>;
+  allPieces: Accessor<HTMLElement[]>;
+  setAllPieces: Setter<HTMLElement[]>;
+  board: Accessor<Board>;
 };
 
-function Arrows({ moves }: Props) {
+class CrownedPiece {
+  ID: string;
+  crownedTo: string;
+  constructor(ID: string, crownedTo: string) {
+    this.ID = ID;
+    this.crownedTo = crownedTo;
+  }
+}
+
+function Arrows({board }: Props) {
+
+  let possiblePieces: HTMLElement[] = []
+
   function positionArrows() {
-    let chessboard = document.querySelector(".chessBoard");
-    let chessboardRect = chessboard.getBoundingClientRect();
-    let height = chessboardRect.height;
     let windowHeight = window.innerHeight;
     let arrows = document.querySelector(".arrows");
-    let arrowsRect = arrows.getBoundingClientRect();
+    // let arrowsRect = arrows.getBoundingClientRect();
+    let board = document.querySelector(".chessBoard");
+    let boardRect = board.getBoundingClientRect();
+    let boardHeight = boardRect.height;
     let userNameWidget = document.querySelector(".userNameWidgetHolder");
     let userNameWidgetRect = userNameWidget.getBoundingClientRect();
     let userHeight = userNameWidgetRect.height;
-    arrows.style.top = `${
-      (height + ((windowHeight - height) / 2)) + (userHeight/1.3)
-    }px`;
+    let z = boardHeight + userHeight * 2;
+    let x = (windowHeight - z) / 2 + z;
+    arrows.style.top = `${x}px`;
   }
 
-  onMount(() => {
-    positionArrows();
-    window.addEventListener("resize", () => {
-      positionArrows();
-    });
-  })
-
-
-
   const [moveIndex, setMoveIndex] = createSignal(-1);
+  const [crownedPieces, setCrownedPieces] = createSignal<CrownedPiece[]>([]);
   const moveSound = new Audio(MoveSound);
   let forwardClick = false;
   let block = false;
 
   onMount(() => {
-    document.addEventListener("boardUpdated", (e) => {
-      setMoveIndex(moves().length - 1);
-      block = false;
+    possiblePieces = [...allPieces()];
+    positionArrows();
+    window.addEventListener("resize", () => {
+      positionArrows();
     });
+    document.addEventListener("boardUpdated", async (e) => {
+      setMoveIndex(moves().length - 1);
+      // await sleep(200);
+      // setCrownedPiecesBackToNormal();
+      block = false;
+      possiblePieces = [...allPieces()];
+      console.log(allPieces());
+      console.log(possiblePieces);
+      document.possiblePieces = possiblePieces;
+      document.allPieces = allPieces;
+    });
+  
   });
+
 
   async function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+
+
   async function executeMoveInReverse(
     move: updateMove,
     singleMove: boolean = true
   ) {
-
-
-
-
-    let UIPiece = document.getElementById(move.to)?.querySelector(".piece");
+    console.log(allPieces());
+    let UIPiece = document.getElementById(move.to)?.querySelector("section.piece");
     let currentSquare = document.getElementById(move.to);
     let previousSquare = document.getElementById(move.from);
     let currentSquareRect = currentSquare?.getBoundingClientRect();
@@ -77,26 +98,69 @@ function Arrows({ moves }: Props) {
     };
     let magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
     let normalized = { x: vector.x / magnitude, y: vector.y / magnitude };
-    if (!UIPiece) return;
+
+    if (!UIPiece) {
+      return;
+    };
     for (let i = 0; i < magnitude; i++) {
       UIPiece.style.transform = `translate(${normalized.x * i}px, ${
         normalized.y * i
       }px)`;
-      if (i % 10 === 0 && singleMove) {
+      if (i % 20 === 0 && singleMove) {
         await sleep(0.001);
-      } else if (i % 50 === 0) {
+      } else if (i % 200 === 0) {
         await sleep(0.001);
       }
     }
-    previousSquare?.appendChild(UIPiece);
-    if (move.atePiece && !move.enPassant) {
-      let newPiece = document.createElement("section");
-      newPiece.classList.add("piece");
-      if (move.turnColor === "black") {
-        newPiece.classList.add(move.atePiece.toUpperCase());
+    console.log("in reverse move function", move);
+    if (move.crowning) {
+      UIPiece.classList.remove(move.crownedTo);
+      if (move.turnColor === "white") {
+        UIPiece.classList.add("P");
       } else {
-        newPiece.classList.add(move.atePiece.toLowerCase());
+        UIPiece.classList.add("p");
       }
+      let newCrownedPiece = new CrownedPiece(UIPiece.id, move.crownedTo);
+      setCrownedPieces([...crownedPieces(), newCrownedPiece]);
+    }
+
+    previousSquare?.appendChild(UIPiece);
+    //don't create a piece
+    if (move.atePiece != "" && !move.enPassant) {
+
+    let pieceType = move.atePiece;
+    if(move.turnColor === "white") pieceType = pieceType.toLowerCase();
+    if(move.turnColor === "black") pieceType = pieceType.toUpperCase();
+    let newPiece;
+      for(let i = 0; i < possiblePieces.length; i++){
+          if(possiblePieces[i].classList.contains(pieceType)){
+            newPiece = possiblePieces[i];
+            possiblePieces.splice(i, 1);
+            break;
+          }
+      } 
+      // if(!newPiece && move.crowning) {
+      //   for(let i = 0; i < possiblePieces.length; i++){
+      //     if(possiblePieces[i].classList.contains('p') && move.turnColor === "black"){
+      //       newPiece = possiblePieces[i];
+      //       possiblePieces.splice(i, 1);
+      //       break;
+      //     }else if(possiblePieces[i].classList.contains('P') && move.turnColor === "white"){
+      //       newPiece = possiblePieces[i];
+      //       possiblePieces.splice(i, 1);
+      //       break;
+      //     }
+      //   }
+      // }
+
+      // console.log(allPieces());
+      // console.log(possiblePieces);
+      if (!newPiece) {
+        UIPiece.style.transform = `translate(0.1px, 0.1px)`;
+        console.log("could not find piece");
+        console.log(possiblePieces);
+        return;
+      };
       currentSquare?.appendChild(newPiece);
     }
     UIPiece.style.transform = `translate(0.1px, 0.1px)`;
@@ -114,10 +178,13 @@ function Arrows({ moves }: Props) {
     }
 
     if (singleMove) moveSound.play();
-    if(singleMove )moveSound.play();
   }
 
-  async function executeMove(move: updateMove, singleMove: boolean = true) {
+  async function executeMove(
+    move: updateMove,
+    singleMove: boolean = true,
+    instant: boolean = false
+  ) {
     let lastMove = move;
     let allDroppables = document.querySelectorAll(".chessSquare");
     for (let i = 0; i < allDroppables.length; i++) {
@@ -130,8 +197,6 @@ function Arrows({ moves }: Props) {
         allDroppables[i]?.classList?.remove("lastMove");
       }
     }
-
-
 
     let UIPiece = document.getElementById(move.from)?.querySelector(".piece");
     let currentSquare = document.getElementById(move.from);
@@ -154,17 +219,15 @@ function Arrows({ moves }: Props) {
     let magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
     let normalized = { x: vector.x / magnitude, y: vector.y / magnitude };
     try {
-      for (let i = 0; i < magnitude; i++) {
-        UIPiece.style.transform = `translate(${normalized.x * i}px, ${
-          normalized.y * i
-        }px)`;
-        if (i % 10 === 0 && singleMove) {
-          await sleep(0.001);
-        } else if (i % 50 === 0) {
-          await sleep(0.001);
-        }
+      
+      if (move.crowning) {
+        UIPiece.classList.remove("p");
+        UIPiece.classList.remove("P");
+        UIPiece.classList.add(move.crownedTo);
       }
+
       if (previousSquare?.querySelector(".piece")) {
+        possiblePieces.push(previousSquare?.querySelector(".piece")!);
         previousSquare?.querySelector(".piece")?.remove();
       }
 
@@ -191,7 +254,7 @@ function Arrows({ moves }: Props) {
   }
   async function goBackOneMove(singleMove: boolean = true) {
     block = true;
-    if (moves().length === 0) {
+    if (board().length === 0) {
       block = false;
       return;
     }
@@ -202,8 +265,8 @@ function Arrows({ moves }: Props) {
     //first thing we do is we undo a move;
     //then we set the move index to the previous move
     await executeMoveInReverse(moves()[moveIndex()], singleMove);
-    let lastMove = moves()[moveIndex()-1];
-    if(lastMove != undefined){
+    let lastMove = moves()[moveIndex() - 1];
+    if (lastMove != undefined) {
       let allDroppables = document.querySelectorAll(".chessSquare");
       for (let i = 0; i < allDroppables.length; i++) {
         if (
@@ -215,14 +278,14 @@ function Arrows({ moves }: Props) {
           allDroppables[i]?.classList?.remove("lastMove");
         }
       }
-    }else{
+    } else {
       let allDroppables = document.querySelectorAll(".chessSquare");
       for (let i = 0; i < allDroppables.length; i++) {
         allDroppables[i]?.classList?.remove("lastMove");
       }
     }
-  
-    if (moves()[moveIndex()].castle) {
+
+    if (moves()[moveIndex()]?.castle) {
       let to = moves()[moveIndex()].to;
       let rockUIPiece;
       switch (to) {
@@ -246,7 +309,10 @@ function Arrows({ moves }: Props) {
     setMoveIndex(moveIndex() - 1);
     block = false;
   }
-  async function goForwardOneMove(singleMove: boolean = true) {
+  async function goForwardOneMove(
+    singleMove: boolean = true,
+    instant: boolean = false
+  ) {
     block = true;
     if (moves().length === 0) {
       block = false;
@@ -256,10 +322,10 @@ function Arrows({ moves }: Props) {
       block = false;
       return;
     }
-    await executeMove(moves()[moveIndex() + 1], singleMove);
+    await executeMove(moves()[moveIndex() + 1], singleMove, instant);
     setMoveIndex(moveIndex() + 1);
 
-    if (moves()[moveIndex()].castle) {
+    if (moves()[moveIndex()]?.castle) {
       let to = moves()[moveIndex()].to;
       let rockUIPiece;
       switch (to) {
@@ -282,9 +348,9 @@ function Arrows({ moves }: Props) {
     }
     block = false;
   }
-  async function goForwardToLastMove() {
+  async function goForwardToLastMove(instant: boolean = false) {
     for (let i = moveIndex(); i < moves().length - 1; i++) {
-      await goForwardOneMove(false);
+      await goForwardOneMove(false, instant);
     }
     moveSound.play();
   }
@@ -292,31 +358,83 @@ function Arrows({ moves }: Props) {
     <div class="arrows">
       <div
         onClick={async () => {
-          block === false ?  goBackToFirstMove() : null;
+          block === false ? goBackToFirstMove() : null;
         }}
       >
-        {"<<"}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="w-7 h-7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5"
+          />
+        </svg>
       </div>
       <div
         onClick={async () => {
           block === false ? goBackOneMove() : null;
         }}
       >
-        {"<"}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="w-7 h-7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 19.5L8.25 12l7.5-7.5"
+          />
+        </svg>
       </div>
       <div
         onClick={async () => {
           block === false ? goForwardOneMove() : null;
         }}
       >
-        {">"}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="w-7 h-7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M8.25 4.5l7.5 7.5-7.5 7.5"
+          />
+        </svg>
       </div>
       <div
         onClick={async () => {
           block === false ? goForwardToLastMove() : null;
         }}
       >
-        {">>"}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="w-7 h-7"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5"
+          />
+        </svg>
       </div>
     </div>
   );

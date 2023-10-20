@@ -7,6 +7,7 @@ import { User, updateMove } from "../Classes/Types";
 import ChessSquare from "./ChessSquare";
 import OpponentName from "./OpponentName";
 import UserName from "./UserName";
+import { all } from "axios";
 let mainTest = new TEST();
 mainTest.runAllTests();
 
@@ -22,6 +23,8 @@ type Props = {
   user: Accessor<User>;
   opponent: Accessor<User>;
   inGame: Accessor<boolean>;
+  allPieces: Accessor<HTMLElement[]>;
+  setAllPieces: Setter<HTMLElement[]>;
 };
 
 // board.movePiece("e2", "e2");
@@ -40,6 +43,8 @@ function BlackChessboard({
   user,
   opponent,
   inGame,
+  allPieces,
+  setAllPieces
 }: Props) {
   board().displayBoard();
 
@@ -72,6 +77,11 @@ function BlackChessboard({
   async function handleSelection(selection: string) {
     setInlaySelection(selection);
     setDisplayInlay(false);
+    let lastMove = moves()[moves().length - 1];
+    lastMove.crownedTo = selection.toLowerCase();
+    let newMoves = moves().splice(0, moves().length - 1);
+    newMoves.push(lastMove);
+    setMoves(newMoves);
     //need to get the piece at the position
     //it is basically 63 - displayInlayX
 
@@ -174,13 +184,15 @@ function BlackChessboard({
                 capturePieceSound={capturePieceSound}
                 setMoves={setMoves}
                 moves={moves}
+                allPieces={allPieces}
+                setAllPieces={setAllPieces}
               />
             )}
           </For>
         </DragDropContextProvider>
       </div>
       <Show when={inGame()}>
-        <UserName user={user} color="black" board={board} moves={moves} />
+        <UserName user={user} color="black" board={board} moves={moves} allPieces={allPieces} setAllPieces={setAllPieces}/>
       </Show>
     </>
   );

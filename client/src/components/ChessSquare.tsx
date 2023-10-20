@@ -23,6 +23,8 @@ type Props = {
   capturePieceSound: any;
   setMoves: Setter<updateMove[]>;
   moves: Accessor<updateMove[]>;
+  allPieces: Accessor<HTMLElement[]>;
+  setAllPieces: Setter<HTMLElement[]>;
 };
 
 function ChessSquare({
@@ -45,6 +47,8 @@ function ChessSquare({
   capturePieceSound,
   setMoves,
   moves,
+  allPieces,
+  setAllPieces
 }: Props) {
   onMount(() => {
     window.movePiece = function (start, end) {
@@ -125,7 +129,7 @@ function ChessSquare({
 
 
       let circles = droppable.ref.querySelectorAll("section.circle");
-
+      //removing  circle
       for (let i = 0; i < circles.length; i++) {
         circles[i].remove();
       }
@@ -274,6 +278,11 @@ function ChessSquare({
       //here I check if I ate a piece and add it to the list of eaten pieces
       if (previousChild?.classList?.contains("piece")) {
         eatenPieces.push(previousChild);
+        let circles = previousChild?.querySelectorAll(".circle");
+        for (let i = 0; i < circles.length; i++) {
+          circles[i].remove();
+        }
+        setAllPieces([...allPieces(), previousChild]);
         newMove.eating = true;
         newMove.atePiece = board().getPieceAtPosition(endingIndex)?.type;
         let sound = capturePieceSound.play();
@@ -301,7 +310,8 @@ function ChessSquare({
       }
 
       setMoves([...moves(), newMove]);
-      updateBoard();
+      // updateBoard();
+
 
       //fix issues with numbers
       if (
