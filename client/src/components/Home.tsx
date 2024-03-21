@@ -496,7 +496,7 @@ function Home({}: Props) {
   //need to highlight the squares that are the last move
 
   onMount(() => {
-    console.log("session storage user", sessionStorageUser());
+    // console.log("session storage user", sessionStorageUser());
     console.log("in game", inGame());
   })
 
